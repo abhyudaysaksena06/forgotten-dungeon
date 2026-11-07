@@ -5,7 +5,7 @@ import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, use
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { Box3, Raycaster, Vector3 } from 'three';
-import { Actor } from './Actor.jsx';
+import { Actor, HIDE_CHARACTERS } from './Actor.jsx';
 import { toonify } from './toon.js';
 import { IS_FLYER, PALETTE, TOON_RAMP } from './placeholders.jsx';
 import { COMPANION_SPEED, DEFAULT_ROOM, RADIUS, companionGoal, faceTowards, formationSpot, gap, radiusFor, resolve, stepLeader, walkTowards, yawTo, intoLane, LANE_WIDTH, LANE_NAMES, rightOf } from './world.js';
@@ -545,12 +545,14 @@ export function Arena({ state, meta, models, cues, targetId, onTarget, world, re
   const [, setLoaded] = useState(0);
   const onRoomReady = useCallback(() => setLoaded((n) => n + 1), []);
   // NPCs stand where the Blender room says (spawn_npc_*), else at the stand-in room's spots.
+  // A build that hides the characters leaves them out entirely, so none blocks the way unseen.
+  const npcs = HIDE_CHARACTERS ? [] : ROOM_NPCS[roomId] ?? [];
   const npcAt = (i) => world.room.spawns?.npcs?.[i] ?? npcSpot(i);
 
   // NPCs and the stand-in room's props block the way.
   world.extraColliders = [
     ...(useRoomModel ? [] : PROP_COLLIDERS[roomId] ?? []),
-    ...(ROOM_NPCS[roomId] ?? []).map((_, i) => ({ kind: 'circle', x: npcAt(i)[0], z: npcAt(i)[2], r: RADIUS.npc })),
+    ...npcs.map((_, i) => ({ kind: 'circle', x: npcAt(i)[0], z: npcAt(i)[2], r: RADIUS.npc })),
   ];
   useFighters(world, state, roomId);
   const motionOf = (id) => () => world.actors.get(id)?.motion ?? 'idle';
@@ -568,7 +570,7 @@ export function Arena({ state, meta, models, cues, targetId, onTarget, world, re
       <TargetRing world={world} targetId={targetId} reach={reach} />
       <LaneMarks world={world} state={state} />
 
-      {(ROOM_NPCS[roomId] ?? []).map((key, i) => (
+      {npcs.map((key, i) => (
         <Actor key={key} modelKey={key} models={models} position={npcAt(i)} facing={1} label={meta.npcs[key.replace('npc_', '').replace('king_ghost', 'king')]?.name} />
       ))}
 

@@ -10,7 +10,7 @@ import { toonify } from './toon.js';
 
 // The hosted build (Vercel, VITE_HIDE_CHARACTERS=1) draws no characters: no party, companions,
 // enemies, boss or NPCs, on the map or in a fight. The rooms, the target ring and the panels stay.
-const HIDE_CHARACTERS = import.meta.env.VITE_HIDE_CHARACTERS === '1';
+export const HIDE_CHARACTERS = import.meta.env.VITE_HIDE_CHARACTERS === '1';
 
 const DURATION = { attack: 520, skill: 700, hit: 420, dodge: 380, defend: 600, heal: 700, death: 700, boss_strike: 700, boss_sweep: 900, transform: 900, armour_break: 800, block: 400 };
 const GLB_CLIP = { attack: 'attack', skill: 'skill', hit: 'hit', dodge: 'hit', defend: 'defend', heal: 'idle', death: 'death', boss_strike: 'boss_strike', boss_sweep: 'boss_sweep', transform: 'transform', armour_break: 'armour_break', block: 'hit' };
