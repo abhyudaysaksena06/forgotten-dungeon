@@ -8,6 +8,10 @@ import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js
 import { IS_FLYER, InkContext, PALETTE, Placeholder, TOON_RAMP } from './placeholders.jsx';
 import { toonify } from './toon.js';
 
+// The hosted build (Vercel, VITE_HIDE_CHARACTERS=1) draws no characters: no party, companions,
+// enemies, boss or NPCs, on the map or in a fight. The rooms, the target ring and the panels stay.
+const HIDE_CHARACTERS = import.meta.env.VITE_HIDE_CHARACTERS === '1';
+
 const DURATION = { attack: 520, skill: 700, hit: 420, dodge: 380, defend: 600, heal: 700, death: 700, boss_strike: 700, boss_sweep: 900, transform: 900, armour_break: 800, block: 400 };
 const GLB_CLIP = { attack: 'attack', skill: 'skill', hit: 'hit', dodge: 'hit', defend: 'defend', heal: 'idle', death: 'death', boss_strike: 'boss_strike', boss_sweep: 'boss_sweep', transform: 'transform', armour_break: 'armour_break', block: 'hit' };
 
@@ -150,6 +154,8 @@ export function Actor({
     }
     if (ring.current) ring.current.rotation.z = t * (telegraphed ? 2 : 0.6);
   });
+
+  if (HIDE_CHARACTERS) return null; // after every hook, so their order never changes
 
   const height = 2 * scale * (modelKey.startsWith('boss_morvath') ? 1.7 : modelKey.startsWith('boss_') ? 1.3 : 1);
   const recentNumbers = cues.filter((c) => (c.kind === 'hit' || c.kind === 'heal') && c.amount);
