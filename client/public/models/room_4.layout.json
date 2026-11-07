@@ -1,0 +1,382 @@
+{
+ "bounds": [
+  {
+   "kind": "box",
+   "minX": -5.4,
+   "maxX": 5.4,
+   "minZ": -4.2,
+   "maxZ": 5.4
+  }
+ ],
+ "colliders": [
+  {
+   "kind": "box",
+   "minX": 5.8,
+   "maxX": 6.199,
+   "minZ": -2.0,
+   "maxZ": 2.0
+  },
+  {
+   "kind": "box",
+   "minX": -6.199,
+   "maxX": -5.8,
+   "minZ": -2.0,
+   "maxZ": 2.0
+  },
+  {
+   "kind": "box",
+   "minX": 5.75,
+   "maxX": 6.25,
+   "minZ": 5.75,
+   "maxZ": 6.25
+  },
+  {
+   "kind": "box",
+   "minX": -6.25,
+   "maxX": -5.75,
+   "minZ": 5.75,
+   "maxZ": 6.25
+  },
+  {
+   "kind": "box",
+   "minX": 5.8,
+   "maxX": 6.2,
+   "minZ": 2.0,
+   "maxZ": 6.0
+  },
+  {
+   "kind": "box",
+   "minX": 5.8,
+   "maxX": 6.2,
+   "minZ": -6.0,
+   "maxZ": -2.0
+  },
+  {
+   "kind": "box",
+   "minX": -2.0,
+   "maxX": 2.0,
+   "minZ": 5.8,
+   "maxZ": 6.2
+  },
+  {
+   "kind": "box",
+   "minX": 2.0,
+   "maxX": 6.0,
+   "minZ": 5.8,
+   "maxZ": 6.2
+  },
+  {
+   "kind": "box",
+   "minX": -6.2,
+   "maxX": -5.8,
+   "minZ": 2.0,
+   "maxZ": 6.0
+  },
+  {
+   "kind": "box",
+   "minX": -6.2,
+   "maxX": -5.8,
+   "minZ": -6.0,
+   "maxZ": -2.0
+  },
+  {
+   "kind": "box",
+   "minX": -6.0,
+   "maxX": -2.0,
+   "minZ": 5.504,
+   "maxZ": 6.199
+  },
+  {
+   "kind": "box",
+   "minX": -5.15,
+   "maxX": -3.85,
+   "minZ": 2.95,
+   "maxZ": 4.25
+  },
+  {
+   "kind": "box",
+   "minX": -3.92,
+   "maxX": -3.64,
+   "minZ": 3.46,
+   "maxZ": 3.74
+  },
+  {
+   "kind": "box",
+   "minX": -5.36,
+   "maxX": -5.08,
+   "minZ": 3.46,
+   "maxZ": 3.74
+  },
+  {
+   "kind": "box",
+   "minX": -4.64,
+   "maxX": -4.36,
+   "minZ": 2.74,
+   "maxZ": 3.02
+  },
+  {
+   "kind": "box",
+   "minX": -4.64,
+   "maxX": -4.36,
+   "minZ": 4.18,
+   "maxZ": 4.46
+  },
+  {
+   "kind": "box",
+   "minX": -5.15,
+   "maxX": -3.85,
+   "minZ": -0.65,
+   "maxZ": 0.65
+  },
+  {
+   "kind": "box",
+   "minX": -3.92,
+   "maxX": -3.64,
+   "minZ": -0.14,
+   "maxZ": 0.14
+  },
+  {
+   "kind": "box",
+   "minX": -5.36,
+   "maxX": -5.08,
+   "minZ": -0.14,
+   "maxZ": 0.14
+  },
+  {
+   "kind": "box",
+   "minX": -4.64,
+   "maxX": -4.36,
+   "minZ": -0.86,
+   "maxZ": -0.58
+  },
+  {
+   "kind": "box",
+   "minX": -4.64,
+   "maxX": -4.36,
+   "minZ": 0.58,
+   "maxZ": 0.86
+  },
+  {
+   "kind": "box",
+   "minX": -5.15,
+   "maxX": -3.85,
+   "minZ": -4.25,
+   "maxZ": -2.95
+  },
+  {
+   "kind": "box",
+   "minX": -3.92,
+   "maxX": -3.64,
+   "minZ": -3.74,
+   "maxZ": -3.46
+  },
+  {
+   "kind": "box",
+   "minX": -5.36,
+   "maxX": -5.08,
+   "minZ": -3.74,
+   "maxZ": -3.46
+  },
+  {
+   "kind": "box",
+   "minX": -4.64,
+   "maxX": -4.36,
+   "minZ": -4.46,
+   "maxZ": -4.18
+  },
+  {
+   "kind": "box",
+   "minX": -4.64,
+   "maxX": -4.36,
+   "minZ": -3.02,
+   "maxZ": -2.74
+  },
+  {
+   "kind": "box",
+   "minX": 3.85,
+   "maxX": 5.15,
+   "minZ": 2.95,
+   "maxZ": 4.25
+  },
+  {
+   "kind": "box",
+   "minX": 5.08,
+   "maxX": 5.36,
+   "minZ": 3.46,
+   "maxZ": 3.74
+  },
+  {
+   "kind": "box",
+   "minX": 3.64,
+   "maxX": 3.92,
+   "minZ": 3.46,
+   "maxZ": 3.74
+  },
+  {
+   "kind": "box",
+   "minX": 4.36,
+   "maxX": 4.64,
+   "minZ": 2.74,
+   "maxZ": 3.02
+  },
+  {
+   "kind": "box",
+   "minX": 4.36,
+   "maxX": 4.64,
+   "minZ": 4.18,
+   "maxZ": 4.46
+  },
+  {
+   "kind": "box",
+   "minX": 3.85,
+   "maxX": 5.15,
+   "minZ": -0.65,
+   "maxZ": 0.65
+  },
+  {
+   "kind": "box",
+   "minX": 5.08,
+   "maxX": 5.36,
+   "minZ": -0.14,
+   "maxZ": 0.14
+  },
+  {
+   "kind": "box",
+   "minX": 3.64,
+   "maxX": 3.92,
+   "minZ": -0.14,
+   "maxZ": 0.14
+  },
+  {
+   "kind": "box",
+   "minX": 4.36,
+   "maxX": 4.64,
+   "minZ": -0.86,
+   "maxZ": -0.58
+  },
+  {
+   "kind": "box",
+   "minX": 4.36,
+   "maxX": 4.64,
+   "minZ": 0.58,
+   "maxZ": 0.86
+  },
+  {
+   "kind": "box",
+   "minX": 3.85,
+   "maxX": 5.15,
+   "minZ": -4.25,
+   "maxZ": -2.95
+  },
+  {
+   "kind": "box",
+   "minX": 5.08,
+   "maxX": 5.36,
+   "minZ": -3.74,
+   "maxZ": -3.46
+  },
+  {
+   "kind": "box",
+   "minX": 3.64,
+   "maxX": 3.92,
+   "minZ": -3.74,
+   "maxZ": -3.46
+  },
+  {
+   "kind": "box",
+   "minX": 4.36,
+   "maxX": 4.64,
+   "minZ": -4.46,
+   "maxZ": -4.18
+  },
+  {
+   "kind": "box",
+   "minX": 4.36,
+   "maxX": 4.64,
+   "minZ": -3.02,
+   "maxZ": -2.74
+  },
+  {
+   "kind": "box",
+   "minX": -4.193,
+   "maxX": -2.607,
+   "minZ": 1.407,
+   "maxZ": 2.993
+  },
+  {
+   "kind": "box",
+   "minX": 2.607,
+   "maxX": 4.193,
+   "minZ": 1.407,
+   "maxZ": 2.993
+  },
+  {
+   "kind": "box",
+   "minX": -4.493,
+   "maxX": -2.907,
+   "minZ": -2.793,
+   "maxZ": -1.207
+  },
+  {
+   "kind": "box",
+   "minX": 2.907,
+   "maxX": 4.493,
+   "minZ": -2.793,
+   "maxZ": -1.207
+  }
+ ],
+ "steps": [],
+ "spawns": {
+  "party": [
+   [
+    0,
+    0.0,
+    3.3
+   ],
+   [
+    -1.6,
+    0.0,
+    3.5
+   ],
+   [
+    1.6,
+    0.0,
+    3.5
+   ],
+   [
+    0,
+    0.0,
+    4.1
+   ]
+  ],
+  "enemies": [
+   [
+    -2,
+    0.0,
+    -2
+   ],
+   [
+    2,
+    0.0,
+    -2
+   ],
+   [
+    0,
+    0.0,
+    -2.8
+   ]
+  ],
+  "boss": [
+   0,
+   0.0,
+   -2.4
+  ],
+  "npcs": [
+   [
+    -2.8,
+    0.0,
+    -3.9
+   ]
+  ]
+ }
+}
