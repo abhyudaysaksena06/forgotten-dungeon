@@ -86,19 +86,23 @@ export function roomSpot(room, i) {
   const walls = [room.bounds].flat().filter(Boolean);
   const props = room.colliders ?? [];
   const r = RADIUS.minion;
-  const fits = (px, pz) =>
+  const fits = (px, pz, spaced) =>
     (!walls.length || walls.some((s) => insideShape(s, px, pz, r))) &&
     !props.some((c) => insideShape(c, px, pz, -r)) &&
-    taken.every((p) => Math.hypot(p[0] - px, p[2] - pz) >= 2 * r);
-  // Behind first, then behind and to the side, then to the side, and in front of the spawn last.
-  for (const [a, b] of [[1, 0], [0.7, 0.7], [0.7, -0.7], [0, 1], [0, -1], [-0.7, 0.7], [-0.7, -0.7], [-1, 0]]) {
-    for (const k of [1, 1.6, 0.6]) {
-      const px = x + (bx * a + sx * b) * row * k;
-      const pz = z + (bz * a + sz * b) * row * k;
-      if (fits(px, pz)) return [px, y, pz];
+    (!spaced || taken.every((p) => Math.hypot(p[0] - px, p[2] - pz) >= 2 * r));
+  // Behind and to one side first (straight behind would hide a name tag behind the front one's),
+  // then straight behind, to the side, and in front of the spawn last. If no spot is clear of the
+  // other minions, the first one clear of walls and props will do: the fight pushes them apart.
+  for (const spaced of [true, false]) {
+    for (const [a, b] of [[0.7, 0.7], [0.7, -0.7], [1, 0], [0, 1], [0, -1], [-0.7, 0.7], [-0.7, -0.7], [-1, 0]]) {
+      for (const k of [1, 1.6, 0.6]) {
+        const px = x + (bx * a + sx * b) * row * k;
+        const pz = z + (bz * a + sz * b) * row * k;
+        if (fits(px, pz, spaced)) return [px, y, pz];
+      }
     }
   }
-  return [x + bx * row, y, z + bz * row]; // nowhere better: behind, and the walls push it back in
+  return spots[i % n]; // nowhere clear at all: on the spawn itself
 }
 
 function clampToShape(s, x, z, r) {
