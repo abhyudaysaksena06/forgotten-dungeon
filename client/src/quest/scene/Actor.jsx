@@ -8,9 +8,9 @@ import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js
 import { IS_FLYER, InkContext, PALETTE, Placeholder, TOON_RAMP } from './placeholders.jsx';
 import { toonify } from './toon.js';
 
-// The hosted build (Vercel, VITE_HIDE_CHARACTERS=1) draws no characters: no party, companions,
-// enemies, boss or NPCs, on the map or in a fight. The rooms, the target ring and the panels stay.
-export const HIDE_CHARACTERS = import.meta.env.VITE_HIDE_CHARACTERS === '1';
+// The hosted build (Vercel, VITE_VILLAINS_ONLY=1) draws only the villains: no party, companions
+// or NPCs, on the map or in a fight. The rooms, the target ring and the panels stay.
+export const VILLAINS_ONLY = import.meta.env.VITE_VILLAINS_ONLY === '1';
 
 const DURATION = { attack: 520, skill: 700, hit: 420, dodge: 380, defend: 600, heal: 700, death: 700, boss_strike: 700, boss_sweep: 900, transform: 900, armour_break: 800, block: 400 };
 const GLB_CLIP = { attack: 'attack', skill: 'skill', hit: 'hit', dodge: 'hit', defend: 'defend', heal: 'idle', death: 'death', boss_strike: 'boss_strike', boss_sweep: 'boss_sweep', transform: 'transform', armour_break: 'armour_break', block: 'hit' };
@@ -34,19 +34,21 @@ function GlbModel({ modelKey, cues, fallen, motion, opts = {} }) {
   const { scene, animations } = useGLTF(`/models/${modelKey}.glb`);
   const inked = useContext(InkContext);
   // Each actor gets its own copy, toon-shaded with an ink outline unless the manifest says toon: false.
-  const model = useMemo(() => {
+  // Its height is measured before the outline is added, which would count in the box.
+  const { model, h } = useMemo(() => {
     const copy = cloneSkinned(scene);
-    return opts.toon === false ? copy : toonify(copy, { ramp: TOON_RAMP, outline: inked });
+    copy.updateMatrixWorld(true);
+    const b = new Box3().setFromObject(copy);
+    return { model: opts.toon === false ? copy : toonify(copy, { ramp: TOON_RAMP, outline: inked }), h: b.max.y - b.min.y };
   }, [scene, inked, opts.toon]);
   const { actions: raw } = useAnimations(animations, model);
   const actions = useMemo(() => Object.fromEntries(Object.entries(raw).map(([k, v]) => [clipKey(k), v])), [raw]);
   // Blender characters face -Y (the front view), which arrives as +Z: turn them to face +X like
   // the stand-ins. `height` (metres) rescales a model exported at the wrong size.
-  const fit = useMemo(() => {
-    const b = new Box3().setFromObject(model);
-    const h = b.max.y - b.min.y;
-    return { scale: opts.height && h > 0 ? opts.height / h : 1, turn: ((opts.turn ?? 90) * Math.PI) / 180 };
-  }, [model, opts.height, opts.turn]);
+  const fit = useMemo(
+    () => ({ scale: opts.height && h > 0 ? opts.height / h : 1, turn: ((opts.turn ?? 90) * Math.PI) / 180 }),
+    [h, opts.height, opts.turn],
+  );
   const loco = useRef(null);
   useEffect(() => {
     loco.current = actions.idle ?? null;
@@ -100,6 +102,7 @@ export function Actor({
   badge,
   onClick,
   motion, // () => 'idle' | 'run' | 'jump' | 'down', for characters that move
+  villain = false, // an enemy: still drawn when only villains are
 }) {
   const inner = useRef();
   const flash = useRef();
@@ -155,7 +158,7 @@ export function Actor({
     if (ring.current) ring.current.rotation.z = t * (telegraphed ? 2 : 0.6);
   });
 
-  if (HIDE_CHARACTERS) return null; // after every hook, so their order never changes
+  if (VILLAINS_ONLY && !villain) return null; // after every hook, so their order never changes
 
   const height = 2 * scale * (modelKey.startsWith('boss_morvath') ? 1.7 : modelKey.startsWith('boss_') ? 1.3 : 1);
   const recentNumbers = cues.filter((c) => (c.kind === 'hit' || c.kind === 'heal') && c.amount);

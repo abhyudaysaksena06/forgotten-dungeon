@@ -27,8 +27,8 @@ clear lines, camp lines, Morvath's phase lines, the ending and the defeat line.
 | Party | **Kael** the Knight (defence, Bulwark), **Lyra** the Mage (healer, Mend), **Rook** the Rogue (striker, Twin Strike), **Mira** the Ranger (long range, Volley). The player picks one as **leader** at the start; the other three are AI companions (`server/src/quest/ai.js`). |
 | Leader | Has every skill of their hero plus **Rune Strike** (cooldown 3). Only the leader's Rune Strike breaks Morvath's shadow armour. |
 | Map | Camp plus five rooms joined by corridors: camp–r1, camp–r2, r1–r2, r1–r3, r2–r4, r3–r4, r3–r5, r4–r5. Each corridor costs 1 torch. A cleared room's waystone links it to the camp. Rooms 1–4 can be done in any order. |
-| Rooms 1–4 | A wave of minions, then the room's boss. Reward: a **Heart fragment**, gold, potions, XP. Some minions drop monster parts. |
-| Room 5 | The Throne of Eternity opens at 3 fragments. It holds only **Morvath**. No retreat. Beating him gives the fifth fragment. |
+| Rooms 1–4 | Six **Skeletons** (65 HP, ATK 12, DEF 5 before scaling); there are no room bosses. Reward: a **Heart fragment**, gold, potions, XP. Every skeleton drops a monster part. |
+| Room 5 | The Throne of Eternity opens at 3 fragments. Six brittle skeleton guards (10 HP, ATK 0), then **Morvath**. No retreat. Beating him gives the fifth fragment. |
 | Difficulty | Enemy strength = 1 + 0.12 × (tier − 1) + 0.06 × rooms already cleared. Higher rooms and later progress hit harder. Morvath grows **+35% for every room cleared beyond the three** that open the Throne (shown on the map), so clearing everything first buys XP at a price. |
 | Camp | Rest (1 torch: full heal and revive), Rune Altar (1 torch + 30 gold: +3 ATK and +3 DEF for one hero), Forge (50 gold: +5 ATK for one hero). |
 | Pip's Pot | At camp, no torch cost: a Health Potion for 25 gold (heals 40), or a Monster Meal from 3 parts (heals 70). |
@@ -40,11 +40,16 @@ clear lines, camp lines, Morvath's phase lines, the ending and the defeat line.
 
 | Round | Room | Minions | Boss | NPC |
 | --- | --- | --- | --- | --- |
-| 1 · The Entrance | The Gate Courtyard | 3 Shadow Crawlers | Stone Sentinel (cleaves 2) | Old Grum, the gatekeeper |
-| 2 · The Forgotten Hall | The Hall of Portraits | 2 Ink Bats (fly), Hollow Scribe | The Ink Wraith (flies, drains) | Ilsa, the ink-keeper |
-| 3 · The Trial Chambers | The Hall of Trials | 3 Trial Spirits | Brakka the Warrior (slams all; yields at 20% HP) | Seraphine, the oracle; Venn, the scholar |
-| 4 · The Shadow Depths | The Hollow Barracks | 2 Shadow Crawlers, Hollow Knight | The Hollow Captain (shadow tide) | Sir Corin, the last loyal knight |
-| 5 · The Boss Round | The Throne of Eternity | none | Morvath | King Aldric's ghost (voice only) |
+| 1 · The Entrance | The Gate Courtyard | 6 Skeletons | none | Old Grum, the gatekeeper |
+| 2 · The Forgotten Hall | The Hall of Portraits | 6 Skeletons | none | Ilsa, the ink-keeper |
+| 3 · The Trial Chambers | The Hall of Trials | 6 Skeletons | none | Seraphine, the oracle; Venn, the scholar |
+| 4 · The Shadow Depths | The Hollow Barracks | 6 Skeletons | none | Sir Corin, the last loyal knight |
+| 5 · The Boss Round | The Throne of Eternity | 6 skeleton guards | Morvath | King Aldric's ghost (voice only) |
+
+The skeletons use the model `enemy_skeleton`. Three kinds share it and the name: `skeleton` (the
+rooms), `skeleton_guard` (the Throne's first wave) and `skeleton_risen` (Morvath's summons, with the
+Shadow Crawlers' old numbers). The old minions and room bosses stay in `ENEMIES` and the engine still
+knows their moves, but no room places them.
 
 NPCs speak when you enter and clear their room (`state.speech`; the client shows it as a speech
 bubble). King Aldric's ghost and Pip wait at the camp.
@@ -56,7 +61,7 @@ bubble). King Aldric's ghost and Pip wait at the camp.
 | Phase | When | Moves |
 | --- | --- | --- |
 | 1 · The Shadow Knight | 100–60% HP | Shadow Blade (36 to one hero) or Black Sweep (15 to all). |
-| 2 · The Change | 60–30% | Becomes the Shadow Dragon and summons 2 Shadow Crawlers, **each of which heals him 10 HP a round while alive**. Dragon Claw (36 to one) or Shadowflame (14 to all + poison). |
+| 2 · The Change | 60–30% | Becomes the Shadow Dragon and summons 2 Skeletons, **each of which heals him 10 HP a round while alive**. Dragon Claw (36 to one) or Shadowflame (14 to all + poison). |
 | 3 · Dragon's Breath | below 30% | Alternates: draws in shadow-fire (no damage), then Dragon's Breath (48 to everyone in **two of the three lanes**: stand in the safe one, or Defend to halve it). |
 
 **Shadow armour** blocks all damage until the leader's Rune Strike breaks it. It grows back after
@@ -97,11 +102,10 @@ perfect.
 
 | Boss | Mechanic | What to do |
 | --- | --- | --- |
-| Stone Sentinel | Every 3rd round, **charges** the most crowded lane (160% damage), marked a round ahead | Spread out; step out of the red lane |
-| Ink Wraith | Every 4th round **hides in a portrait** in one lane for 2 rounds; only heroes in that lane can hit it | Walk into its lane, or reveal it with Mira's Volley |
-| Brakka | Takes a **counter stance** 2 rounds in 4: hits do half and he strikes back | Defend, heal or reposition while he counters |
-| Hollow Captain | Every 3rd round, a **shadow tide** over 2 of 3 lanes (80% damage + poison), marked a round ahead | Find the one safe lane |
-| Morvath | Shadow armour (Rune Strike); in phase 2 his crawlers **heal him** each round; in phase 3 his **breath covers 2 of 3 lanes** | Kill the crawlers first; stand in the safe lane |
+| Morvath | Shadow armour (Rune Strike); in phase 2 his skeletons **heal him** each round; in phase 3 his **breath covers 2 of 3 lanes** | Kill the skeletons first; stand in the safe lane |
+
+The room bosses' mechanics (the Stone Sentinel's charge, the Ink Wraith hiding, Brakka's counter, the
+Hollow Captain's shadow tide) are still in the engine and its tests, but no room uses them now.
 
 The floor shows it all: faint lane guides, red pulsing strips on lanes hit next round, a purple strip
 where the Wraith hides. The action bar shows your lane (red with "move!" when it's marked), and the
@@ -139,7 +143,7 @@ run's state on every view, so it never changes the rules, the dice or the judgin
 | Monster Stew (side) | Pip | first monster part | a Monster Meal is cooked |
 | The Scholar's Lesson (side) | Venn | first level-up | the leader reaches level 3 |
 
-Each room quest has three steps (reach the room, beat the minions, beat the boss) and lists its
+Each room quest has two steps (reach the room, defeat the six skeletons) and lists its
 reward: the fragment, gold, potions and XP. The room-clear line in the chronicle states the XP too,
 which is how players can spot bug Q18.
 
@@ -224,9 +228,10 @@ the target room's tier and threat, travel cost, power-to-threat ratio, who leads
    estimates its win chance from 40 simulated continuations with fresh dice. An option is "good" if it's
    within 10 points of the best option in that exact situation. About 4 minutes.
 2. `python ml/train_forest.py` trains a scikit-learn RandomForestClassifier (120 trees, depth 12),
-   split by team. Current result: **79.1% accuracy on unseen teams** (majority baseline 66.8%),
-   ROC AUC 0.88, on 14,638 decisions. By tier: weak 69%, average 72%, strong 94%. Top inputs: party
-   power, party ATK, potions, torches, torches left after the move.
+   split by team. Current result (retrained for the skeleton rooms): **71.5% accuracy on unseen
+   teams** (majority baseline 54.9%), ROC AUC 0.81, on 16,958 decisions. By tier: weak 75%, average
+   68%, strong 72%. Top inputs: party power, power-to-threat ratio, torches, party ATK, torches left
+   after the move.
 3. The model ships as JSON (`server/src/quest/model/route-forest.json`); `forest.js` evaluates it in
    Node. `server/test/forest.test.js` proves Node and scikit-learn agree, and that the forest beats the
    baseline by at least 10 points.
@@ -432,8 +437,9 @@ and textures; add `"toon": false` to the model's manifest entry to keep the orig
 | --- | --- |
 | `room_1` … `room_5` | Gate Courtyard, Hall of Portraits, Hall of Trials, Hollow Barracks, Throne of Eternity. Put empties named `spawn_party_1..4`, `spawn_enemy_1..4` and `spawn_boss` where characters stand. |
 | `char_kael`, `char_lyra`, `char_rook`, `char_mira` | The party: knight, mage, rogue, ranger. |
-| `enemy_shadow_crawler`, `enemy_ink_bat`, `enemy_hollow_scribe`, `enemy_trial_spirit`, `enemy_hollow_knight` | Minions. Morvath's summoned crawlers reuse `enemy_shadow_crawler`. |
-| `boss_stone_sentinel`, `boss_ink_wraith`, `boss_brakka`, `boss_hollow_captain` | Room bosses. |
+| `enemy_skeleton` | Every room's villains, the Throne's guards and Morvath's summons. Shipped (`enemy_skeleton.glb`, clips `Idle` and `Run`). |
+| `enemy_shadow_crawler`, `enemy_ink_bat`, `enemy_hollow_scribe`, `enemy_trial_spirit`, `enemy_hollow_knight` | The old minions; no room places them now. |
+| `boss_stone_sentinel`, `boss_ink_wraith`, `boss_brakka`, `boss_hollow_captain` | The old room bosses; no room places them now. |
 | `boss_morvath_knight`, `boss_morvath_dragon` | Morvath before and after the Change. |
 | `npc_king_ghost`, `npc_grum`, `npc_ilsa`, `npc_venn`, `npc_seraphine`, `npc_corin`, `npc_pip` | NPCs (idle only). |
 

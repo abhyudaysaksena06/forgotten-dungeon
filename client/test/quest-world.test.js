@@ -1,7 +1,7 @@
 // Free movement in a fight room: walking, jumping, walls, reach, and companions acting on their own.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { LEASH, MOVE, RADIUS, companionGoal, createWorld, gap, inReach, inputDirection, nearestEnemy, resolve, stepLeader, walkTowards } from '../src/quest/scene/world.js';
+import { LEASH, MOVE, RADIUS, companionGoal, createWorld, gap, inReach, inputDirection, insideShape, nearestEnemy, resolve, roomSpot, stepLeader, walkTowards } from '../src/quest/scene/world.js';
 
 const world = () => {
   const w = createWorld();
@@ -123,4 +123,20 @@ test('lanes run across the fight: left, centre, right as the camera sees them', 
   const [x, z] = intoLane(w, 5, 0.3, 'left');
   assert.equal(x, 5);
   assert.equal(laneOf(w, x, z), 'left');
+});
+
+test('six minions fit a Blender room with three enemy spawns: extra rows stand behind, inside the walls', () => {
+  const room = {
+    bounds: [{ kind: 'box', minX: -3.6, maxX: 3.6, minZ: -3.5, maxZ: 3.6 }],
+    spawns: { party: [[-1.65, 0, 2]], enemies: [[-1, 0, -1.5], [1, 0, -1.5], [0, 0, -1.8]] },
+  };
+  const spots = [0, 1, 2, 3, 4, 5].map((i) => roomSpot(room, i));
+  assert.deepEqual(spots.slice(0, 3), room.spawns.enemies);
+  for (const [x, , z] of spots) assert.ok(insideShape(room.bounds[0], x, z, RADIUS.minion), `${x},${z} inside`);
+  const key = (p) => `${p[0].toFixed(2)},${p[2].toFixed(2)}`;
+  assert.equal(new Set(spots.map(key)).size, 6, 'no two minions share a spot');
+  // The second row is further from the party than the spawn it stands behind.
+  const d = (p) => Math.hypot(p[0] - -1.65, p[2] - 2);
+  assert.ok(d(spots[3]) > d(spots[0]));
+  assert.equal(roomSpot({ spawns: null }, 0), undefined);
 });

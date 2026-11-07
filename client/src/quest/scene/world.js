@@ -63,6 +63,44 @@ export function insideShape(s, x, z, r = 0) {
   return x >= s.minX + r - 1e-9 && x <= s.maxX - r + 1e-9 && z >= s.minZ + r - 1e-9 && z <= s.maxZ - r + 1e-9;
 }
 
+const ROW_GAP = 1.3; // metres between rows of minions
+
+// Where the i-th minion starts in a Blender room. The room has a few spawn_enemy_* points; more
+// minions than that stand in rows behind them, further from the party. Where a wall, a prop or
+// another minion is in the way, the spot moves in front, to the side, or nearer. Undefined when
+// the room has no enemy spawns.
+export function roomSpot(room, i) {
+  const spots = room.spawns?.enemies;
+  if (!spots?.length) return undefined;
+  const n = spots.length;
+  if (i < n) return spots[i];
+  const party = room.spawns.party?.[0] ?? [0, 0, 0];
+  const cx = spots.reduce((t, p) => t + p[0], 0) / n;
+  const cz = spots.reduce((t, p) => t + p[2], 0) / n;
+  const len = Math.hypot(cx - party[0], cz - party[2]) || 1;
+  const [bx, bz] = [(cx - party[0]) / len, (cz - party[2]) / len]; // away from the party
+  const [sx, sz] = [-bz, bx]; // sideways
+  const [x, y, z] = spots[i % n];
+  const row = Math.floor(i / n) * ROW_GAP;
+  const taken = Array.from({ length: i }, (_, j) => roomSpot(room, j));
+  const walls = [room.bounds].flat().filter(Boolean);
+  const props = room.colliders ?? [];
+  const r = RADIUS.minion;
+  const fits = (px, pz) =>
+    (!walls.length || walls.some((s) => insideShape(s, px, pz, r))) &&
+    !props.some((c) => insideShape(c, px, pz, -r)) &&
+    taken.every((p) => Math.hypot(p[0] - px, p[2] - pz) >= 2 * r);
+  // Behind first, then behind and to the side, then to the side, and in front of the spawn last.
+  for (const [a, b] of [[1, 0], [0.7, 0.7], [0.7, -0.7], [0, 1], [0, -1], [-0.7, 0.7], [-0.7, -0.7], [-1, 0]]) {
+    for (const k of [1, 1.6, 0.6]) {
+      const px = x + (bx * a + sx * b) * row * k;
+      const pz = z + (bz * a + sz * b) * row * k;
+      if (fits(px, pz)) return [px, y, pz];
+    }
+  }
+  return [x + bx * row, y, z + bz * row]; // nowhere better: behind, and the walls push it back in
+}
+
 function clampToShape(s, x, z, r) {
   if (s.kind === 'circle') {
     const dx = x - s.x;

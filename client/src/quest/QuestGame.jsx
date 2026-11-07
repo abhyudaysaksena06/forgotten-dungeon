@@ -129,8 +129,9 @@ export default function QuestGame({ session, onLeave }) {
         metaRef.current = m;
         setMeta(m);
         setModels(manifest);
-        // Start fetching the Blender rooms now, so a fight doesn't wait for a big download.
-        for (const key of manifest.keys()) if (key.startsWith('room_')) useGLTF.preload(`/models/${key}.glb`);
+        // Start fetching every Blender model now (the rooms and the skeletons), so a fight doesn't
+        // wait for a big download.
+        for (const key of manifest.keys()) useGLTF.preload(`/models/${key}.glb`);
         apply(v);
       })
       .catch((err) => alive && onLeave(err.message));

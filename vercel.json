@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
-  "buildCommand": "VITE_HOSTED=1 VITE_HIDE_CHARACTERS=1 npm run build -w client",
+  "buildCommand": "VITE_HOSTED=1 VITE_VILLAINS_ONLY=1 npm run build -w client",
   "outputDirectory": "client/dist",
   "rewrites": [{ "source": "/api/quest/:path*", "destination": "/api/quest?path=:path*" }],
   "headers": [

@@ -5,10 +5,10 @@ import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, use
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { Box3, Raycaster, Vector3 } from 'three';
-import { Actor, HIDE_CHARACTERS } from './Actor.jsx';
+import { Actor, VILLAINS_ONLY } from './Actor.jsx';
 import { toonify } from './toon.js';
 import { IS_FLYER, PALETTE, TOON_RAMP } from './placeholders.jsx';
-import { COMPANION_SPEED, DEFAULT_ROOM, RADIUS, companionGoal, faceTowards, formationSpot, gap, radiusFor, resolve, stepLeader, walkTowards, yawTo, intoLane, LANE_WIDTH, LANE_NAMES, rightOf } from './world.js';
+import { COMPANION_SPEED, DEFAULT_ROOM, RADIUS, companionGoal, faceTowards, formationSpot, gap, radiusFor, resolve, roomSpot, stepLeader, walkTowards, yawTo, intoLane, LANE_WIDTH, LANE_NAMES, rightOf } from './world.js';
 
 // Each round's look, from the Story Bible: it gets darker the deeper the party goes.
 const THEMES = {
@@ -448,7 +448,7 @@ function useFighters(world, state, roomId) {
     let a = world.actors.get(e.id);
     if (!a) {
       const minionIndex = enemies.filter((x) => !x.boss).indexOf(e);
-      const fromRoom = e.boss ? spawns?.boss : spawns?.enemies?.[minionIndex];
+      const fromRoom = e.boss ? spawns?.boss : roomSpot(world.room, minionIndex);
       const home = fromRoom ?? homes[i];
       a = { x: home[0], y: home[1] ?? 0, z: home[2], vx: 0, vy: 0, vz: 0, yaw: Math.PI, radius: radiusFor(e), motion: 'idle', kind: 'enemy', home, solid: true, flyer: e.flying, ultimate: e.ultimate, boss: e.boss };
       world.actors.set(e.id, a);
@@ -545,8 +545,8 @@ export function Arena({ state, meta, models, cues, targetId, onTarget, world, re
   const [, setLoaded] = useState(0);
   const onRoomReady = useCallback(() => setLoaded((n) => n + 1), []);
   // NPCs stand where the Blender room says (spawn_npc_*), else at the stand-in room's spots.
-  // A build that hides the characters leaves them out entirely, so none blocks the way unseen.
-  const npcs = HIDE_CHARACTERS ? [] : ROOM_NPCS[roomId] ?? [];
+  // A build that draws only the villains leaves them out entirely, so none blocks the way unseen.
+  const npcs = VILLAINS_ONLY ? [] : ROOM_NPCS[roomId] ?? [];
   const npcAt = (i) => world.room.spawns?.npcs?.[i] ?? npcSpot(i);
 
   // NPCs and the stand-in room's props block the way.
@@ -611,6 +611,7 @@ export function Arena({ state, meta, models, cues, targetId, onTarget, world, re
             maxHp={e.maxHp}
             motion={motionOf(e.id)}
             onClick={e.hp > 0 ? () => onTarget(e.id) : undefined}
+            villain
           />
         </Mover>
       ))}

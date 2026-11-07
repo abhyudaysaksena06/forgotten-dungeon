@@ -25,10 +25,11 @@ so keep your leader alive. Melee can't reach flying enemies; magic and ranged ca
 
 - Five rounds, one room each: the Gate Courtyard, the Hall of Portraits, the Hall of Trials, the
   Hollow Barracks, and the Throne of Eternity.
-- Rooms 1–4 can be taken in any order. Each holds a wave of enemies, then a boss, and gives a
+- Rooms 1–4 can be taken in any order. Each holds six skeletons and gives a
   **Heart fragment**, gold, potions and XP. Higher rooms are harder, and every room grows harder as
   your quest goes on.
-- The **Throne** opens with three fragments. It holds only Morvath, and his fight changes as he weakens.
+- The **Throne** opens with three fragments. Six skeleton guards stand before Morvath, and his fight
+  changes as he weakens.
 - Each corridor costs one **torch**. When the torches run out, the quest is over.
 - At the camp you can **rest** (heal and revive, 1 torch), use the **Rune Altar**, or use the **Forge**.
   Pip the goblin cook sells potions, and turns 3 monster parts into a Monster Meal.

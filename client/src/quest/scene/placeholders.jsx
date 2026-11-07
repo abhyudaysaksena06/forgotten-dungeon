@@ -442,6 +442,8 @@ export function Placeholder({ modelKey, armoured }) {
       return <Armour color="#8c5a2b" glow={PALETTE.gold} scale={1.45} axe />;
     case 'enemy_hollow_knight':
       return <Armour />;
+    case 'enemy_skeleton':
+      return <Robed color={PALETTE.bone} glow={PALETTE.rune} />;
     case 'boss_hollow_captain':
       return <Armour scale={1.35} glow={PALETTE.rune} cape="#2b0d12" axe />;
     case 'boss_morvath_knight':

@@ -38,6 +38,7 @@ function toToon(mat, ramp) {
 
 // Mutates `root` (call it on a clone). `outline` is false for rooms and in low-spec mode.
 export function toonify(root, { ramp, outline = true, color = '#0b0a10' } = {}) {
+  root.updateMatrixWorld(true); // a fresh clone's bones have not been placed yet; sizes need them
   const size = new Box3().setFromObject(root).getSize(new Vector3());
   const thickness = Math.max(size.y, 0.5) * 0.012;
   const meshes = [];
@@ -45,7 +46,13 @@ export function toonify(root, { ramp, outline = true, color = '#0b0a10' } = {}) 
   for (const mesh of meshes) {
     mesh.material = Array.isArray(mesh.material) ? mesh.material.map((m) => toToon(m, ramp)) : toToon(mesh.material, ramp);
     if (!outline || mesh.material?.transparent) continue;
-    const hull = mesh.isSkinnedMesh ? new SkinnedMesh(mesh.geometry, inkMaterial(color, thickness)) : new Mesh(mesh.geometry, inkMaterial(color, thickness));
+    // The hull grows in the mesh's own units, so a mesh exported at another scale (Sketchfab
+    // models often sit under a ×100 node) gets its thickness converted from the model's units.
+    const own = mesh.geometry.boundingBox ?? (mesh.geometry.computeBoundingBox(), mesh.geometry.boundingBox);
+    const placed = new Box3().setFromObject(mesh); // a rigged mesh is measured as posed
+    const perUnit = own.max.y - own.min.y > 0 && placed.max.y - placed.min.y > 0 ? (placed.max.y - placed.min.y) / (own.max.y - own.min.y) : 1;
+    const t = thickness / perUnit;
+    const hull = mesh.isSkinnedMesh ? new SkinnedMesh(mesh.geometry, inkMaterial(color, t)) : new Mesh(mesh.geometry, inkMaterial(color, t));
     if (mesh.isSkinnedMesh) hull.bind(mesh.skeleton, mesh.bindMatrix);
     hull.userData.inkHull = true;
     hull.raycast = () => {}; // clicks go to the model, not its outline

@@ -25,11 +25,11 @@ export const ROOM_LINES = {
   },
   r3: {
     enter: ['Seraphine: “Three trials guard the Heart. Strength, wisdom, judgment. The corruption has made us… unkind.”', 'Venn: “Bring me the right page, Runewright. Or the wrong one. I will know.”'],
-    clear: ['Brakka laughs and lowers his axe: “Hit hard enough. It counts.”', 'Seraphine: “The truth lies in the shadows. Take the third fragment.”'],
+    clear: ['The last skeleton falls apart, and the chamber goes quiet.', 'Seraphine: “The truth lies in the shadows. Take the third fragment.”'],
   },
   r4: {
     enter: ['Sir Corin: “Morvath isn’t hiding with the shadows. He became one. The Heart turned him into a dragon… and the King never blamed him.”'],
-    clear: ['Sir Corin: “The Captain is down. The Fortress Gate is open. Go — and spare him if you can.”'],
+    clear: ['Sir Corin: “Their line is broken. The Fortress Gate is open. Go — and spare him if you can.”'],
   },
   r5: {
     enter: ['Morvath: “You fixed my dungeon, Runewright. Clever. But some wishes cannot be undone.”'],
@@ -39,7 +39,7 @@ export const ROOM_LINES = {
 
 export const CAMP_LINES = {
   first: 'King Aldric (a faint blue light): “Find the fragments, Runewright. I will explain everything.”',
-  pip: 'Pip: “Crawler legs? Lovely. Bring me three and I’ll make you a stew.”',
+  pip: 'Pip: “Skeleton bones? Lovely. Bring me three and I’ll make you a stew.”',
 };
 
 export const MORVATH_LINES = {
