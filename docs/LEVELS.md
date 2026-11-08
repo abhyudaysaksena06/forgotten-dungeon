@@ -56,10 +56,16 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
 - **Enemies:** 6 Skeletons, 24% stronger than in room 1 (plus progress). Only when all six are down
   does the **Hell Nemesis** step out (**BOSS BATTLE!** banner): 150 HP, ATK 15, DEF 4 before scaling.
   Kael catches his breath as it appears: his shield is full again and he gets 25% of his health
-  back (no breather before Morvath). Every third
-  round it marks a lane a round ahead and then charges down it (1.6× its attack): step out of the lane.
-- **Length:** about **37 rounds** (34–39), 14 of them against the Nemesis. Roughly **110–220 s**.
-  Kael ends about 32% down on health (after the breather); 48% of first attempts win: the room where
+  back (no breather before Morvath). Its moves:
+  - **Hellfire Charge**, every third round: it lowers its head at the lane Kael stands in ("Move
+    out!"), and the next round dashes down it for 1.6× its attack. Step into another lane.
+  - **Enraged** below half health, once (**ENRAGED!** banner, hellfire glowing inside it): +25% to
+    its blows, and a special every second round instead of every third.
+  - **Infernal Slam**, enraged, alternating with the Charge: it raises its blade over its head
+    and the next round slams it into the floor, a shockwave of hellfire across **all three lanes**
+    (1.3× its attack). No lane is safe: **Defend (R)** or **Bulwark (E)** halves it.
+- **Length:** about **40 rounds** (37–43), 17 of them against the Nemesis. Roughly **2–4 minutes**.
+  Kael ends about 40% down on health (after the breather); 47% of first attempts win: the room where
   a weaker Kael starts to fall. Still easier than room 4 (19% of first attempts), and the route
   planner knows it.
 - **Reward:** fragment, 80 gold, 2 potions, 210 XP. *"The last skeleton falls apart, and the

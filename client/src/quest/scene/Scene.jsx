@@ -48,7 +48,9 @@ function CameraRig({ view, world }) {
       // In a walled Blender room the camera pulls in rather than end up behind a wall.
       let d = world.camDist;
       if (world.room.enclosed) {
-        const shapes = Array.isArray(world.room.bounds) ? world.room.bounds : [world.room.bounds];
+        // A room may give the camera more room than the walkable floor (up to its inner walls).
+        const area = world.room.view ?? world.room.bounds;
+        const shapes = Array.isArray(area) ? area : [area];
         while (d > 0.8 && !shapes.some((s) => insideShape(s, leader.x - fx * d, leader.z - fz * d, 0.3))) d -= 0.25;
       }
       // Pulled in by a wall, it rises instead, looking down more steeply, so the fight stays in view.
@@ -60,10 +62,12 @@ function CameraRig({ view, world }) {
       // The look-ahead shrinks when a wall pulls the camera in, so the hero stays on screen.
       const [rx, rz] = rightOf(world.camYaw);
       const shoulder = Math.min(0.9, 0.3 + d * 0.1);
-      const ahead = 2 + d * 1.2;
+      const ahead = 1.2 + d * 0.6; // far enough to see the fight, near enough to keep Kael in frame
+      // ...but never up into a low ceiling.
+      const ceiling = (world.room.ceiling ?? Infinity) - 0.25;
       want.current.set(
         leader.x - fx * d + rx * shoulder,
-        Math.max(leader.y + 0.6, leader.y + CAMERA.height * Math.max(0.8, d / CAMERA.distance) + rise + tilt),
+        Math.min(ceiling, Math.max(leader.y + 0.6, leader.y + CAMERA.height * Math.max(0.8, d / CAMERA.distance) + rise + tilt)),
         leader.z - fz * d + rz * shoulder,
       );
       wantLook.current.set(leader.x + fx * ahead + rx * shoulder, leader.y + CAMERA.lookHeight, leader.z + fz * ahead + rz * shoulder);

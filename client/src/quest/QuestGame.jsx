@@ -63,7 +63,7 @@ const SENS_KEY = 'forgotten-dungeon.sensitivity';
 const VIEW_KEY = 'forgotten-dungeon.view';
 const readFirstPerson = () => {
   try {
-    return localStorage.getItem(VIEW_KEY) !== 'third';
+    return localStorage.getItem(VIEW_KEY) === 'first'; // third person by default: Kael is on screen
   } catch {
     return true;
   }
@@ -476,9 +476,10 @@ export default function QuestGame({ session, onLeave }) {
   }, [phase]);
 
   // The round clock. Restarts after every round; holds while a request is in flight, a picker or
-  // the quest log is open, a banner is showing, or the game window isn't in front.
+  // the quest log is open, a banner is showing, the game window isn't in front, the loading screen
+  // is still up, or the first-fight coach is teaching how to move and attack.
   const holdClock = useRef(false);
-  holdClock.current = busy || Boolean(picker) || logOpen || helpOpen || settingsOpen || banners.length > 0;
+  holdClock.current = busy || Boolean(picker) || logOpen || helpOpen || settingsOpen || banners.length > 0 || !preloaded || coach < 2;
   const turn = state?.turn;
   useEffect(() => {
     if (phase !== 'combat' || !autoRounds) {

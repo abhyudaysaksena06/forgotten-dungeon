@@ -265,6 +265,8 @@ export function roomFromLayout(L) {
     colliders: L.colliders ?? [],
     floorY,
     enclosed: true,
+    view: L.view ?? null, // where the camera may go (the inner walls), when wider than the floor
+    ceiling: L.ceiling ?? Infinity, // the camera stays under it
     spawns: { party: L.spawns?.party ?? [], enemies: L.spawns?.enemies ?? [], boss: L.spawns?.boss ?? null, npcs: L.spawns?.npcs ?? [] },
   };
 }
@@ -372,14 +374,14 @@ function Door({ hinge, width, height, side, open }) {
 // The room's cage: two cells, the Healer's on the left and the Weaponsmith's on the right. Shut
 // while skeletons stand; once the room is cleared the doors swing open and the floor of each cell
 // glows. Kael uses a cell by walking up to its door.
-function Cage({ cage, open, models, floorY }) {
+function Cage({ cage, open, models, floorY, cues }) {
   const w = CAGE.width;
   const d = CAGE.depth;
   const h = CAGE.height;
   const y = floorY ? floorY(cage.x, cage.z) : 0;
   const keepers = [
-    { key: 'npc_healer', name: 'Healer', x: -w / 4 },
-    { key: 'npc_smith', name: 'Weaponsmith', x: w / 4 },
+    { key: 'npc_healer', id: 'keeper_healer', name: 'Healer', x: -w / 4 },
+    { key: 'npc_smith', id: 'keeper_smith', name: 'Weaponsmith', x: w / 4 },
   ];
   return (
     <group position={[cage.x, y, cage.z]} rotation={[0, cage.yaw, 0]} scale={cage.scale}>
@@ -408,12 +410,22 @@ function Cage({ cage, open, models, floorY }) {
             </mesh>
           )}
           <group rotation={[0, -Math.PI / 2, 0]}>
-            <Actor modelKey={k.key} models={models} position={[0, 0, 0]} facing={1} label={k.name} keeper />
+            <Actor modelKey={k.key} models={models} position={[0, 0, 0]} facing={1} label={k.name} cues={cues.filter((c) => c.id === k.id)} keeper />
           </group>
         </group>
       ))}
     </group>
   );
+}
+
+// The light Kael carries: a slow torch flicker, above and a little in front of him.
+function HeroTorch() {
+  const light = useRef();
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    if (light.current) light.current.intensity = 7 + Math.sin(t * 7.3) * 0.6 + Math.sin(t * 17.1) * 0.35;
+  });
+  return <pointLight ref={light} position={[0.3, 2.4, 0]} color="#ffc489" distance={8} decay={1.6} castShadow={false} />;
 }
 
 // Puts a group where the world says an actor stands.
@@ -556,6 +568,7 @@ function useFighters(world, state, roomId) {
       world.actors.set(e.id, a);
     }
     a.alive = e.hp > 0;
+    a.radius = radiusFor(e); // Morvath grows when he becomes the dragon
   });
 }
 
@@ -675,8 +688,17 @@ export function Arena({ state, meta, models, cues, targetId, onTarget, world, re
       <TargetRing world={world} targetId={targetId} reach={reach} />
       <LaneMarks world={world} state={state} />
 
-      {cage && <Cage cage={cage} open={open} models={models} floorY={room.floorY} />}
+      {cage && <Cage cage={cage} open={open} models={models} floorY={room.floorY} cues={cues} />}
 
+      {/* Kael's torch: a warm light that goes where he goes, so whoever he fights stays readable in
+          the darkest corner of an artist's room without changing the room's own lighting. */}
+      {state.party
+        .filter((m) => m.controlled)
+        .map((m) => (
+          <Mover key={`torch-${m.id}`} id={m.id} world={world}>
+            <HeroTorch />
+          </Mover>
+        ))}
       {state.party.filter((m) => !(firstPerson && m.controlled)).map((m) => (
         <Mover key={m.id} id={m.id} world={world}>
           <Actor
@@ -714,6 +736,7 @@ export function Arena({ state, meta, models, cues, targetId, onTarget, world, re
             maxHp={e.maxHp}
             motion={motionOf(e.id)}
             onClick={e.hp > 0 ? () => onTarget(e.id) : undefined}
+            enraged={e.enraged && e.hp > 0}
             villain
           />
         </Mover>

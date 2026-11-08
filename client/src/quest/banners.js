@@ -24,6 +24,11 @@ export function bannersFor(prev, next, meta) {
     const boss = nc.enemies.find((e) => e.boss && e.hp > 0);
     out.push({ kind: 'boss', title: 'Boss Battle!', sub: boss?.name ?? '' });
   }
+  // A room boss is Enraged (the Hell Nemesis below half health).
+  for (const e of nc?.enemies ?? []) {
+    const before = pc?.enemies.find((x) => x.id === e.id);
+    if (e.enraged && before && !before.enraged) out.push({ kind: 'boss', title: 'Enraged!', sub: `${e.name}: harder blows, a special every second round` });
+  }
   // Morvath changes phase.
   const pb = pc?.enemies.find((e) => e.ultimate);
   const nb = nc?.enemies.find((e) => e.ultimate);

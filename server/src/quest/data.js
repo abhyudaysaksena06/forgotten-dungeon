@@ -82,8 +82,8 @@ export const ENEMIES = {
   skeleton: { name: 'Skeleton', model: 'enemy_skeleton', hp: 50, atk: 13, def: 4, part: true, partEvery: 2 },
   skeleton_guard: { name: 'Skeleton', model: 'enemy_skeleton', hp: 10, atk: 0, def: 0 },
   skeleton_risen: { name: 'Skeleton', model: 'enemy_skeleton', hp: 20, atk: 6, def: 2, part: true },
-  // The Hall of Trials' boss: he steps out only once its six skeletons are down (the room's second
-  // wave). Every third round he charges down a lane he marks a round ahead: step out of it.
+  // The Hall of Trials' boss: it steps out only once its six skeletons are down (the room's second
+  // wave). Its moves are in NEMESIS below.
   nemesis: { name: 'The Hell Nemesis', model: 'boss_nemesis', hp: 150, atk: 15, def: 4, boss: true, move: 'charge' },
   // No room places these any more; the engine still knows their moves.
   shadow_crawler: { name: 'Shadow Crawler', model: 'enemy_shadow_crawler', hp: 34, atk: 11, def: 3, part: true },
@@ -154,6 +154,12 @@ export const MECHANICS = {
   hide: { every: 4, rounds: 2 }, // Ink Wraith hides in one lane's portrait
   counter: { every: 4, rounds: 2, reflect: 0.5 }, // Brakka's counter stance
 };
+
+// The Hell Nemesis (room 3's boss). Every third round it marks a lane a round ahead and charges down
+// it (MECHANICS.charge: step out of the lane). Below half health it is Enraged, once: its blows hit
+// harder and every second round brings a special, alternating the Charge with the Infernal Slam,
+// which floods all three lanes with hellfire (no safe lane: Defend or Bulwark halves it).
+export const NEMESIS = { every: 3, enragedEvery: 2, enrageAt: 0.5, enragedAtk: 1.25, slam: 1.3 };
 
 // Difficulty rises with the room's tier and with how far the run has progressed.
 export const TIER_SCALE = 0.12;

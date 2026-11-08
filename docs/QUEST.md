@@ -56,6 +56,29 @@ knows their moves, but no room places them.
 NPCs speak when you enter and clear their room (`state.speech`; the client shows it as a speech
 bubble). King Aldric's ghost and Pip wait at the camp.
 
+### The Hell Nemesis (room 3)
+
+Steps out once the Hall of Trials' six skeletons are down (the room's second wave). Kael catches his
+breath first: full shield, +25% health (`BREATHER_HEAL`). Every third round a **Hellfire Charge** down
+a lane marked a round ahead (step out of it). Below half health it is **Enraged**, once: +25% to its
+blows and a special every second round, alternating the Charge with the **Infernal Slam**, which
+floods all three lanes a round after it's announced (Defend or Bulwark halves it). Numbers in
+`NEMESIS` (`server/src/quest/data.js`); tests in `server/test/nemesis.test.js`. The model is a
+78 MB sculpt with no rig, so the client moves it itself: it breathes at rest, bobs as it walks,
+leans into its blows, dashes down the lane for the Charge and leaps for the Slam, whose shockwave
+rolls out across the floor.
+
+### Characters
+
+Kael, the Healer, the Weaponsmith, King Aldric's ghost and Pip are KayKit Adventurers (CC0) rigged
+characters: Knight with sword and shield, Mage with a staff, Barbarian with an axe, a pale Knight,
+and a stout Barbarian with his mug, each with the clips the game plays (run, slash, stab, block,
+hit, dodge, drink, interact, cheer, death). The keepers act out their service (the Healer casts,
+the Weaponsmith hammers) and Kael cheers when a room is won. The camera is third person by default
+so Kael is on screen, and Kael carries a torch: a warm light around him, so whoever he fights stays
+readable in the darkest room. The hosted build (Vercel, `VITE_VILLAINS_ONLY=1`) leaves out only the
+characters that still have no real model (stand-in figures); every character above has one.
+
 ### Morvath
 
 350 HP, DEF 8 (more if Kael cleared a fourth room first). Each round he announces his next move, so the player can react.
@@ -73,7 +96,7 @@ Per-team starting stats (`server/src/quest/teams.js`): tier × ±12% per stat, f
 
 | Tier | Stats | Torches | Gold | Potions |
 | --- | --- | --- | --- | --- |
-| Weak | 0.92× | 13 (±1) | 20 | 2 |
+| Weak | 0.95× | 14 (±1) | 30 | 2 |
 | Average | 1.0× | 14 (±1) | 40 | 2 |
 | Strong | 1.10× | 16 (±1) | 60 | 3 |
 
@@ -83,9 +106,9 @@ planner at boldness 1.2, 60 teams per tier. All numbers are for one hero with sw
 
 | Tier | Careful player | Careless player |
 | --- | --- | --- |
-| Weak | 2% | 0% |
-| Average | 42% | 0% |
-| Strong | 85% | 0% |
+| Weak | 13% | 0% |
+| Average | 38% | 0% |
+| Strong | 88% | 0% |
 
 (Under the four-hero rules the same measure gave 8%, 19% and 80%.) Rooms 1 and 2 are nearly always
 won; room 3 is where weaker heroes start to fall (about half of first attempts), now with the Hell
@@ -455,7 +478,8 @@ and textures; add `"toon": false` to the model's manifest entry to keep the orig
 | `npc_healer`, `npc_smith` | The Healer and the Weaponsmith in each room's cage (stand-ins until models arrive). |
 | `enemy_skeleton` | Every room's villains, the Throne's guards and Morvath's summons. Shipped (`enemy_skeleton.glb`, clips `Idle` and `Run`). |
 | `enemy_shadow_crawler`, `enemy_ink_bat`, `enemy_hollow_scribe`, `enemy_trial_spirit`, `enemy_hollow_knight` | The old minions; no room places them now. |
-| `boss_nemesis` | The Hell Nemesis, room 3's boss (no clips: the game moves the whole model for attacks, hits and the fall). Shrunk from 78 MB to 1.2 MB with `optimize.mjs full boss_nemesis --simplify 0.02`, feet moved to the origin. |
+| `boss_nemesis` | The Hell Nemesis, room 3's boss (no clips: the game moves the whole model). From a 78 MB sculpt with `optimize.mjs full boss_nemesis --simplify 0.2 --ground` (3.7 MB, 372k triangles; lower ratios facet its armour), with its own materials (`toon: false`). |
+| `char_kael`, `npc_healer`, `npc_smith`, `npc_king_ghost`, `npc_pip` | KayKit Adventurers (CC0), built by `tools/models/character.mjs` (see `client/public/models/README.md`). |
 | `boss_stone_sentinel`, `boss_ink_wraith`, `boss_brakka`, `boss_hollow_captain` | The old room bosses; no room places them now. |
 | `boss_morvath_knight`, `boss_morvath_dragon` | Morvath before and after the Change. |
 | `npc_king_ghost`, `npc_grum`, `npc_ilsa`, `npc_venn`, `npc_seraphine`, `npc_corin`, `npc_pip` | NPCs (idle only). |
