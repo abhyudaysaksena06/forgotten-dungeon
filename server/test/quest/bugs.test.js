@@ -5,34 +5,32 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { carefulLeaderAction, companionAction } from '../../src/quest/ai.js';
-import { ENEMIES, MORVATH, PIP, POWER_UPS, ROOMS, XP_PER_TIER } from '../../src/quest/data.js';
+import { carefulLeaderAction } from '../../src/quest/ai.js';
+import { ENEMIES, MORVATH, PIP, POWER_UPS, ROOMS, SWORD, XP_PER_TIER } from '../../src/quest/data.js';
 import { beginFight, createRun, distance, routeOptions, step, throneOpen } from '../../src/quest/engine.js';
 import { QuestRuns, cleanAction } from '../../src/quest/runs.js';
 import { makeProfile } from '../../src/quest/teams.js';
 
 const profile = (tier = 'strong', seed = 'hidden') => makeProfile({ teamId: 'h', seed, tier });
-// Each test sets up only what its own bug touches (the leader is set directly, not via `lead`),
-// so one bug never fails another bug's test.
-const fresh = (tier, leader = 'knight') => {
-  const s = createRun(profile(tier));
-  s.phase = 'map';
-  s.leaderId = leader;
-  for (const m of s.party) m.controlled = m.id === leader;
+// Each test sets up only what its own bug touches, so one bug never fails another bug's test.
+// The quest has one hero, Kael.
+const fresh = (tier) => createRun(profile(tier));
+// Morvath's wave, with Kael named as the Runewright here (how a new run names him is [Q01]).
+const atThrone = () => {
+  const s = beginFight(fresh('strong'), 'r5', ROOMS.r5.waves.length - 1);
+  s.leaderId = s.party[0].id;
   return s;
 };
-const atThrone = (leader) => beginFight(fresh('strong', leader), 'r5', ROOMS.r5.waves.length - 1); // Morvath's wave
 const boss = (s) => s.combat.enemies.find((e) => e.ultimate);
-const hero = (s, id) => s.party.find((m) => m.id === id);
+const kael = (s) => s.party[0];
+// Standing in a room already cleared: its cage, with the Healer and the Weaponsmith, is open.
+const atOpenCage = () => ({ ...fresh(), fragments: ['r1'], location: 'r1' });
 
 // ---------- Round 1 ----------
 
-test('[Q01] the player steers exactly the hero they chose to lead', () => {
-  for (const id of ['knight', 'mage', 'rogue', 'ranger']) {
-    const s = step(createRun(profile()), { type: 'lead', memberId: id });
-    assert.equal(s.leaderId, id);
-    assert.deepEqual(s.party.filter((m) => m.controlled).map((m) => m.id), [id]);
-  }
+test('[Q01] a new run knows Kael, by id, as its Runewright', () => {
+  const s = fresh();
+  assert.equal(s.leaderId, kael(s).id);
 });
 
 test('[Q02] the Attack input attacks and the Defend input defends', () => {
@@ -58,18 +56,17 @@ test('[Q13] a cleared room’s waystone leads straight back to camp', () => {
 
 test('[Q07] the Rune Altar adds +3 ATK and +3 DEF', () => {
   const s0 = { ...fresh(), gold: 100 };
-  const s = step(s0, { type: 'altar', memberId: 'ranger' });
-  assert.equal(hero(s, 'ranger').atk, hero(s0, 'ranger').atk + 3);
-  assert.equal(hero(s, 'ranger').def, hero(s0, 'ranger').def + 3);
+  const s = step(s0, { type: 'altar', memberId: 'knight' });
+  assert.equal(kael(s).atk, kael(s0).atk + 3);
+  assert.equal(kael(s).def, kael(s0).def + 3);
   assert.equal(s.gold, 100 - POWER_UPS.altar.gold);
 });
 
-test('[Q10] resting revives the Fallen', () => {
+test('[Q10] resting by the campfire heals Kael fully', () => {
   const s0 = fresh();
-  Object.assign(s0.party[1], { hp: 0, fallen: true });
+  kael(s0).hp = 20;
   const s = step(s0, { type: 'rest' });
-  assert.equal(s.party[1].fallen, false);
-  assert.equal(s.party[1].hp, s.party[1].maxHp);
+  assert.equal(kael(s).hp, kael(s).maxHp);
 });
 
 test('[Q14] room loot adds potions to the satchel', () => {
@@ -90,26 +87,28 @@ test('[Q15] Pip hands over the potion that was paid for', () => {
 
 // ---------- Round 3 ----------
 
-test('[Q06] Lyra mends the most wounded ally', () => {
-  const s = beginFight(fresh(), 'r1');
-  hero(s, 'rogue').hp = Math.round(hero(s, 'rogue').maxHp * 0.3);
-  hero(s, 'mage').cooldown = 0;
-  assert.deepEqual(companionAction(s, hero(s, 'mage')), { type: 'skill', targetId: 'rogue' });
+test('[Q06] the Healer restores health and shield', () => {
+  const s0 = atOpenCage();
+  Object.assign(kael(s0), { hp: 40, shield: 5 });
+  const s = step(s0, { type: 'healer' });
+  assert.equal(kael(s).hp, kael(s).maxHp);
+  assert.equal(kael(s).shield, kael(s).maxShield);
 });
 
-test('[Q16] Bulwark halves damage for the whole party', () => {
-  const s = atThrone('knight');
-  s.combat.telegraph = { move: 'sweep', name: MORVATH.moves.sweep.name, targetId: null, damage: MORVATH.moves.sweep.damage, all: true };
-  const mageHp = hero(s, 'mage').hp;
-  const after = step(s, { type: 'skill' }); // Kael raises Bulwark
-  assert.equal(mageHp - hero(after, 'mage').hp, Math.ceil(MORVATH.moves.sweep.damage / 2));
+test('[Q16] the shield takes a blow before health does', () => {
+  const s = beginFight(fresh(), 'r1');
+  kael(s).shield = 999; // more than six skeletons can take in a round
+  const hp = kael(s).hp;
+  const after = step(s, { type: 'defend' });
+  assert.ok(kael(after).shield < 999, 'something hit the shield');
+  assert.equal(kael(after).hp, hp);
 });
 
 test('[Q17] a Health Potion restores 40 HP', () => {
   const s0 = fresh();
-  hero(s0, 'rogue').hp = 30;
-  const s = step(s0, { type: 'potion', targetId: 'rogue' });
-  assert.equal(hero(s, 'rogue').hp, Math.min(hero(s, 'rogue').maxHp, 70));
+  kael(s0).hp = 30;
+  const s = step(s0, { type: 'potion', targetId: 'knight' });
+  assert.equal(kael(s).hp, Math.min(kael(s).maxHp, 70));
 });
 
 // ---------- Round 4 ----------
@@ -125,7 +124,6 @@ test('[Q05] a long run survives a server restart', () => {
   const dir = mkdtempSync(join(tmpdir(), 'quest-hidden-'));
   const p = profile('strong', 'long-run');
   const a = new QuestRuns({ profiles: [p], saveDir: dir });
-  a.act('h', { type: 'lead', memberId: 'knight' });
   for (let i = 0; i < 70; i++) {
     const s = a.run('h').state;
     if (s.phase !== 'map' && s.phase !== 'combat') break;
@@ -145,12 +143,11 @@ test('[Q08] a fight ends when the last enemy falls', () => {
   assert.deepEqual(s.fragments, ['r1']);
 });
 
-test('[Q19] a skill’s cooldown belongs to the hero who used it', () => {
-  const s = beginFight(fresh(), 'r1');
-  for (const id of ['mage', 'rogue', 'ranger']) Object.assign(hero(s, id), { hp: 0, fallen: true });
-  const after = step(s, { type: 'skill' }); // only Kael acts
-  assert.ok(hero(after, 'knight').cooldown > 0);
-  for (const id of ['mage', 'rogue', 'ranger']) assert.equal(hero(after, id).cooldown, 0, `${id} cooldown`);
+test('[Q19] the Weaponsmith restores the sword’s sharpness and durability', () => {
+  const s0 = atOpenCage();
+  kael(s0).sword = { sharpness: 12, durability: 4 };
+  const s = step(s0, { type: 'smith' });
+  assert.deepEqual(kael(s).sword, { sharpness: SWORD.sharpness, durability: SWORD.durability });
 });
 
 test('[Q18] a harder room teaches more: XP grows with the room’s tier', () => {
@@ -173,23 +170,21 @@ test('[Q03] the Throne opens with three Heart fragments', () => {
 });
 
 test('[Q09] the leader’s Rune Strike breaks Morvath’s armour', () => {
-  for (const leader of ['knight', 'mage']) {
-    const s = atThrone(leader);
-    const after = step(s, { type: 'rune', targetId: boss(s).id });
-    assert.equal(boss(after).armoured, false, `${leader} leading`);
-    assert.ok(boss(after).hp < boss(s).hp);
-  }
+  const s = atThrone();
+  const after = step(s, { type: 'rune', targetId: boss(s).id });
+  assert.equal(boss(after).armoured, false);
+  assert.ok(boss(after).hp < boss(s).hp);
 });
 
 test('[Q12] the player’s Rune Strike recharges', () => {
-  let s = atThrone('knight');
+  let s = atThrone();
   s = step(s, { type: 'rune', targetId: boss(s).id });
   for (let i = 0; i < 6 && s.phase === 'combat'; i++) s = step(s, { type: 'defend' });
-  if (s.phase === 'combat') assert.equal(hero(s, 'knight').runeCooldown, 0);
+  if (s.phase === 'combat') assert.equal(kael(s).runeCooldown, 0);
 });
 
 test('[Q21] defeating Morvath ends the quest in victory', () => {
-  const s = atThrone('rogue');
+  const s = atThrone();
   Object.assign(boss(s), { hp: -1 }); // already beaten: the next round ends the fight
   const after = step(s, { type: 'wait' });
   assert.equal(after.phase, 'victory');
@@ -197,7 +192,7 @@ test('[Q21] defeating Morvath ends the quest in victory', () => {
 });
 
 test('[Q22] broken shadow armour stays down for the promised rounds', () => {
-  let s = atThrone('knight');
+  let s = atThrone();
   Object.assign(boss(s), { armoured: false, armourDown: MORVATH.armourRegrowRounds }); // as if just shattered
   for (let i = 1; i < MORVATH.armourRegrowRounds; i++) {
     s = step(s, { type: 'defend' });
@@ -208,10 +203,11 @@ test('[Q22] broken shadow armour stays down for the promised rounds', () => {
 });
 
 test('[Q20] Defend halves Dragon’s Breath', () => {
-  const s = atThrone('knight');
+  const s = atThrone();
   Object.assign(boss(s), { phase: 3, charged: true });
   s.combat.telegraph = { move: 'breath', name: MORVATH.moves.breath.name, targetId: null, damage: MORVATH.moves.breath.damage, all: true };
-  const hp = hero(s, 'knight').hp;
+  kael(s).shield = 0; // the whole blow reaches his health
+  const hp = kael(s).hp;
   const after = step(s, { type: 'defend' });
-  assert.equal(hp - hero(after, 'knight').hp, Math.ceil(MORVATH.moves.breath.damage / 2));
+  assert.equal(hp - kael(after).hp, Math.ceil(MORVATH.moves.breath.damage / 2));
 });

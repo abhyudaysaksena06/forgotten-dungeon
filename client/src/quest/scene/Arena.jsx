@@ -8,7 +8,7 @@ import { Box3, Raycaster, Vector3 } from 'three';
 import { Actor, VILLAINS_ONLY } from './Actor.jsx';
 import { toonify } from './toon.js';
 import { IS_FLYER, PALETTE, TOON_RAMP } from './placeholders.jsx';
-import { COMPANION_SPEED, DEFAULT_ROOM, RADIUS, companionGoal, faceTowards, formationSpot, gap, radiusFor, resolve, roomSpot, stepLeader, walkTowards, yawTo, intoLane, LANE_WIDTH, LANE_NAMES, rightOf } from './world.js';
+import { CAGE, COMPANION_SPEED, DEFAULT_ROOM, RADIUS, cageSpot, companionGoal, faceTowards, formationSpot, gap, radiusFor, resolve, roomSpot, stepLeader, walkTowards, yawTo, intoLane, LANE_WIDTH, LANE_NAMES, rightOf } from './world.js';
 
 // Each round's look, from the Story Bible: it gets darker the deeper the party goes.
 const THEMES = {
@@ -19,8 +19,6 @@ const THEMES = {
   r5: { floor: '#1e1012', wall: '#140a0c', light: '#ff8a3a', fill: '#7a1a1a', props: 'throne' }, // black, dark red, fiery gold
 };
 
-const ROOM_NPCS = { r1: ['npc_grum'], r2: ['npc_ilsa'], r3: ['npc_seraphine', 'npc_venn'], r4: ['npc_corin'], r5: [] };
-const npcSpot = (i) => [-5.4 + i * 1.3, 0, -3.8];
 
 // Props of the stand-in rooms that block the way (a Blender room brings its own colliders).
 const PROP_COLLIDERS = {
@@ -330,6 +328,94 @@ function RoomModel({ modelKey, world, toon, onReady }) {
   return <primitive object={scene} />;
 }
 
+// ---------- the cage ----------
+
+const IRON = '#2c2b30';
+const CELL_GLOW = ['#5aa38f', '#e07a2e']; // the Healer's, the Weaponsmith's
+
+// Three circles along the cage keep Kael outside its bars.
+function cageColliders(cage) {
+  const w = CAGE.width * cage.scale;
+  const r = [Math.cos(cage.yaw), -Math.sin(cage.yaw)];
+  return [-w / 3, 0, w / 3].map((a) => ({ kind: 'circle', x: cage.x + r[0] * a, z: cage.z + r[1] * a, r: (CAGE.depth * cage.scale) / 2 + 0.15 }));
+}
+
+function Bars({ from, to, y, height, step = 0.2 }) {
+  const n = Math.max(1, Math.round(Math.hypot(to[0] - from[0], to[1] - from[1]) / step));
+  return Array.from({ length: n + 1 }, (_, i) => (
+    <mesh key={i} position={[from[0] + ((to[0] - from[0]) * i) / n, y + height / 2, from[1] + ((to[1] - from[1]) * i) / n]}>
+      <cylinderGeometry args={[0.025, 0.025, height, 6]} />
+      <meshStandardMaterial color={IRON} metalness={0.7} roughness={0.45} />
+    </mesh>
+  ));
+}
+
+// A cell's door: bars on a hinge at the cell's outer edge. It swings out once the room is cleared.
+function Door({ hinge, width, height, side, open }) {
+  const g = useRef();
+  useFrame((_, dt) => {
+    if (!g.current) return;
+    const want = open ? side * 1.75 : 0; // outward, away from the cell
+    g.current.rotation.y += (want - g.current.rotation.y) * Math.min(1, dt * 2.5);
+  });
+  return (
+    <group ref={g} position={[hinge, 0, 0]}>
+      <Bars from={[0, 0]} to={[-side * width, 0]} y={0.12} height={height - 0.2} />
+      <mesh position={[(-side * width) / 2, height - 0.12, 0]}>
+        <boxGeometry args={[width, 0.06, 0.06]} />
+        <meshStandardMaterial color={IRON} metalness={0.7} roughness={0.45} />
+      </mesh>
+    </group>
+  );
+}
+
+// The room's cage: two cells, the Healer's on the left and the Weaponsmith's on the right. Shut
+// while skeletons stand; once the room is cleared the doors swing open and the floor of each cell
+// glows. Kael uses a cell by walking up to its door.
+function Cage({ cage, open, models, floorY }) {
+  const w = CAGE.width;
+  const d = CAGE.depth;
+  const h = CAGE.height;
+  const y = floorY ? floorY(cage.x, cage.z) : 0;
+  const keepers = [
+    { key: 'npc_healer', name: 'Healer', x: -w / 4 },
+    { key: 'npc_smith', name: 'Weaponsmith', x: w / 4 },
+  ];
+  return (
+    <group position={[cage.x, y, cage.z]} rotation={[0, cage.yaw, 0]} scale={cage.scale}>
+      <mesh position={[0, 0.06, 0]} receiveShadow>
+        <boxGeometry args={[w + 0.2, 0.12, d + 0.2]} />
+        <meshStandardMaterial color="#4a4652" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, h, 0]}>
+        <boxGeometry args={[w + 0.2, 0.1, d + 0.2]} />
+        <meshStandardMaterial color={IRON} metalness={0.6} roughness={0.5} />
+      </mesh>
+      <Bars from={[-w / 2, -d / 2]} to={[w / 2, -d / 2]} y={0.12} height={h - 0.12} />
+      <Bars from={[-w / 2, -d / 2]} to={[-w / 2, d / 2]} y={0.12} height={h - 0.12} />
+      <Bars from={[w / 2, -d / 2]} to={[w / 2, d / 2]} y={0.12} height={h - 0.12} />
+      <Bars from={[0, -d / 2]} to={[0, d / 2]} y={0.12} height={h - 0.12} />
+      <group position={[0, 0, d / 2]}>
+        <Door hinge={-w / 2} width={w / 2} height={h} side={-1} open={open} />
+        <Door hinge={w / 2} width={w / 2} height={h} side={1} open={open} />
+      </group>
+      {keepers.map((k, i) => (
+        <group key={k.key} position={[k.x, 0.12, 0]}>
+          {open && (
+            <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.55, 24]} />
+              <meshBasicMaterial color={CELL_GLOW[i]} transparent opacity={0.45} depthWrite={false} />
+            </mesh>
+          )}
+          <group rotation={[0, -Math.PI / 2, 0]}>
+            <Actor modelKey={k.key} models={models} position={[0, 0, 0]} facing={1} label={k.name} keeper />
+          </group>
+        </group>
+      ))}
+    </group>
+  );
+}
+
 // Puts a group where the world says an actor stands.
 function Mover({ id, world, children }) {
   const g = useRef();
@@ -560,15 +646,17 @@ export function Arena({ state, meta, models, cues, targetId, onTarget, world, re
   const useRoomModel = models.has(roomKey);
   const [, setLoaded] = useState(0);
   const onRoomReady = useCallback(() => setLoaded((n) => n + 1), []);
-  // NPCs stand where the Blender room says (spawn_npc_*), else at the stand-in room's spots.
-  // A build that draws only the villains leaves them out entirely, so none blocks the way unseen.
-  const npcs = VILLAINS_ONLY ? [] : ROOM_NPCS[roomId] ?? [];
-  const npcAt = (i) => world.room.spawns?.npcs?.[i] ?? npcSpot(i);
+  // The rooms have no NPCs: Kael goes alone. Each room but the Throne keeps a cage at its side.
+  const room = world.room;
+  const cage = useMemo(() => (meta.rooms[roomId]?.final ? null : cageSpot(room)), [room, roomId, meta]);
+  const open = state.fragments.includes(roomId) && state.phase !== 'combat';
+  // What the HUD needs to know: the cells' doors, while the cage is open.
+  world.cage = cage && open ? { cells: cage.cells } : null;
 
-  // NPCs and the stand-in room's props block the way.
+  // The stand-in room's props and the cage block the way.
   world.extraColliders = [
     ...(useRoomModel ? [] : PROP_COLLIDERS[roomId] ?? []),
-    ...npcs.map((_, i) => ({ kind: 'circle', x: npcAt(i)[0], z: npcAt(i)[2], r: RADIUS.npc })),
+    ...(cage ? cageColliders(cage) : []),
   ];
   useFighters(world, state, roomId);
   const motionOf = (id) => () => world.actors.get(id)?.motion ?? 'idle';
@@ -586,9 +674,7 @@ export function Arena({ state, meta, models, cues, targetId, onTarget, world, re
       <TargetRing world={world} targetId={targetId} reach={reach} />
       <LaneMarks world={world} state={state} />
 
-      {npcs.map((key, i) => (
-        <Actor key={key} modelKey={key} models={models} position={npcAt(i)} facing={1} label={meta.npcs[key.replace('npc_', '').replace('king_ghost', 'king')]?.name} />
-      ))}
+      {cage && <Cage cage={cage} open={open} models={models} floorY={room.floorY} />}
 
       {state.party.filter((m) => !(firstPerson && m.controlled)).map((m) => (
         <Mover key={m.id} id={m.id} world={world}>

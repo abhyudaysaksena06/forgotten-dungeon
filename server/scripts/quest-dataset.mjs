@@ -14,7 +14,7 @@ import { dirname, resolve } from 'node:path';
 import { createRng, hashSeed } from '../src/engine/rng.js';
 import { createRun, routeOptions, step } from '../src/quest/engine.js';
 import { FEATURE_NAMES, decisionFeatures, optionCategory } from '../src/quest/features.js';
-import { LEADERS, carefulLeaderAction, routePolicy, upkeep } from '../src/quest/sim.js';
+import { carefulLeaderAction, routePolicy, upkeep } from '../src/quest/sim.js';
 import { makeProfile } from '../src/quest/teams.js';
 
 const args = cliArgs(process.argv.slice(2));
@@ -47,7 +47,6 @@ function collectStates() {
   for (let t = 0; states.length < STATES * 3; t++) {
     const tier = tiers[t % 3];
     let s = createRun(makeProfile({ teamId: `d${t}`, seed: `ds-${t}`, tier }));
-    s = step(s, { type: 'lead', memberId: LEADERS[t % LEADERS.length] }, { mutate: true });
     const route = routePolicy({ boldness: 0.7 + r01() * 1.6, epsilon: 0.3, rng: r01 });
     for (let i = 0; i < 2500 && (s.phase === 'map' || s.phase === 'combat'); i++) {
       if (s.phase === 'map') {

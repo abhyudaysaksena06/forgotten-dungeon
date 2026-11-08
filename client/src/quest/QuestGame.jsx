@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { loadModelManifest, loadQuestMeta, questApi } from './api.js';
 import { applySettings, play, playCues, readAudioSettings, setMusic, unlock } from './audio.js';
@@ -8,7 +8,7 @@ import { cuesFor } from './events.js';
 import { download, downloadAll } from './preload.js';
 import Scene, { modelUrls } from './scene/Scene.jsx';
 import { morvathStrength } from './scene/MapView.jsx';
-import { REACH, createWorld, gap, laneOf, nearestEnemy, yawTo } from './scene/world.js';
+import { CAGE, REACH, createWorld, gap, laneOf, nearestEnemy, yawTo } from './scene/world.js';
 
 // Draco-compressed models (room 3) decode with three.js's own decoder, served from public/draco/,
 // so no model depends on a CDN being reachable during the event.
@@ -39,8 +39,8 @@ function LoadingScreen() {
 
 const MOVE_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright']);
 
-// The party acts on its own: if the leader does nothing for this long in a fight, the round plays
-// out anyway (a plain "wait" input, saved and replayed like any other), so the companions and
+// The fight goes on: if Kael does nothing for this long, the round plays
+// out anyway (a plain "wait" input, saved and replayed like any other), so the
 // enemies keep fighting. It pauses whenever the player is busy elsewhere.
 const ROUND_SECONDS = 6;
 const AUTO_KEY = 'forgotten-dungeon.autorounds';
@@ -260,10 +260,48 @@ export default function QuestGame({ session, onLeave }) {
   const reachKind = me && meta ? meta.classes[me.cls].reach : 'melee';
   const reach = REACH[reachKind] ?? REACH.melee;
   const canReach = useCallback((e) => Boolean(e) && (!e.flying || reachKind !== 'melee'), [reachKind]);
+  // Kael walks in a fight, and in a cleared room whose cage is open.
+  const walking = phase === 'combat' || Boolean(state?.cages);
 
-  // Movement: WASD (or ↑ ↓) walks, Space jumps, ← → turn the camera. Only in a fight.
+  // Which cell door of the open cage Kael stands at: 'healer', 'smith' or null.
+  const [atCell, setAtCell] = useState(null);
   useEffect(() => {
-    if (phase !== 'combat') {
+    if (!state?.cages) return setAtCell(null);
+    const t = setInterval(() => {
+      const l = world.actors.get(world.leaderId);
+      const cells = world.cage?.cells;
+      if (!l || !cells) return setAtCell(null);
+      // The nearer door, if it is within reach (the two doors stand close together).
+      const [dh, ds] = cells.map((c) => Math.hypot(l.x - c[0], l.z - c[1]));
+      setAtCell(Math.min(dh, ds) > CAGE.reach ? null : dh <= ds ? 'healer' : 'smith');
+    }, 150);
+    return () => clearInterval(t);
+  }, [state?.cages, world]);
+  const atCellRef = useRef(null);
+  atCellRef.current = atCell;
+  // E at a cell door: the Healer or the Weaponsmith.
+  useEffect(() => {
+    if (!state?.cages) return;
+    const onKey = (e) => {
+      if (e.target instanceof HTMLInputElement || e.repeat || e.key.toLowerCase() !== 'e') return;
+      if (atCellRef.current) handlers.current.act({ type: atCellRef.current });
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [state?.cages]);
+
+  // One hero: a "choose a hero" picker answers itself.
+  const pickRef = useRef(null);
+  useLayoutEffect(() => {
+    if (!picker || state?.party.length !== 1) return;
+    pickRef.current?.(state.party[0].id);
+    setPicker(null);
+  }, [picker, state?.party.length]);
+
+  // Movement: WASD (or ↑ ↓) walks, Space jumps, ← → turn the camera. In a fight, and in a cleared
+  // room while the cage is open.
+  useEffect(() => {
+    if (!walking) {
       world.keys.clear();
       return;
     }
@@ -293,7 +331,7 @@ export default function QuestGame({ session, onLeave }) {
       window.removeEventListener('blur', clear);
       clear();
     };
-  }, [phase, world]);
+  }, [walking, world]);
 
   // Who the leader aims at: the clicked enemy, else the nearest one they can hit. Positions
   // change every frame, so this is refreshed a few times a second.
@@ -329,7 +367,7 @@ export default function QuestGame({ session, onLeave }) {
   // Anything that hits an enemy needs the leader close enough; the leader turns to face it.
   const strikeAt = (enemy, action) => {
     if (!enemy) return setToast('No enemy in sight.');
-    if (!canReach(enemy)) return setToast(`${me.name} can’t reach a flying enemy. Your companions can.`);
+    if (!canReach(enemy)) return setToast(`${me.name} can’t reach a flying enemy.`);
     if (gap(world, enemy.id) > reach) {
       setTargetId(enemy.id);
       return setToast(`Too far from ${enemy.name}: move closer (WASD).`);
@@ -412,8 +450,8 @@ export default function QuestGame({ session, onLeave }) {
   }, []);
   // Menus need the cursor: give it back when a picker or the quest log opens, or the fight ends.
   useEffect(() => {
-    if ((picker || logOpen || helpOpen || settingsOpen || phase !== 'combat') && document.pointerLockElement) document.exitPointerLock?.();
-  }, [picker, logOpen, helpOpen, settingsOpen, phase]);
+    if ((picker || logOpen || helpOpen || settingsOpen || !walking) && document.pointerLockElement) document.exitPointerLock?.();
+  }, [picker, logOpen, helpOpen, settingsOpen, walking]);
   useEffect(() => {
     if (phase !== 'combat') return;
     const onKey = (e) => {
@@ -492,6 +530,7 @@ export default function QuestGame({ session, onLeave }) {
     else if (picker.kind === 'skill') act({ type: 'skill', targetId: memberId });
     else act({ type: picker.kind, memberId });
   };
+  pickRef.current = pick;
 
   return (
     <div className="quest-root">
@@ -518,7 +557,6 @@ export default function QuestGame({ session, onLeave }) {
       <TopBar view={view} meta={meta} lowSpec={lowSpec} onLowSpec={toggleLowSpec} onLeave={() => onLeave()} sensitivity={sensitivity} onSensitivity={changeSensitivity} audio={audio} onAudio={changeAudio} firstPerson={firstPerson} onToggleView={toggleView} onHelp={() => setHelpOpen(true)} onMenu={setSettingsOpen} />
       {view.note && <div className="hud-note">{view.note}</div>}
 
-      {state.phase === 'setup' && <HeroSelect state={state} meta={meta} busy={busy} onLead={(memberId) => act({ type: 'lead', memberId })} />}
       {state.phase !== 'setup' && <PartyPanel party={state.party} meta={meta} inFight={state.phase === 'combat'} />}
       {state.phase !== 'setup' && <Chronicle log={state.log} rolls={state.lastRolls} />}
       {state.speech && state.phase !== 'setup' && <Subtitle speech={state.speech} meta={meta} />}
@@ -583,7 +621,7 @@ export default function QuestGame({ session, onLeave }) {
       )}
 
       {state.phase === 'map' && (
-        <MapPanel state={state} meta={meta} busy={busy} act={act} setPicker={setPicker} />
+        <MapPanel state={state} meta={meta} busy={busy} act={act} setPicker={setPicker} atCell={atCell} />
       )}
 
       {(state.phase === 'victory' || state.phase === 'defeat') && <EndScreen view={view} session={session} path={path} onRestart={async () => apply(await questApi(`${path}/reset`, { method: 'POST', code: session.code }))} />}
@@ -606,7 +644,7 @@ function dangerSoon(state) {
   return new Set([...(c?.danger && c.danger.round === c.round + 1 ? c.danger.lanes : []), ...(c?.telegraph?.lanes ?? [])]);
 }
 
-function MapPanel({ state, meta, busy, act, setPicker }) {
+function MapPanel({ state, meta, busy, act, setPicker, atCell }) {
   const travel = state.options.filter((o) => o.type === 'travel');
   const atCamp = state.location === 'camp';
   const has = (type) => state.options.some((o) => o.type === type);
@@ -635,6 +673,7 @@ function MapPanel({ state, meta, busy, act, setPicker }) {
           );
         })}
       </div>
+      {state.cages && <CageSection busy={busy} act={act} atCell={atCell} />}
       {atCamp && <p className="eyebrow mt-3">Camp</p>}
       {atCamp && (
         <div className="mt-1.5 grid grid-cols-3 gap-1.5">
@@ -671,6 +710,25 @@ function MapPanel({ state, meta, busy, act, setPicker }) {
         </button>
       </div>
     </section>
+  );
+}
+
+// A cleared room's cage: walk up to a cell's door, then E (or the button).
+function CageSection({ busy, act, atCell }) {
+  const cell = (type, name, does) => (
+    <button className="btn px-2 py-1.5 text-sm" disabled={busy || atCell !== type} onClick={() => act({ type })} title={does}>
+      {name}
+      <small className="block font-mono text-[10px] text-ash">{atCell === type ? `${does} (E)` : 'walk up to the door'}</small>
+    </button>
+  );
+  return (
+    <div className="mt-3 border-t border-crypt-3 pt-2">
+      <p className="eyebrow">The cage</p>
+      <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+        {cell('healer', 'Healer', 'health and shield')}
+        {cell('smith', 'Weaponsmith', 'hone and mend')}
+      </div>
+    </div>
   );
 }
 
@@ -780,42 +838,6 @@ function EndScreen({ view, session, path, onRestart }) {
     </div>
   );
 }
-
-// ---------- choosing the leader ----------
-
-function HeroSelect({ state, meta, busy, onLead }) {
-  return (
-    <div className="hud-end" style={{ width: 'min(60rem, 96vw)' }}>
-      <div className="panel p-5">
-        <p className="eyebrow">Party formation</p>
-        <h2 className="font-display text-4xl text-bronze">Choose your leader</h2>
-        <p className="mt-1 max-w-2xl text-sm text-bone/80">
-          You control your leader; the other three follow as companions. Only the leader’s Rune Strike can break Morvath’s shadow armour.
-        </p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {state.party.map((m) => {
-            const c = meta.classes[m.cls];
-            return (
-              <button key={m.id} className="panel flex flex-col p-3 text-left transition-colors hover:border-bronze" disabled={busy} onClick={() => onLead(m.id)}>
-                <span className="font-display text-2xl leading-none">{c.title}</span>
-                <span className="mt-1 font-mono text-[11px] text-bronze">{c.role}</span>
-                <span className="mt-2 text-xs text-bone/80">{c.bio}</span>
-                <span className="mt-2 font-mono text-[11px] text-ash">
-                  HP {m.maxHp} · ATK {m.atk} · DEF {m.def}
-                </span>
-                <span className="mt-1 text-xs text-ash">
-                  {c.skill.name}: {c.skill.text}
-                </span>
-                <span className="mt-auto pt-2 font-mono text-[10px] text-ash">Carries: {c.startingItem}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 
 // ---------- quests ----------
 

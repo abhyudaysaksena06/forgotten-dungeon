@@ -4,7 +4,12 @@
 const roomName = (meta, id) => meta?.rooms?.[id]?.name ?? '';
 
 export function bannersFor(prev, next, meta) {
-  if (!prev || !next) return [];
+  if (!next) return [];
+  // A brand-new run: Kael sets out, and the first quests are handed out.
+  if (!prev) {
+    const quests = next.turn === 0 ? (next.quests ?? []).filter((q) => !q.done) : [];
+    return quests.length ? [{ kind: 'quest', title: 'New Quests', sub: quests.map((q) => q.title).join(' · '), note: '' }] : [];
+  }
   const out = [];
   const pc = prev.combat;
   const nc = next.combat;
@@ -27,11 +32,11 @@ export function bannersFor(prev, next, meta) {
   }
   // A room is won.
   if (prev.phase === 'combat' && next.phase === 'map' && next.fragments.length > prev.fragments.length) {
-    out.push({ kind: 'victory', title: 'Victory!', sub: `Heart fragment ${next.fragments.length} of 5` });
+    out.push({ kind: 'victory', title: 'Victory!', sub: `Heart fragment ${next.fragments.length} of 5`, note: next.cages ? 'The cage is open: the Healer and the Weaponsmith are free' : '' });
   }
   // The whole party fell.
   if ((next.stats?.wipes ?? 0) > (prev.stats?.wipes ?? 0)) {
-    out.push({ kind: 'defeat', title: 'Defeated…', sub: 'The party wakes by the campfire' });
+    out.push({ kind: 'defeat', title: 'Defeated…', sub: `${next.party[0]?.name ?? 'The hero'} wakes by the campfire` });
   }
   // Level ups.
   const ups = next.party.filter((m) => m.level > (prev.party.find((p) => p.id === m.id)?.level ?? m.level));

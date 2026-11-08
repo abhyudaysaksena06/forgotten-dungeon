@@ -67,8 +67,9 @@ function TeamLogin({ notice, onEnter }) {
           <span className="text-bronze">Heart</span>
         </h1>
         <p className="mt-6 max-w-md text-lg leading-relaxed text-bone/80">
-          The Heart of Eternity broke into five pieces, and Eldermoor sank beneath the earth. Lead Kael, Lyra, Rook and Mira through four
-          rounds of the dungeon to Morvath, the Shadow Dragon, on the Throne of Eternity. Every corridor costs a torch.
+          The Heart of Eternity broke into five pieces, and Eldermoor sank beneath the earth. Kael goes alone, with his Iron Sword and his
+          shield, through four rounds of the dungeon to Morvath, the Shadow Dragon, on the Throne of Eternity. In every room a Healer and a
+          Weaponsmith wait in a cage that opens when its skeletons fall. Every corridor costs a torch.
         </p>
         <p className="mt-4 max-w-md text-sm text-ash">
           You are a Runewright: the dungeon runs on runes, and the runes are written wrong. If the quest becomes impossible, the fault may

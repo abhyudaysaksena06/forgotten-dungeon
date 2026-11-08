@@ -390,6 +390,40 @@ function Seraphine() {
   );
 }
 
+// The cage's keepers.
+function Healer() {
+  return (
+    <group>
+      <Robed color="#e6e2d6" glow={PALETTE.verdigris} />
+      <mesh position={[0.32, 1.0, 0]}>
+        <sphereGeometry args={[0.1, 12, 10]} />
+        <M color={PALETTE.verdigris} emissive={PALETTE.verdigris} intensity={1.6} />
+      </mesh>
+    </group>
+  );
+}
+
+function Weaponsmith() {
+  return (
+    <group>
+      <Body color="#5a4632" height={1.0} radius={0.32} />
+      <Head y={1.45} r={0.19} />
+      <mesh position={[0.36, 0.9, 0]} rotation={[0, 0, -0.5]} castShadow>
+        <cylinderGeometry args={[0.03, 0.03, 0.7, 6]} />
+        <M color="#6b4a2c" />
+      </mesh>
+      <mesh position={[0.5, 1.2, 0]} rotation={[0, 0, -0.5]} castShadow>
+        <boxGeometry args={[0.24, 0.12, 0.12]} />
+        <M color="#8a8f96" metal={0.8} rough={0.3} />
+      </mesh>
+      <mesh position={[0.22, 0.6, 0]}>
+        <boxGeometry args={[0.06, 0.5, 0.5]} />
+        <M color={PALETTE.ember} emissive={PALETTE.ember} intensity={0.5} />
+      </mesh>
+    </group>
+  );
+}
+
 function Corin() {
   return (
     <group>
@@ -464,6 +498,10 @@ export function Placeholder({ modelKey, armoured }) {
       return <Corin />;
     case 'npc_pip':
       return <Pip />;
+    case 'npc_healer':
+      return <Healer />;
+    case 'npc_smith':
+      return <Weaponsmith />;
     default:
       return (
         <mesh position={[0, 0.8, 0]}>

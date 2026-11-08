@@ -73,7 +73,7 @@ function carefulLane(state, me) {
 }
 
 // A sensible player. Steps out of marked lanes, uses Rune Strike on an armoured Morvath, eats or
-// drinks when low, waits out Brakka's counter, and otherwise plays their hero like a companion would.
+// drinks when low, and plays Kael the way a lone knight has to (other heroes play like companions).
 export function carefulLeaderAction(state) {
   const me = state.party.find((p) => p.controlled);
   if (me.fallen) return { type: 'wait' };
@@ -90,6 +90,18 @@ export function carefulLeaderAction(state) {
   const safe = !dangerLanes(state).has(lane);
   if (tele?.move === 'breath' && !safe && me.cls !== 'knight') return withLane({ type: 'defend' });
   if (tele?.targetId === me.id && tele.damage >= 30 && frac(me) < 0.5) return withLane({ type: 'defend' });
+  if (me.cls === 'knight') {
+    // Alone, Kael saves Bulwark (half damage, and he guards: a quarter) for the blows he is warned
+    // of, spends every opening in Morvath's armour on Morvath, and otherwise clears the skeletons.
+    const warned = (tele && tele.damage >= 30 && (tele.all || tele.targetId === me.id)) || tele?.move === 'charge' || Boolean(state.combat.danger);
+    if (me.cooldown === 0 && warned) return withLane({ type: 'skill' });
+    const feeder = state.combat.enemies.find((e) => e.hp > 0 && e.kind === 'skeleton_risen');
+    if (feeder) return withLane({ type: 'attack', targetId: feeder.id }); // they heal Morvath: first
+    if (boss && !boss.armoured) return withLane({ type: 'attack', targetId: boss.id });
+    const target = pickTarget(state, moved);
+    if (target?.ultimate && target.armoured) return withLane({ type: 'defend' }); // nothing gets through: guard until Rune Strike is back
+    return withLane(target ? { type: 'attack', targetId: target.id } : { type: 'defend' });
+  }
   // Look at the board from the lane we're moving to.
   return withLane(companionAction({ ...state, party: state.party.map((p) => (p.id === me.id ? moved : p)) }, moved));
 }

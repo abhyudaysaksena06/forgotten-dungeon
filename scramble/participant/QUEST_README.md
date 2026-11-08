@@ -1,25 +1,29 @@
 # The Forgotten Dungeon — The Shattered Heart
 
 The Heart of Eternity broke into five pieces, and the kingdom of Eldermoor sank beneath the earth.
-Lead four heroes through the dungeon, recover the fragments, and face Morvath on the Throne of Eternity.
+Kael goes alone through the dungeon, recovers the fragments, and faces Morvath on the Throne of Eternity.
 
 You are a **Runewright**. The dungeon runs on runes, and the runes are written wrong: bugs are
 hidden in this game, and some of them make the quest impossible to finish. Find them while you play,
 fix the code, restart, and carry on. Your progress is saved after every move.
 
-## Your party
+## Your hero
 
-Pick one hero to **lead** at the start. You control the leader; the other three are AI companions.
+You play **Kael, the Knight**, alone.
 
-| Hero | Role | Skill |
-| --- | --- | --- |
-| Kael, the Knight | Defence | Bulwark: the party takes half damage this round. |
-| Lyra, the Mage | Healer, magic | Mend: heal an ally, or revive the Fallen. |
-| Rook, the Rogue | Striker | Twin Strike: a sure double-damage blow. |
-| Mira, the Ranger | Long range | Volley: hits every enemy, flyers included. |
+| | |
+| --- | --- |
+| **Iron Sword** | Its sharpness adds to every blow and dulls with each blow that lands; its durability wears too, and a broken sword hits for half. |
+| **Shield** | Takes every blow before your health does. |
+| **Bulwark** (E in a fight) | You take half damage this round. |
+| **Rune Strike** (Q) | A sure blow, and the only thing that breaks Morvath's shadow armour. |
 
-The leader also has **Rune Strike**. Only the leader's Rune Strike can break Morvath's shadow armour,
-so keep your leader alive. Melee can't reach flying enemies; magic and ranged can.
+## The cage
+
+Every room keeps a cage at its side with two cells: a **Healer** and a **Weaponsmith**. The cage is
+locked while the room's skeletons stand. Clear the room and it opens: walk up to a cell's door and
+press **E**. The Healer restores your health and shield; the Weaponsmith restores your sword's
+sharpness and durability. It's free, and it opens again whenever you come back to a cleared room.
 
 ## The dungeon
 
@@ -31,10 +35,10 @@ so keep your leader alive. Melee can't reach flying enemies; magic and ranged ca
 - The **Throne** opens with three fragments. Six skeleton guards stand before Morvath, and his fight
   changes as he weakens.
 - Each corridor costs one **torch**. When the torches run out, the quest is over.
-- At the camp you can **rest** (heal and revive, 1 torch), use the **Rune Altar**, or use the **Forge**.
+- At the camp you can **rest** (health and shield, 1 torch), use the **Rune Altar**, or use the **Forge**.
   Pip the goblin cook sells potions, and turns 3 monster parts into a Monster Meal.
 - Clearing a room opens a waystone back to the camp.
-- The people you meet hand out **quests**. The tracker on the left shows what's next; press **J** for
+- King Aldric and Pip hand out **quests**. The tracker on the left shows what's next; press **J** for
   the full quest log.
 
 **Your choices are judged.** Your team's starting stats are different from every other team's.
@@ -62,7 +66,7 @@ In a fight you walk around the room:
 | Click the view, then move the mouse | Look around (left-click attacks what's in the crosshair). **Esc** gives you the cursor back |
 | Mouse drag, **← →**, wheel | Look around, zoom |
 | **F**, right-click (or click an enemy) | Attack; **Tab** picks the next target. Middle-click: Rune Strike. Mouse side buttons: skill / defend |
-| **E** | Your leader's skill |
+| **E** | In a fight: Bulwark. In a cleared room: use the cage cell you stand at |
 | **Q** | Rune Strike |
 | **R** | Defend |
 | **H** / **G** | Potion / Monster Meal |
@@ -72,7 +76,7 @@ In a fight you walk around the room:
 
 Attacks need you close enough: melee heroes must walk up to their target, while magic and ranged
 heroes can strike from further away. The ring under your target turns green when you're in reach.
-Every fight has three lanes. **Red lanes on the floor get hit next round**: walk into another lane before you act (the action bar shows yours). Each boss has a trick worth learning. Your companions move and fight on their own. If you do nothing for a few seconds, the round plays out
+Every fight has three lanes. **Red lanes on the floor get hit next round**: walk into another lane before you act (the action bar shows yours). Morvath has tricks worth learning. If you do nothing for a few seconds, the round plays out
 without you; the clock pauses while you're in another window.
 
 Your team's profile is in `server/teams/profile.json` and your save is in `server/saves/`.

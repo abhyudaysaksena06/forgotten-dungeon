@@ -105,6 +105,72 @@ export function roomSpot(room, i) {
   return spots[i % n]; // nowhere clear at all: on the spawn itself
 }
 
+// The cage of a room: two cells side by side (the Healer's on the left as you face it, the
+// Weaponsmith's on the right). CAGE is its size in metres.
+export const CAGE = { width: 2.8, depth: 1.2, height: 2.3, reach: 1.7 };
+
+// Where a room's cage stands: the nearest spot to its old NPC spot (else beside the party's start)
+// where the whole cage is inside the walls, clear of props, off to the side of the fight, and away
+// from the skeletons' spots and the party's start. A tight room gets a smaller cage. It faces the
+// middle of the fight. Returns { x, z, yaw, scale, cells: [healer, smith] } (each cell's front,
+// where Kael stands to use it), or null when no spot fits.
+export function cageSpot(room) {
+  const sp = room.spawns ?? {};
+  const party = sp.party?.[0] ?? [0, 0, 0];
+  const foes = sp.enemies?.length ? sp.enemies : [[party[0], 0, party[2] - 4]];
+  const foe = [foes.reduce((t, p) => t + p[0], 0) / foes.length, foes.reduce((t, p) => t + p[2], 0) / foes.length];
+  const mid = [(party[0] + foe[0]) / 2, (party[2] + foe[1]) / 2];
+  const axis = [foe[0] - party[0], foe[1] - party[2]];
+  const axisLen = Math.hypot(axis[0], axis[1]) || 1;
+  const offAxis = (x, z) => Math.abs((x - party[0]) * axis[1] - (z - party[2]) * axis[0]) / axisLen; // metres beside the fight line
+  const minions = Array.from({ length: 6 }, (_, i) => roomSpot(room, i)).filter(Boolean);
+  const walls = [room.bounds].flat().filter(Boolean);
+  const props = room.colliders ?? [];
+  const target = sp.npcs?.[0] ?? [party[0] + 3.2, 0, party[2]];
+  for (const scale of [1, 0.85, 0.7]) {
+    const W = CAGE.width * scale;
+    const D = CAGE.depth * scale;
+    const place = (x, z) => {
+      const yaw = Math.atan2(mid[0] - x, mid[1] - z); // facing the fight
+      const f = [Math.sin(yaw), Math.cos(yaw)];
+      const r = [Math.cos(yaw), -Math.sin(yaw)];
+      return { x, z, yaw, at: (a, b) => [x + r[0] * a + f[0] * b, z + r[1] * a + f[1] * b] };
+    };
+    const fits = (c) => {
+      if (offAxis(c.x, c.z) < W / 2 + 0.6) return false;
+      for (const a of [-W / 2, -W / 4, 0, W / 4, W / 2]) {
+        for (const b of [-D / 2, 0, D / 2]) {
+          const [px, pz] = c.at(a, b);
+          if (walls.length && !walls.some((s) => insideShape(s, px, pz, 0.1))) return false;
+          if (props.some((s) => insideShape(s, px, pz, -0.1))) return false;
+        }
+      }
+      for (const a of [-W / 4, W / 4]) {
+        // the cells' fronts must be open floor
+        const [px, pz] = c.at(a, D / 2 + 0.7);
+        if (walls.length && !walls.some((s) => insideShape(s, px, pz, 0.25))) return false;
+        if (props.some((s) => insideShape(s, px, pz, -0.25))) return false;
+      }
+      if (minions.some((m) => Math.hypot(m[0] - c.x, m[2] - c.z) < W / 2 + 0.5)) return false;
+      return (sp.party ?? [party]).every((p) => Math.hypot(p[0] - c.x, p[2] - c.z) >= W / 2 + 0.8);
+    };
+    let best = null;
+    for (let dx = -12; dx <= 12; dx += 0.25) {
+      for (let dz = -12; dz <= 12; dz += 0.25) {
+        const d = Math.hypot(dx, dz);
+        if (best && d >= best.d) continue;
+        const c = place(target[0] + dx, target[2] + dz);
+        if (fits(c)) best = { d, c };
+      }
+    }
+    if (best) {
+      const { x, z, yaw, at } = best.c;
+      return { x, z, yaw, scale, cells: [at(-W / 4, D / 2 + 0.7), at(W / 4, D / 2 + 0.7)] };
+    }
+  }
+  return null;
+}
+
 function clampToShape(s, x, z, r) {
   if (s.kind === 'circle') {
     const dx = x - s.x;

@@ -24,16 +24,18 @@ clear lines, camp lines, Morvath's phase lines, the ending and the defeat line.
 
 | Piece | Rule |
 | --- | --- |
-| Party | **Kael** the Knight (defence, Bulwark), **Lyra** the Mage (healer, Mend), **Rook** the Rogue (striker, Twin Strike), **Mira** the Ranger (long range, Volley). The player picks one as **leader** at the start; the other three are AI companions (`server/src/quest/ai.js`). |
-| Leader | Has every skill of their hero plus **Rune Strike** (cooldown 3). Only the leader's Rune Strike breaks Morvath's shadow armour. |
+| Hero | **Kael** the Knight, alone (260 HP, ATK 15, DEF 13 before the team's tier): no leader to choose and no companions. Skill: **Bulwark** (half damage this round). He is the Runewright: only his **Rune Strike** (cooldown 3) breaks Morvath's shadow armour. |
+| Iron Sword | Adds its **edge** (up to 14, by **sharpness**) to every blow. Each blow that lands dulls it (−3 sharpness) and wears it (−2 **durability**); at 0 durability it is broken and hits for half. |
+| Shield | 100 points that take every blow before health does. |
+| The cage | Every room but the Throne keeps a cage at its side with two cells: a **Healer** and a **Weaponsmith**. It opens when the room is cleared (its skeletons down, its runes put right) and stays open whenever Kael comes back. Walk up to a cell's door and press **E**: the Healer restores health and shield, the Weaponsmith sharpness and durability. Free. |
 | Map | Camp plus five rooms joined by corridors: camp–r1, camp–r2, r1–r2, r1–r3, r2–r4, r3–r4, r3–r5, r4–r5. Each corridor costs 1 torch. A cleared room's waystone links it to the camp. Rooms 1–4 can be done in any order. |
-| Rooms 1–4 | Six **Skeletons** (65 HP, ATK 12, DEF 5 before scaling); there are no room bosses. Reward: a **Heart fragment**, gold, potions, XP. Every second skeleton to fall drops a monster part (three a room). |
+| Rooms 1–4 | Six **Skeletons** (50 HP, ATK 13, DEF 4 before scaling); there are no room bosses and no NPCs. Reward: a **Heart fragment**, gold, potions, XP. Every second skeleton to fall drops a monster part (three a room). |
 | Room 5 | The Throne of Eternity opens at 3 fragments. Six brittle skeleton guards (10 HP, ATK 0), then **Morvath**. No retreat. Beating him gives the fifth fragment. |
 | Difficulty | Enemy strength = 1 + 0.12 × (tier − 1) + 0.06 × rooms already cleared. Higher rooms and later progress hit harder. Morvath grows **+35% for every room cleared beyond the three** that open the Throne (shown on the map), so clearing everything first buys XP at a price. |
-| Camp | Rest (1 torch: full heal and revive), Rune Altar (1 torch + 30 gold: +3 ATK and +3 DEF for one hero), Forge (50 gold: +5 ATK for one hero). |
+| Camp | Rest (1 torch: full health and shield), Rune Altar (1 torch + 30 gold: +3 ATK and +3 DEF), Forge (50 gold: +5 ATK). |
 | Pip's Pot | At camp, no torch cost: a Health Potion for 25 gold (heals 40), or a Monster Meal from 3 parts (heals 70). |
-| Combat | One input per round: Attack, Defend, Skill, Rune Strike, Potion, Meal, Retreat (−1 torch), or Wait if the leader has fallen. d20 1–3 misses, 20 crits. Damage = ATK + d6 − DEF (magic halves DEF), minimum 1. Melee can't hit flyers. Poison: 4 damage for 3 rounds. |
-| Wipe | The party wakes at camp at 30% HP; −2 torches; half the gold. |
+| Combat | One input per round: Attack, Defend, Skill, Rune Strike, Potion, Meal, Retreat (−1 torch). d20 1–3 misses, 20 crits. Damage = ATK + sword edge + d6 − DEF, minimum 1 (halved when the sword is broken). Melee can't hit flyers. Poison: 4 damage for 3 rounds. |
+| Wipe | Kael wakes at camp at 30% health and shield; −2 torches; half the gold. |
 | End | Victory when Morvath falls. Defeat when the torches run out on the map. |
 
 ### Rooms and NPCs
@@ -56,18 +58,18 @@ bubble). King Aldric's ghost and Pip wait at the camp.
 
 ### Morvath
 
-725 HP, DEF 8 (more if the party cleared a fourth room first). Each round he announces his next move, so the player can react.
+350 HP, DEF 8 (more if Kael cleared a fourth room first). Each round he announces his next move, so the player can react.
 
 | Phase | When | Moves |
 | --- | --- | --- |
-| 1 · The Shadow Knight | 100–60% HP | Shadow Blade (36 to one hero) or Black Sweep (15 to all). |
-| 2 · The Change | 60–30% | Becomes the Shadow Dragon and summons 2 Skeletons, **each of which heals him 10 HP a round while alive**. Dragon Claw (36 to one) or Shadowflame (14 to all + poison). |
-| 3 · Dragon's Breath | below 30% | Alternates: draws in shadow-fire (no damage), then Dragon's Breath (48 to everyone in **two of the three lanes**: stand in the safe one, or Defend to halve it). |
+| 1 · The Shadow Knight | 100–60% HP | Shadow Blade (27) or Black Sweep (11). |
+| 2 · The Change | 60–30% | Becomes the Shadow Dragon and summons 2 Skeletons (weak, 20 HP), **each of which heals him 10 HP a round while alive**: kill them first. Dragon Claw (27) or Shadowflame (11 + poison). |
+| 3 · Dragon's Breath | below 30% | Alternates: draws in shadow-fire (no damage), then Dragon's Breath (36 in **two of the three lanes**: stand in the safe one, or Defend to halve it). |
 
-**Shadow armour** blocks all damage until the leader's Rune Strike breaks it. It grows back after
+**Shadow armour** blocks all damage until Kael's Rune Strike breaks it. It grows back after
 3 rounds. A player who never uses Rune Strike can't win.
 
-Per-team starting stats (`server/src/quest/teams.js`): tier × ±12% per stat per hero, from the team's seed.
+Per-team starting stats (`server/src/quest/teams.js`): tier × ±12% per stat, from the team's seed.
 
 | Tier | Stats | Torches | Gold | Potions |
 | --- | --- | --- | --- | --- |
@@ -75,22 +77,20 @@ Per-team starting stats (`server/src/quest/teams.js`): tier × ±12% per stat pe
 | Average | 1.0× | 14 (±1) | 40 | 2 |
 | Strong | 1.10× | 16 (±1) | 60 | 3 |
 
-Balance, from the simulator with the careful leader bot (Rune Strike on armour, Defend before the
-breath), averaged over all four leaders. "Prepared" clears every room it can before Morvath,
-"Balanced" goes for the throne as soon as it opens, "Reckless" fights early:
+Balance, from the simulator (`server/src/quest/sim.js`): the careful player (Rune Strike on armour,
+Bulwark before a warned blow, kills Morvath's summons first, uses every open cage) with the route
+planner at boldness 1.2, 60 teams per tier. All numbers are for one hero with sword and shield:
 
-| Tier | Prepared route | Balanced route | Reckless route |
-| --- | --- | --- | --- |
-| Weak | 0% | 10% | — |
-| Average | 0% | 12% | — |
-| Strong | 0% | 54% | — |
+| Tier | Careful player | Careless player |
+| --- | --- | --- |
+| Weak | 12% | 0% |
+| Average | 33% | 0% |
+| Strong | 88% | 0% |
 
-The game is tuned so that **fewer than 30% of runs finish**: even the best route for each tier wins
-25% on average (the bot dodges every marked lane and never misses a Rune Strike), and real players win less. A careless
-leader wins 0%. Rooms 1–4 stay winnable (teams average 3.4–4 fragments), so progression still
-separates teams. Clearing all four rooms before Morvath now backfires, because he grows with each
-extra room; going in at three fragments, rested and stocked, is the better play. That's what the
-forest judges.
+(Under the four-hero rules the same measure gave 8%, 19% and 80%.) Rooms 1 and 2 are nearly always
+won; room 3 is where weaker heroes start to fall (about half of first attempts). Going to the Throne
+with three fragments, healed and mended at the last cage, is the better play than clearing all four
+rooms, because Morvath grows with each extra room. That's what the forest judges.
 
 ## Lanes and boss mechanics
 
@@ -141,7 +141,7 @@ run's state on every view, so it never changes the rules, the dice or the judgin
 | The Last Loyal Knight | Sir Corin | after the first room | Hollow Barracks cleared |
 | The Throne of Eternity (main) | King Aldric | after the first fragment | 3 fragments, then Morvath |
 | Monster Stew (side) | Pip | first monster part | a Monster Meal is cooked |
-| The Scholar's Lesson (side) | Venn | first level-up | the leader reaches level 3 |
+| The Scholar's Lesson (side) | King Aldric | first level-up | Kael reaches level 3 |
 
 Each room quest has two steps (reach the room, defeat the six skeletons) and lists its
 reward: the fragment, gold, potions and XP. The room-clear line in the chronicle states the XP too,
@@ -154,11 +154,11 @@ which is how players can spot bug Q18.
 - **Banners** (`client/src/quest/banners.js`): BATTLE START!, BOSS BATTLE!, FINAL BATTLE, THE CHANGE,
   DRAGON'S BREATH, VICTORY!, DEFEATED…, LEVEL UP!, NEW QUEST, QUEST CLEAR!, and a cut-in for each
   skill and Rune Strike. They're worked out from the change between two server states.
-- **Dialogue.** NPC lines show in a dialogue box with a name plate.
+- **Dialogue.** Lines show in a dialogue box, with a name plate for the camp's NPCs (the rooms have none).
 
 ## Moving in a fight
 
-Every room is a 3D space you walk around in. The camera follows the leader from behind.
+Every room is a 3D space you walk around in. The camera follows Kael (first person by default).
 
 | Key | Does |
 | --- | --- |
@@ -171,15 +171,15 @@ Every room is a 3D space you walk around in. The camera follows the leader from 
 | **Right-click** · middle-click · side buttons | Attack · Rune Strike · skill (back) / defend (forward) |
 | Settings (top bar) | Mouse sensitivity (0.2–3×, saved in the browser) |
 | **F** / click an enemy | Attack (click selects; **Tab** cycles; **1–6** pick from the list) |
-| **E** | The leader's skill (Bulwark, Mend, Twin Strike, Volley) |
+| **E** | In a fight: Bulwark. In a cleared room: use the cage cell whose door Kael stands at (Healer or Weaponsmith) |
 | **Q** | Rune Strike |
 | **R** | Defend |
 | **H** / **G** | Potion / Monster Meal |
 | **X** | Retreat (costs a torch) |
 | **J** | Quest log |
 
-**Reach.** Attacks, Twin Strike and Rune Strike only fire when the leader is close enough to the
-target: melee 2.4 m, magic 9 m, ranged 12 m, measured edge to edge. A ring under the target turns
+**Reach.** Attacks and Rune Strike only fire when Kael is close enough to the target: 2.4 m, measured
+edge to edge. A ring under the target turns
 green in reach and red when too far, and the action bar shows the distance. Out of reach, the game
 says "move closer" and sends nothing.
 
@@ -188,15 +188,14 @@ says "move closer" and sends nothing.
 to the same deterministic engine, so autosave by inputs, replay, cheat-proofing and judging are
 unchanged. Positions are never saved and never scored.
 
-**Companions act on their own (moderately).**
+**After a fight.** A cleared room stays on screen with its cage open: walk up to the Healer's or the
+Weaponsmith's door (the HUD's "The cage" section says when you're there) and press E, then pick the
+next room from the Journey list. The cage is placed by `cageSpot` in `scene/world.js`: the nearest
+spot to the room's old NPC spot where the whole cage fits off to the side of the fight.
 
-- **They position themselves by role.** Kael steps between the leader and the closest enemy. Rook
-  flanks. Mira keeps about 6 m back. Lyra stays back and to the side of whoever is most hurt. None of
-  them strays more than 7 m from the leader. Enemies close in on the nearest hero, and Morvath holds
-  his ground.
-- **The round clock.** If the leader does nothing for 6 seconds in a fight, the round plays out anyway
-  (a plain `wait` input, saved and replayed like any other). The companions use their own AI and the
-  enemies strike back. The clock restarts after every round. It pauses while a request is in flight,
+- **Enemies close in on Kael**, and Morvath holds his ground.
+- **The round clock.** If Kael does nothing for 6 seconds in a fight, the round plays out anyway
+  (a plain `wait` input, saved and replayed like any other) and the enemies strike back. The clock restarts after every round. It pauses while a request is in flight,
   a picker or the quest log is open, a banner is showing, or the window isn't in front, so a team
   reading code in their editor never loses rounds. "Auto rounds: on/off" in the action bar turns it off.
 
@@ -224,13 +223,13 @@ ATK, DEF, power, torches, gold, potions, meals, parts, fragments, progress, wipe
 the target room's tier and threat, travel cost, power-to-threat ratio, who leads, and the leader's HP).
 
 1. `node server/scripts/quest-dataset.mjs --states 3000 --rollouts 40 --out ml/data/route_decisions.csv`
-   plays thousands of teams of all tiers and leaders. At each decision it tries every option and
+   plays thousands of runs of all tiers (Kael alone, with sword and shield). At each decision it tries every option and
    estimates its win chance from 40 simulated continuations with fresh dice. An option is "good" if it's
    within 10 points of the best option in that exact situation. About 4 minutes.
 2. `python ml/train_forest.py` trains a scikit-learn RandomForestClassifier (120 trees, depth 12),
-   split by team. Current result (retrained for the skeleton rooms): **71.8% accuracy on unseen
-   teams** (majority baseline 53.4%), ROC AUC 0.80, on 16,859 decisions. By tier: weak 76%, average
-   71%, strong 68%. Top inputs: party power, power-to-threat ratio, torches, party ATK, gold.
+   split by team. Current result (retrained for the one-hero game with the cages): **86.5% accuracy on unseen
+   teams** (majority baseline 50.7%), ROC AUC 0.945, on 15,174 decisions. By tier: weak 89%, average
+   85%, strong 85%. Top inputs: party power, party DEF, power-to-threat ratio, gold, target tier.
 3. The model ships as JSON (`server/src/quest/model/route-forest.json`); `forest.js` evaluates it in
    Node. `server/test/forest.test.js` proves Node and scikit-learn agree, and that the forest beats the
    baseline by at least 10 points.
@@ -244,21 +243,21 @@ Re-run steps 1–2 after any change to the game rules.
 
 | Round | Id | Name | Kind | What players see |
 | --- | --- | --- | --- | --- |
-| 1 | Q01 | Wrong Hands | blocker | You pick one hero but steer the next one in line, so Rune Strike never breaks the armour. |
+| 1 | Q01 | Nameless Runewright | blocker | A new run stores Kael's name instead of his id as its Runewright, so Rune Strike never breaks the armour. |
 | 1 | Q02 | Turncoat Buttons | hindrance | Attack defends; Defend tries to attack and errors. |
 | 1 | Q11 | Long Way Round | blocker | Every journey burns twice the torches shown. |
 | 1 | Q13 | Dead Waystones | hindrance | Cleared rooms don't link back to the camp. |
 | 2 | Q07 | Cursed Altar | hindrance | The Rune Altar says +3 ATK but takes 3 away. |
-| 2 | Q10 | Cold Ashes | hindrance | Resting never revives the Fallen. |
+| 2 | Q10 | Cold Ashes | hindrance | Resting only brings Kael back to half health. |
 | 2 | Q14 | Empty Satchel | hindrance | Loot replaces the potion count instead of adding to it. |
 | 2 | Q15 | Pip's Short Change | hindrance | Pip takes the gold but no potion arrives. |
-| 3 | Q06 | Selfish Mender | hindrance | Lyra heals only allies who are already healthy. |
-| 3 | Q16 | Lonely Bulwark | hindrance | Bulwark protects only Kael. |
+| 3 | Q06 | Half a Healer | hindrance | The cage's Healer restores health but not the shield. |
+| 3 | Q16 | Paper Shield | hindrance | The shield drains, but the whole blow still reaches Kael's health. |
 | 3 | Q17 | Watered Potion | hindrance | Potions restore almost nothing. |
 | 4 | Q04 | Iron Skin | blocker | From the second room on, enemies shrug off almost every blow. |
 | 4 | Q05 | Short Memory | blocker | After a server restart a long run rewinds. |
 | 4 | Q08 | Endless Wave | blocker | A fight never ends after the last enemy falls. |
-| 4 | Q19 | Echoing Cooldown | hindrance | One hero's skill puts every hero's skill on cooldown. |
+| 4 | Q19 | Careless Smith | hindrance | The cage's Weaponsmith hones the sword but barely mends it, so it breaks a few rooms later. |
 | 4 | Q18 | Stingy Lessons | hindrance | Every room pays only the first room's XP, so the party levels too slowly. |
 | 5 | Q03 | The Sealed Throne | blocker | The Throne never opens. |
 | 5 | Q09 | Unbreakable Armour | blocker | Rune Strike never breaks the armour. |
@@ -432,7 +431,7 @@ the `spawn_*` empties in the .blend, and run it again.
 
 | Name in Blender | Used for |
 | --- | --- |
-| `spawn_party_1` … `spawn_party_4` or `spawn_player_*` (empties) | Where the leader (1) and companions start |
+| `spawn_party_1` … `spawn_party_4` or `spawn_player_*` (empties) | Where Kael starts (1); the others steer the cage away from the start |
 | `spawn_npc_1` … (empties) | Where the room's NPCs stand |
 | `spawn_enemy_1` … `spawn_enemy_N`, `spawn_boss` (empties) | Where minions and the boss appear |
 | `collider…` (meshes) | Block movement (walls, pillars, crates); hidden in the game |
@@ -449,7 +448,8 @@ and textures; add `"toon": false` to the model's manifest entry to keep the orig
 | Model key | What |
 | --- | --- |
 | `room_1` … `room_5` | Gate Courtyard, Hall of Portraits, Hall of Trials, Hollow Barracks, Throne of Eternity. Put empties named `spawn_party_1..4`, `spawn_enemy_1..4` and `spawn_boss` where characters stand. |
-| `char_kael`, `char_lyra`, `char_rook`, `char_mira` | The party: knight, mage, rogue, ranger. |
+| `char_kael` | Kael, the one hero (`char_lyra`, `char_rook`, `char_mira` are no longer used). |
+| `npc_healer`, `npc_smith` | The Healer and the Weaponsmith in each room's cage (stand-ins until models arrive). |
 | `enemy_skeleton` | Every room's villains, the Throne's guards and Morvath's summons. Shipped (`enemy_skeleton.glb`, clips `Idle` and `Run`). |
 | `enemy_shadow_crawler`, `enemy_ink_bat`, `enemy_hollow_scribe`, `enemy_trial_spirit`, `enemy_hollow_knight` | The old minions; no room places them now. |
 | `boss_stone_sentinel`, `boss_ink_wraith`, `boss_brakka`, `boss_hollow_captain` | The old room bosses; no room places them now. |

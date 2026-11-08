@@ -1,20 +1,21 @@
 // Static game data for the Quest — "The Shattered Heart".
 // `model` keys are what the 3D client looks up (client/public/models/<model>.glb).
 
-// The four Runewrights. The player picks one to lead; the other three follow as AI companions.
+// The Runewrights. The quest is played by one hero, Kael, alone (PARTY_ORDER); the others stay in the
+// data for the engine's tests and older saves, but no run includes them.
 export const CLASSES = {
   knight: {
     name: 'Kael',
     title: 'Kael the Knight',
     role: 'Defence · melee',
     model: 'char_kael',
-    hp: 150,
-    atk: 9,
-    def: 12,
+    hp: 260, // alone now: built to face six skeletons with his Iron Sword and shield
+    atk: 15,
+    def: 13,
     reach: 'melee',
     startingItem: 'Iron Sword',
     bio: 'A soldier whose grandfather served King Aldric. Brave, honest, a little stubborn.',
-    skill: { id: 'bulwark', name: 'Bulwark', cooldown: 3, target: 'none', text: 'The party takes half damage this round and enemies aim at Kael.' },
+    skill: { id: 'bulwark', name: 'Bulwark', cooldown: 3, target: 'none', text: 'Kael takes half damage this round.' },
   },
   mage: {
     name: 'Lyra',
@@ -57,7 +58,15 @@ export const CLASSES = {
   },
 };
 
-export const PARTY_ORDER = ['knight', 'mage', 'rogue', 'ranger'];
+export const PARTY_ORDER = ['knight'];
+
+// Kael's Iron Sword. Sharpness adds up to `edge` damage to every blow and dulls with each blow that
+// lands; durability wears with each blow too, and a broken sword (durability 0) hits for half.
+// The Weaponsmith in a cleared room's cage restores both.
+export const SWORD = { name: 'Iron Sword', edge: 14, sharpness: 100, durability: 100, dullPerHit: 3, wearPerHit: 2 };
+// Kael's shield takes every blow before his health does. The Healer in a cleared room's cage
+// restores both, and so does resting at the camp.
+export const SHIELD = { name: 'Shield', max: 100 };
 
 // Whoever leads is the Runewright: only the leader's Rune Strike can break Morvath's shadow armour.
 export const RUNE_STRIKE = { name: 'Rune Strike', cooldown: 3, text: 'A sure strike that rewrites a broken rune. Only it can break Morvath’s shadow armour.' };
@@ -68,11 +77,11 @@ export const CAN_HIT_FLYING = new Set(['magic', 'ranged']);
 // `part`: drops a monster part for Pip (`partEvery: n`: every n-th of its kind in a fight). `yieldsAt`: gives up (counts as beaten) below this HP share.
 export const ENEMIES = {
   // Skeletons are the villains. All three look and are named alike; their numbers differ so each
-  // fight keeps its balance: six in every room, six brittle guards before Morvath, and the two
-  // Morvath raises in phase 2 (with the stats of the Shadow Crawlers they replace).
-  skeleton: { name: 'Skeleton', model: 'enemy_skeleton', hp: 65, atk: 12, def: 5, part: true, partEvery: 2 },
+  // fight keeps its balance for a lone Kael: six in every room, six brittle guards before Morvath,
+  // and the two Morvath raises in phase 2 (weak, but each heals him while it stands).
+  skeleton: { name: 'Skeleton', model: 'enemy_skeleton', hp: 50, atk: 13, def: 4, part: true, partEvery: 2 },
   skeleton_guard: { name: 'Skeleton', model: 'enemy_skeleton', hp: 10, atk: 0, def: 0 },
-  skeleton_risen: { name: 'Skeleton', model: 'enemy_skeleton', hp: 34, atk: 11, def: 3, part: true },
+  skeleton_risen: { name: 'Skeleton', model: 'enemy_skeleton', hp: 20, atk: 6, def: 2, part: true },
   // No room places these any more; the engine still knows their moves.
   shadow_crawler: { name: 'Shadow Crawler', model: 'enemy_shadow_crawler', hp: 34, atk: 11, def: 3, part: true },
   stone_sentinel: { name: 'Stone Sentinel', model: 'boss_stone_sentinel', hp: 150, atk: 16, def: 6, boss: true, move: 'charge' },
@@ -84,7 +93,7 @@ export const ENEMIES = {
   hollow_knight: { name: 'Hollow Knight', model: 'enemy_hollow_knight', hp: 50, atk: 15, def: 6, part: true },
   hollow_captain: { name: 'The Hollow Captain', model: 'boss_hollow_captain', hp: 240, atk: 19, def: 9, boss: true, move: 'shadow_tide' },
   // atk is not used in combat (Morvath only uses his telegraphed moves); it feeds threat estimates.
-  morvath: { name: 'Morvath, the Shadow Knight', model: 'boss_morvath_knight', hp: 725, atk: 34, def: 8, boss: true, ultimate: true },
+  morvath: { name: 'Morvath, the Shadow Knight', model: 'boss_morvath_knight', hp: 350, atk: 34, def: 8, boss: true, ultimate: true },
 };
 
 // The rulebook's five rounds, one room each. Rooms 1–4: six skeletons. Room 5: six skeleton
@@ -181,11 +190,11 @@ export const MORVATH = {
   dragonName: 'Morvath, the Shadow Dragon',
   dragonModel: 'boss_morvath_dragon',
   moves: {
-    shadow_blade: { name: 'Shadow Blade', damage: 36, all: false, phase: 1 },
-    sweep: { name: 'Black Sweep', damage: 15, all: true, phase: 1 },
-    claw: { name: 'Dragon Claw', damage: 36, all: false, phase: 2 },
-    shadowflame: { name: 'Shadowflame', damage: 14, all: true, poison: true, phase: 2 },
+    shadow_blade: { name: 'Shadow Blade', damage: 27, all: false, phase: 1 },
+    sweep: { name: 'Black Sweep', damage: 11, all: true, phase: 1 },
+    claw: { name: 'Dragon Claw', damage: 27, all: false, phase: 2 },
+    shadowflame: { name: 'Shadowflame', damage: 11, all: true, poison: true, phase: 2 },
     charge: { name: 'Draws in Shadow-Fire', damage: 0, all: true, phase: 3 },
-    breath: { name: 'Dragon’s Breath', damage: 48, all: true, phase: 3 },
+    breath: { name: 'Dragon’s Breath', damage: 36, all: true, phase: 3 },
   },
 };

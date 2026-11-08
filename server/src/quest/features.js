@@ -1,6 +1,6 @@
 // The numbers the random forest sees for one readiness / route decision. Shared by the simulator
 // (training data), the engine (recorded at decision time) and the judge (scoring).
-import { CAMP, ENEMIES, FINAL_GROWTH, FRAGMENTS_FOR_THRONE, POWER_UPS, PROGRESS_SCALE, ROOMS, TIER_SCALE } from './data.js';
+import { CAMP, ENEMIES, FINAL_GROWTH, FRAGMENTS_FOR_THRONE, POWER_UPS, PROGRESS_SCALE, ROOMS, SWORD, TIER_SCALE } from './data.js';
 
 export const FEATURE_NAMES = [
   'avg_level',
@@ -42,9 +42,15 @@ export function optionCategory(state, action) {
   return fight ? `room${action.to.slice(1)}` : 'move';
 }
 
-// Rough strength of the party right now: offence and defence, discounted by missing HP.
+// Rough strength of the party right now: offence (with the sword's edge, halved when it is broken)
+// and defence, discounted by missing health and shield.
 export function partyPower(state) {
-  return state.party.reduce((n, m) => (m.fallen ? n : n + (m.atk * 2 + m.def) * (0.4 + 0.6 * (m.hp / m.maxHp))), 0);
+  return state.party.reduce((n, m) => {
+    if (m.fallen) return n;
+    const edge = m.sword ? ((SWORD.edge * m.sword.sharpness) / SWORD.sharpness) * (m.sword.durability > 0 ? 1 : 0.5) : 0;
+    const pool = (m.hp + (m.shield ?? 0)) / (m.maxHp + (m.maxShield ?? 0));
+    return n + ((m.atk + edge) * 2 + m.def) * (0.4 + 0.6 * pool);
+  }, 0);
 }
 
 // Rough danger of a room if entered now (scales like the engine's spawns).

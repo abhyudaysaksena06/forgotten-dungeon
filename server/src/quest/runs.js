@@ -19,12 +19,13 @@ export const INPUT_TYPES = {
   meal: 'meal',
   retreat: 'retreat',
   wait: 'wait',
-  lead: 'lead',
   travel: 'travel',
   rest: 'rest',
   altar: 'altar',
   forge: 'forge',
   trade: 'trade',
+  healer: 'healer',
+  smith: 'smith',
 };
 
 // Inputs only: a short type plus ids. Anything else (hp, damage, …) is dropped.

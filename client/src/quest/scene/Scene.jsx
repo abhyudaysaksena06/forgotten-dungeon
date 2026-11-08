@@ -262,9 +262,11 @@ class PreloadGuard extends Component {
 }
 
 export default function Scene({ state, meta, models, cues, targetId, onTarget, onTravel, lowSpec, world, reach, firstPerson, preloaded, downloaded, onPreloaded }) {
-  const view = state.phase === 'combat' ? 'arena' : 'map';
+  // A fight, or a cleared room whose cage is open, shows the room; anywhere else, the map.
+  const view = state.phase === 'combat' || state.cages ? 'arena' : 'map';
   // In a Blender room its own lamps set the mood, so the generic fill lights step back.
-  const roomKey = state.combat ? `room_${state.combat.roomId.slice(1)}` : null;
+  const roomId = state.combat?.roomId ?? (state.cages ? state.location : null);
+  const roomKey = roomId ? `room_${roomId.slice(1)}` : null;
   const blenderRoom = Boolean(roomKey && models.has(roomKey));
   // In the artist's rooms only their own lamps light the scene (a faint ambient keeps the heroes
   // readable), with Blender's AgX tone mapping and no added effects.
