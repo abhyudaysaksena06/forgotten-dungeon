@@ -22,5 +22,9 @@
   {
     "key": "enemy_skeleton",
     "height": 1.8
+  },
+  {
+    "key": "boss_nemesis",
+    "height": 3.2
   }
 ]

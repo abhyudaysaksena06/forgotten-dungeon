@@ -3,6 +3,7 @@
 // autosave (replay the log) and the judge's cheat check (replay on a clean copy) work.
 import { createRng, hashSeed } from '../engine/rng.js';
 import {
+  BREATHER_HEAL,
   CAMP,
   CAN_HIT_FLYING,
   CLASSES,
@@ -202,7 +203,16 @@ function startWave(state) {
   state.combat.enemies = kinds.map((kind, i) => spawn(state, kind, i));
   state.combat.danger = null;
   nameDuplicates(state.combat.enemies);
-  say(state, `${kinds.length > 1 ? 'Enemies' : 'A foe'} rise: ${state.combat.enemies.map((e) => e.name).join(', ')}.`);
+  say(state, `${kinds.length > 1 ? 'Enemies rise' : 'A foe rises'}: ${state.combat.enemies.map((e) => e.name).join(', ')}.`);
+  // A room's boss steps out only after its skeletons fall; Kael catches his breath and raises his
+  // shield again and gets back a little health. Not before Morvath: the Throne has no breather.
+  if (state.combat.waveIndex > 0 && !room.final) {
+    for (const m of alive(state)) {
+      m.shield = m.maxShield;
+      m.hp = Math.min(m.maxHp, m.hp + Math.round(m.maxHp * BREATHER_HEAL));
+    }
+    say(state, `${controlled(state).name} catches his breath (+${Math.round(BREATHER_HEAL * 100)}% health) and raises his shield again.`);
+  }
   const morvath = state.combat.enemies.find((e) => e.ultimate);
   if (morvath) telegraphMorvath(state, createRng(state), morvath);
 }

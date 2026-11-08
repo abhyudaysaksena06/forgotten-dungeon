@@ -53,12 +53,20 @@ export function partyPower(state) {
   }, 0);
 }
 
+// How much a room's boss counts towards its danger, after the breather before it (see roomThreat).
+const BOSS_WEIGHT = 0.25;
+
 // Rough danger of a room if entered now (scales like the engine's spawns).
 export function roomThreat(state, roomId) {
   const room = ROOMS[roomId];
   const scale = room.final ? 1 + FINAL_GROWTH * Math.max(0, state.stats.roomsCleared - FRAGMENTS_FOR_THRONE) : 1 + TIER_SCALE * (room.tier - 1) + PROGRESS_SCALE * state.stats.roomsCleared;
   let threat = 0;
-  for (const wave of room.waves) for (const kind of wave) threat += (ENEMIES[kind].hp / 10 + ENEMIES[kind].atk * 2) * scale;
+  // A room's boss (a later wave, not the Throne's) comes after a breather: Kael's shield is full
+  // again and he gets some health back, so the boss adds only a share of its weight.
+  room.waves.forEach((wave, w) => {
+    const weight = w > 0 && !room.final ? BOSS_WEIGHT : 1;
+    for (const kind of wave) threat += (ENEMIES[kind].hp / 10 + ENEMIES[kind].atk * 2) * scale * weight;
+  });
   return threat;
 }
 

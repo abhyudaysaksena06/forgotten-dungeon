@@ -44,7 +44,7 @@ clear lines, camp lines, Morvath's phase lines, the ending and the defeat line.
 | --- | --- | --- | --- | --- |
 | 1 · The Entrance | The Gate Courtyard | 6 Skeletons | none | Old Grum, the gatekeeper |
 | 2 · The Forgotten Hall | The Hall of Portraits | 6 Skeletons | none | Ilsa, the ink-keeper |
-| 3 · The Trial Chambers | The Hall of Trials | 6 Skeletons | none | Seraphine, the oracle; Venn, the scholar |
+| 3 · The Trial Chambers | The Hall of Trials | 6 Skeletons | The Hell Nemesis (after the skeletons) | Seraphine, the oracle; Venn, the scholar |
 | 4 · The Shadow Depths | The Hollow Barracks | 6 Skeletons | none | Sir Corin, the last loyal knight |
 | 5 · The Boss Round | The Throne of Eternity | 6 skeleton guards | Morvath | King Aldric's ghost (voice only) |
 
@@ -83,12 +83,15 @@ planner at boldness 1.2, 60 teams per tier. All numbers are for one hero with sw
 
 | Tier | Careful player | Careless player |
 | --- | --- | --- |
-| Weak | 12% | 0% |
-| Average | 33% | 0% |
-| Strong | 88% | 0% |
+| Weak | 2% | 0% |
+| Average | 42% | 0% |
+| Strong | 85% | 0% |
 
 (Under the four-hero rules the same measure gave 8%, 19% and 80%.) Rooms 1 and 2 are nearly always
-won; room 3 is where weaker heroes start to fall (about half of first attempts). Going to the Throne
+won; room 3 is where weaker heroes start to fall (about half of first attempts), now with the Hell
+Nemesis after its skeletons. Before a room's boss Kael catches his breath (full shield, +25% health,
+`BREATHER_HEAL`), and the planner's `roomThreat` counts that boss at a quarter of its weight, so it
+still rates room 3 as easier than room 4, which it is. Going to the Throne
 with three fragments, healed and mended at the last cage, is the better play than clearing all four
 rooms, because Morvath grows with each extra room. That's what the forest judges.
 
@@ -452,6 +455,7 @@ and textures; add `"toon": false` to the model's manifest entry to keep the orig
 | `npc_healer`, `npc_smith` | The Healer and the Weaponsmith in each room's cage (stand-ins until models arrive). |
 | `enemy_skeleton` | Every room's villains, the Throne's guards and Morvath's summons. Shipped (`enemy_skeleton.glb`, clips `Idle` and `Run`). |
 | `enemy_shadow_crawler`, `enemy_ink_bat`, `enemy_hollow_scribe`, `enemy_trial_spirit`, `enemy_hollow_knight` | The old minions; no room places them now. |
+| `boss_nemesis` | The Hell Nemesis, room 3's boss (no clips: the game moves the whole model for attacks, hits and the fall). Shrunk from 78 MB to 1.2 MB with `optimize.mjs full boss_nemesis --simplify 0.02`, feet moved to the origin. |
 | `boss_stone_sentinel`, `boss_ink_wraith`, `boss_brakka`, `boss_hollow_captain` | The old room bosses; no room places them now. |
 | `boss_morvath_knight`, `boss_morvath_dragon` | Morvath before and after the Change. |
 | `npc_king_ghost`, `npc_grum`, `npc_ilsa`, `npc_venn`, `npc_seraphine`, `npc_corin`, `npc_pip` | NPCs (idle only). |

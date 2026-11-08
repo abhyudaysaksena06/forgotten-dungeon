@@ -30,7 +30,8 @@ sharpness and durability. It's free, and it opens again whenever you come back t
 
 - Five rounds, one room each: the Gate Courtyard, the Hall of Portraits, the Hall of Trials, the
   Hollow Barracks, and the Throne of Eternity.
-- Rooms 1–4 can be taken in any order. Each holds six skeletons and gives a
+- Rooms 1–4 can be taken in any order. Each holds six skeletons (in the Hall of Trials, the Hell
+  Nemesis steps out once they are down) and gives a
   **Heart fragment**, gold, potions and XP. Higher rooms are harder, and every room grows harder as
   your quest goes on.
 - The **Throne** opens with three fragments. Six skeleton guards stand before Morvath, and his fight
