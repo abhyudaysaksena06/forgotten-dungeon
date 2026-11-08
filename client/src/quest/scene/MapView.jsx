@@ -52,8 +52,9 @@ function Campfire() {
 // diorama, without its own lamps, and scaled to fit the hexagon. The cut is a clipping plane on the
 // miniature's own copies of the materials, so the full-size room in a fight is never affected.
 const CUTAWAY = 2.6; // metres above the floor: walls, domes and ceilings are sliced off here
-function RoomMiniature({ modelKey, radius = 1.15 }) {
-  const { scene } = useGLTF(`/models/${modelKey}.glb`);
+// `lite`: the room has a low-detail copy for the map (room_N.mini.glb, from tools/models/optimize.mjs).
+function RoomMiniature({ modelKey, lite, radius = 1.15 }) {
+  const { scene } = useGLTF(`/models/${modelKey}${lite ? '.mini' : ''}.glb`);
   const layout = useRoomLayout(modelKey);
   const gl = useThree((s) => s.gl);
   const plane = useMemo(() => new Plane(new Vector3(0, -1, 0), 0), []);
@@ -163,7 +164,7 @@ function Node({ id, room, status, option, cleared, sealed, here, onTravel, model
       {showMini && (
         <Suspense fallback={null}>
           <group position={[0, 0.02, 0]}>
-            <RoomMiniature modelKey={roomKey} />
+            <RoomMiniature modelKey={roomKey} lite={models.get?.(roomKey)?.mini === true} />
           </group>
           {/* its own lamp, so dark rooms still read on the map; dimmer while sealed */}
           <pointLight position={[0, 1.6, 0.4]} color={sealed ? '#b89ad0' : '#ffd9a8'} intensity={sealed ? 2.5 : 5} distance={3.2} decay={2} />

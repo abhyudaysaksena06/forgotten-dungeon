@@ -1,0 +1,17 @@
+{
+  "name": "forgotten-dungeon-model-tools",
+  "private": true,
+  "type": "module",
+  "description": "Organiser tool: shrink the game's .glb models. Not part of the game build (Vercel never installs it).",
+  "scripts": {
+    "optimize": "node optimize.mjs"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
+    "draco3dgltf": "1.5.9",
+    "meshoptimizer": "0.22.0",
+    "sharp": "0.33.5"
+  }
+}

@@ -27,6 +27,8 @@ import {
   PROGRESS_SCALE,
   ROOMS,
   RUNE_STRIKE,
+  SHIELD,
+  SWORD,
   TIER_SCALE,
   XP_PER_TIER,
 } from './data.js';
@@ -49,7 +51,8 @@ const LOG_LIMIT = 120;
 
 // ---------- creation ----------
 
-// A run starts in 'setup': the first input picks which hero the player leads.
+// A run starts on the map with Kael, the one hero, in command: his Iron Sword sharp and whole, his
+// shield full.
 export function createRun(profile) {
   const party = PARTY_ORDER.map((cls) => {
     const base = CLASSES[cls];
@@ -58,11 +61,14 @@ export function createRun(profile) {
       id: cls,
       cls,
       name: base.name,
-      controlled: false,
+      controlled: true,
       level: 1,
       xp: 0,
       hp: s.hp,
       maxHp: s.hp,
+      shield: SHIELD.max,
+      maxShield: SHIELD.max,
+      sword: { sharpness: SWORD.sharpness, durability: SWORD.durability },
       atk: s.atk,
       def: s.def,
       cooldown: 0,
@@ -78,8 +84,8 @@ export function createRun(profile) {
     teamId: profile.teamId,
     rngState: hashSeed(`${profile.seed}:${profile.salt ?? ''}`),
     turn: 0,
-    phase: 'setup',
-    leaderId: null,
+    phase: 'map',
+    leaderId: PARTY_ORDER[0],
     location: CAMP,
     torches: profile.torches,
     gold: profile.gold,
@@ -90,9 +96,9 @@ export function createRun(profile) {
     party,
     combat: null,
     decisions: [],
-    speech: null,
     stats: { roomsCleared: 0, wipes: 0, wipedIn: [], retreats: 0, kills: 0, rounds: 0, mealsCooked: 0 },
-    log: [...INTRO, 'Choose the Runewright who will lead the party.'],
+    log: [...INTRO, LEAD_LINES[PARTY_ORDER[0]], CAMP_LINES.first],
+    speech: { npc: 'king', text: CAMP_LINES.first },
     lastRolls: [],
   };
 }
@@ -203,17 +209,6 @@ function startWave(state) {
 
 // ---------- setup: choosing the leader ----------
 
-function lead(state, { memberId }) {
-  need(PARTY_ORDER.includes(memberId), 'bad_target', 'Choose Kael, Lyra, Rook or Mira.');
-  const leader = state.party[PARTY_ORDER.indexOf(memberId)];
-  state.leaderId = memberId;
-  for (const m of state.party) m.controlled = m.id === leader.id;
-  state.phase = 'map';
-  say(state, `${CLASSES[memberId].title} leads the party. The other three follow.`);
-  say(state, LEAD_LINES[memberId]);
-  speak(state, CAMP_LINES.first);
-}
-
 // ---------- the map: route decisions ----------
 
 // Every choice the player can make on the map. Each one is a readiness / route decision that
@@ -291,7 +286,8 @@ function powerUp(state, action) {
   state.gold -= p.gold;
   if (action.type === 'rest') {
     for (const m of state.party) Object.assign(m, { hp: m.maxHp, fallen: false, poison: 0 });
-    say(state, `The party rests by the campfire. Everyone is healed (${state.torches} torches left).`);
+    for (const m of state.party) m.shield = m.maxShield;
+    say(state, `${controlled(state).name} rests by the campfire: health and shield are whole again (${state.torches} torches left).`);
     return;
   }
   const m = member(state, action.memberId);
@@ -304,6 +300,33 @@ function powerUp(state, action) {
     m.atk += 5;
     say(state, `${m.name}'s weapon is reforged at the Old Forge: +5 ATK.`);
   }
+}
+
+// ---------- the cage: a cleared room's Healer and Weaponsmith ----------
+
+// Every room keeps a Healer and a Weaponsmith in a cage at its side. The cage opens when the room is
+// cleared (its skeletons down, its runes put right) and stays open whenever the hero comes back.
+export function cagesOpen(state) {
+  return state.phase === 'map' && state.location !== CAMP && state.fragments.includes(state.location) && !ROOMS[state.location].final;
+}
+
+function healer(state) {
+  need(cagesOpen(state), 'cage_closed', 'The Healer’s cage opens once this room is cleared.');
+  for (const m of state.party) {
+    Object.assign(m, { hp: m.maxHp, fallen: false, poison: 0 });
+    m.shield = m.maxShield;
+  }
+  say(state, `The Healer lays a hand on ${controlled(state).name}: health and shield are whole again.`);
+}
+
+function weaponsmith(state) {
+  need(cagesOpen(state), 'cage_closed', 'The Weaponsmith’s cage opens once this room is cleared.');
+  for (const m of state.party) {
+    if (!m.sword) continue;
+    m.sword.sharpness = SWORD.sharpness;
+    m.sword.durability = SWORD.durability;
+  }
+  say(state, `The Weaponsmith hones and mends the ${SWORD.name}: sharp and whole again.`);
 }
 
 function trade(state, { item }) {
@@ -334,15 +357,31 @@ function consume(state, user, { type, targetId }) {
 
 // ---------- combat ----------
 
+// What the Iron Sword's sharpness adds to a blow.
+export const swordEdge = (sword) => Math.round((SWORD.edge * sword.sharpness) / SWORD.sharpness);
+
 function strike(state, rng, attacker, target, { mult = 1, sure = false } = {}) {
   const roll = rng.die(20);
   if (roll <= 3 && !sure) return { roll, miss: true, damage: 0 };
   const crit = roll === 20;
   const reach = CLASSES[attacker.cls]?.reach;
   const def = reach === 'magic' ? target.def / 2 : target.def;
-  let damage = Math.max(1, Math.round(attacker.atk * mult + rng.die(6) - def));
+  const sword = attacker.sword;
+  const edge = sword ? swordEdge(sword) : 0;
+  let damage = Math.max(1, Math.round((attacker.atk + edge) * mult + rng.die(6) - def));
+  if (sword && sword.durability === 0) damage = Math.max(1, Math.ceil(damage / 2));
   if (crit) damage *= 2;
+  if (sword) wearSword(state, attacker);
   return { roll, crit, miss: false, damage };
+}
+
+// Every blow that lands dulls the blade and wears it; the Weaponsmith puts both right.
+function wearSword(state, m) {
+  const s = m.sword;
+  const wasWhole = s.durability > 0;
+  s.sharpness = Math.max(0, s.sharpness - SWORD.dullPerHit);
+  s.durability = Math.max(0, s.durability - SWORD.wearPerHit);
+  if (wasWhole && s.durability === 0) say(state, `${m.name}'s ${SWORD.name} breaks! Every blow lands for half until the Weaponsmith mends it.`);
 }
 
 export function canReach(attacker, enemy) {
@@ -401,6 +440,14 @@ function hurt(state, m, amount, source) {
   let dmg = amount;
   if (m.defending) dmg = Math.ceil(dmg / 2);
   if (state.combat?.bulwark) dmg = Math.ceil(dmg / 2);
+  // The shield takes the blow first.
+  const blocked = Math.min(m.shield ?? 0, dmg);
+  if (blocked > 0) {
+    m.shield -= blocked;
+    dmg -= blocked;
+    say(state, `${m.name}'s shield takes ${blocked} from ${source}${m.shield === 0 ? ' and gives way' : ''}.`);
+  }
+  if (dmg <= 0) return 0;
   const dealt = Math.min(m.hp, dmg);
   m.hp -= dealt;
   say(state, `${source} hits ${m.name} for ${dealt}.`);
@@ -465,7 +512,7 @@ function act(state, rng, m, action, commanded) {
       } else if (skill.id === 'bulwark') {
         state.combat.bulwark = true;
         m.defending = true;
-        say(state, `${m.name} raises a Bulwark: the party takes half damage this round.`);
+        say(state, `${m.name} raises a Bulwark: he takes half damage this round.`);
       } else if (skill.id === 'volley') {
         say(state, `${m.name} looses a volley!`);
         for (const e of liveEnemies(state)) hitEnemy(state, m, e, strike(state, rng, m, e, { mult: 0.7, sure: true }), { volley: true });
@@ -728,7 +775,7 @@ function winRoom(state) {
     m.runeCooldown = 0;
   }
   gainXp(state, XP_PER_TIER * room.tier);
-  say(state, `${room.name} is cleared! Heart fragment ${state.fragments.length}, ${room.loot.gold} gold, ${room.loot.potions} potion(s), ${XP_PER_TIER * room.tier} XP for each hero standing. Its runes turn from red to gold.`);
+  say(state, `${room.name} is cleared! Heart fragment ${state.fragments.length}, ${room.loot.gold} gold, ${room.loot.potions} potion(s), ${XP_PER_TIER * room.tier} XP. Its runes turn from red to gold.`);
   for (const line of ROOM_LINES[roomId].clear) speak(state, line);
   if (throneOpen(state) && state.fragments.length === FRAGMENTS_FOR_THRONE) say(state, 'The Throne of Eternity’s seal cracks open.');
   checkDarkness(state);
@@ -743,7 +790,8 @@ function wipe(state) {
   state.torches = Math.max(0, state.torches - 2);
   state.gold = Math.floor(state.gold / 2);
   for (const m of state.party) Object.assign(m, { fallen: false, hp: Math.round(m.maxHp * 0.3), poison: 0, defending: false, cooldown: 0, runeCooldown: 0 });
-  say(state, `The whole party falls… and wakes by the campfire. 2 torches and half the gold are lost (${state.torches} torches left).`);
+  for (const m of state.party) m.shield = Math.round(m.maxShield * 0.3);
+  say(state, `${controlled(state).name} falls… and wakes by the campfire. 2 torches and half the gold are lost (${state.torches} torches left).`);
   checkDarkness(state);
 }
 
@@ -829,15 +877,14 @@ export function step(prev, action, { mutate = false } = {}) {
   need(prev.phase !== 'victory' && prev.phase !== 'defeat', 'run_over', 'This run is over.');
   const state = mutate ? prev : structuredClone(prev);
   state.speech = null;
-  if (state.phase === 'setup') {
-    need(action.type === 'lead', 'choose_leader', 'First choose the Runewright who leads the party.');
-    lead(state, action);
-  } else if (state.phase === 'map') {
+  if (state.phase === 'map') {
     if (action.type === 'potion' || action.type === 'meal') consume(state, null, action);
     else if (action.type === 'trade') trade(state, action);
+    else if (action.type === 'healer') healer(state);
+    else if (action.type === 'smith') weaponsmith(state);
     else {
       const isRoute = ['travel', 'rest', 'altar', 'forge'].includes(action.type);
-      need(isRoute, 'bad_action', 'On the map you can travel, rest, use the altar or forge, trade with Pip, or eat and drink.');
+      need(isRoute, 'bad_action', 'On the map you can travel, rest, use the altar or forge, trade with Pip, visit a cleared room’s Healer and Weaponsmith, or eat and drink.');
       recordDecision(state, action);
       if (action.type === 'travel') travel(state, action);
       else powerUp(state, action);
@@ -860,6 +907,7 @@ export function publicState(state) {
     options: routeOptions(state),
     pip: pipOffers(state),
     throneOpen: throneOpen(state),
+    cages: cagesOpen(state),
     quests: questLog(state),
     room: room ? { id: room, ...ROOMS[room], waves: undefined } : null,
   };

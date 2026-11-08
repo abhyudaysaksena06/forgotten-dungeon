@@ -32,14 +32,14 @@ export const QUEST_BUGS = [
   {
     id: 'Q01',
     round: 1,
-    name: 'Wrong Hands',
+    name: 'Nameless Runewright',
     kind: 'blocker',
-    symptom: 'You choose one hero but steer the next one in line. Rune Strike from that hero never breaks Morvath’s armour.',
-    patches: [{ file: E, find: '  const leader = state.party[PARTY_ORDER.indexOf(memberId)];', replace: '  const leader = state.party[(PARTY_ORDER.indexOf(memberId) + 1) % PARTY_ORDER.length];' }],
+    symptom: 'Kael’s Rune Strike never breaks Morvath’s armour: the run does not know he is its Runewright.',
+    patches: [{ file: E, find: '    leaderId: PARTY_ORDER[0],', replace: '    leaderId: CLASSES[PARTY_ORDER[0]].name,' }],
     hints: [
-      'Check which hero the party cards say you control right after choosing your leader.',
-      'Look at how the leader is chosen in the quest engine (the `lead` function).',
-      'The hero you control should be the exact one you picked; compare the index used with the id stored as the leader.',
+      'Look at `leaderId` in the run state (the save file shows it) and at Kael’s `id`.',
+      'The leader is set when the run is created (`createRun` in the quest engine).',
+      'The Rune Strike check compares the attacker’s id with `leaderId`: the leader must be stored by id, not by name.',
     ],
   },
   {
@@ -101,18 +101,18 @@ export const QUEST_BUGS = [
     round: 2,
     name: 'Cold Ashes',
     kind: 'hindrance',
-    symptom: 'Resting heals the living but never revives the Fallen.',
+    symptom: 'Resting by the campfire only brings Kael back to half health.',
     patches: [
       {
         file: E,
         find: '    for (const m of state.party) Object.assign(m, { hp: m.maxHp, fallen: false, poison: 0 });',
-        replace: '    for (const m of state.party) if (!m.fallen) Object.assign(m, { hp: m.maxHp, poison: 0 });',
+        replace: '    for (const m of state.party) Object.assign(m, { hp: Math.max(m.hp, Math.round(m.maxHp / 2)), fallen: false, poison: 0 });',
       },
     ],
     hints: [
-      'Rest at the campfire while a companion is Fallen.',
+      'Rest at the campfire while badly hurt and read Kael’s health afterwards.',
       'Look at what resting does in `powerUp`.',
-      'Resting should restore every hero, including the Fallen.',
+      'Resting should restore Kael to his full health.',
     ],
   },
   {
@@ -152,27 +152,33 @@ export const QUEST_BUGS = [
   {
     id: 'Q06',
     round: 3,
-    name: 'Selfish Mender',
+    name: 'Half a Healer',
     kind: 'hindrance',
-    symptom: 'Lyra only heals allies who are already healthy.',
-    patches: [{ file: 'server/src/quest/ai.js', find: '      if (ready && lowest && frac(lowest) < 0.55)', replace: '      if (ready && lowest && frac(lowest) > 0.55)' }],
+    symptom: 'The Healer in a cleared room’s cage restores Kael’s health but leaves his shield broken.',
+    patches: [
+      {
+        file: E,
+        find: '    m.shield = m.maxShield;\n  }\n  say(state, `The Healer',
+        replace: '    m.shield = Math.max(m.shield, 0);\n  }\n  say(state, `The Healer',
+      },
+    ],
     hints: [
-      'Watch whom Lyra mends when a companion is badly hurt.',
-      'Companion decisions live in server/src/quest/ai.js.',
-      'The healer should mend the most wounded ally when they drop low.',
+      'Visit the Healer with an empty shield and watch the shield bar.',
+      'The cage’s Healer is the `healer` function in the quest engine.',
+      'The Healer should set the shield back to its maximum, not leave it where it was.',
     ],
   },
   {
     id: 'Q16',
     round: 3,
-    name: 'Lonely Bulwark',
+    name: 'Paper Shield',
     kind: 'hindrance',
-    symptom: 'Bulwark protects only Kael; the rest of the party takes full damage.',
-    patches: [{ file: E, find: '  if (state.combat?.bulwark) dmg = Math.ceil(dmg / 2);', replace: "  if (state.combat?.bulwark && m.id === 'knight') dmg = Math.ceil(dmg / 2);" }],
+    symptom: 'Kael’s shield drains when he is hit, but the whole blow still lands on his health.',
+    patches: [{ file: E, find: '    m.shield -= blocked;\n    dmg -= blocked;\n', replace: '    m.shield -= blocked;\n' }],
     hints: [
-      'Compare the damage the party takes in a Bulwark round with a normal round.',
-      'Damage to heroes goes through the `hurt` function in the quest engine.',
-      'Bulwark halves damage for the whole party, not just the knight.',
+      'Take a hit with a full shield and compare the shield and health bars.',
+      'Damage to Kael goes through the `hurt` function in the quest engine.',
+      'Whatever the shield takes should be taken off the blow before it reaches his health.',
     ],
   },
   {
@@ -238,20 +244,20 @@ export const QUEST_BUGS = [
   {
     id: 'Q19',
     round: 4,
-    name: 'Echoing Cooldown',
+    name: 'Careless Smith',
     kind: 'hindrance',
-    symptom: 'When any hero uses a skill, every hero’s skill goes on cooldown.',
+    symptom: 'The Weaponsmith hones the Iron Sword but barely mends it: a few rooms later it breaks.',
     patches: [
       {
         file: E,
-        find: '      m.cooldown = skill.cooldown + 1; // ticks down at the end of this round',
-        replace: '      for (const p of state.party) p.cooldown = skill.cooldown + 1; // ticks down at the end of this round',
+        find: '    m.sword.durability = SWORD.durability;',
+        replace: '    m.sword.durability = Math.min(SWORD.durability, m.sword.durability + 10);',
       },
     ],
     hints: [
-      'Use a skill and look at every party card’s cooldown.',
-      'Skills are handled in `act` in the quest engine.',
-      'A cooldown belongs to the hero who used the skill.',
+      'Visit the Weaponsmith with a worn sword and read its durability.',
+      'The cage’s Weaponsmith is the `weaponsmith` function in the quest engine.',
+      'Durability should go back to the full value in `SWORD` (data.js), like sharpness does.',
     ],
   },
   {

@@ -1,8 +1,26 @@
 [
-  "room_1",
-  "room_2",
-  "room_3",
-  "room_4",
-  "room_5",
-  { "key": "enemy_skeleton", "height": 1.8 }
+  {
+    "key": "room_1",
+    "mini": true
+  },
+  {
+    "key": "room_2",
+    "mini": true
+  },
+  {
+    "key": "room_3",
+    "mini": true
+  },
+  {
+    "key": "room_4",
+    "mini": true
+  },
+  {
+    "key": "room_5",
+    "mini": true
+  },
+  {
+    "key": "enemy_skeleton",
+    "height": 1.8
+  }
 ]

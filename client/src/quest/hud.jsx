@@ -187,6 +187,21 @@ export function PartyPanel({ party, meta, inFight }) {
                 </span>
                 <span>{m.fallen ? <b className="text-blood">Fallen</b> : m.poison ? <b className="text-venom">Poisoned</b> : m.cooldown ? `${cls.skill.name} ${m.cooldown}` : `${cls.skill.name} ready`}</span>
               </div>
+              {m.maxShield > 0 && (
+                <>
+                  <div className="pcard-bar is-thin" title="Shield: takes blows before health">
+                    <span className="shield" style={{ width: `${Math.max(0, Math.min(100, (m.shield / m.maxShield) * 100))}%` }} />
+                  </div>
+                  <div className="pcard-foot">
+                    <span>shield {m.shield}/{m.maxShield}</span>
+                    {m.sword && meta.sword && (
+                      <span title={`${meta.sword.name}: edge adds damage; a broken sword hits for half`}>
+                        {m.sword.durability === 0 ? <b className="text-blood">sword broken</b> : `edge ${Math.round((m.sword.sharpness / meta.sword.sharpness) * 100)}% · wear ${100 - Math.round((m.sword.durability / meta.sword.durability) * 100)}%`}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </article>
         );
@@ -263,7 +278,7 @@ export function AbilityBar({ me, skill, target, canReach, potions, meals, rune, 
       <div className="ability-slots">
         {me.fallen ? (
           <>
-            <p className="fallen-note">{me.name} has fallen. Your companions fight on.</p>
+            <p className="fallen-note">{me.name} has fallen.</p>
             <Slot icon="wait" label="Wait" keyName="F" onClick={onWait} disabled={busy} primary />
           </>
         ) : (

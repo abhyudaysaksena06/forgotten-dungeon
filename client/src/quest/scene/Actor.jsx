@@ -8,8 +8,8 @@ import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js
 import { IS_FLYER, InkContext, PALETTE, Placeholder, TOON_RAMP } from './placeholders.jsx';
 import { toonify } from './toon.js';
 
-// The hosted build (Vercel, VITE_VILLAINS_ONLY=1) draws only the villains: no party, companions
-// or NPCs, on the map or in a fight. The rooms, the target ring and the panels stay.
+// The hosted build (Vercel, VITE_VILLAINS_ONLY=1) draws only the villains and the cage's keepers:
+// not Kael, nor the camp's NPCs. The rooms, the target ring and the panels stay.
 export const VILLAINS_ONLY = import.meta.env.VITE_VILLAINS_ONLY === '1';
 
 const DURATION = { attack: 520, skill: 700, hit: 420, dodge: 380, defend: 600, heal: 700, death: 700, boss_strike: 700, boss_sweep: 900, transform: 900, armour_break: 800, block: 400 };
@@ -103,6 +103,7 @@ export function Actor({
   onClick,
   motion, // () => 'idle' | 'run' | 'jump' | 'down', for characters that move
   villain = false, // an enemy: still drawn when only villains are
+  keeper = false, // the Healer or the Weaponsmith in a room's cage: always drawn too
 }) {
   const inner = useRef();
   const flash = useRef();
@@ -158,7 +159,7 @@ export function Actor({
     if (ring.current) ring.current.rotation.z = t * (telegraphed ? 2 : 0.6);
   });
 
-  if (VILLAINS_ONLY && !villain) return null; // after every hook, so their order never changes
+  if (VILLAINS_ONLY && !villain && !keeper) return null; // after every hook, so their order never changes
 
   const height = 2 * scale * (modelKey.startsWith('boss_morvath') ? 1.7 : modelKey.startsWith('boss_') ? 1.3 : 1);
   const recentNumbers = cues.filter((c) => (c.kind === 'hit' || c.kind === 'heal') && c.amount);

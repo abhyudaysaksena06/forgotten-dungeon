@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import express from 'express';
-import { CLASSES, MORVATH, PIP } from '../../src/quest/data.js';
+import { CLASSES, MORVATH, PIP, SHIELD, SWORD } from '../../src/quest/data.js';
 import { beginFight, createRun, distance, publicState, routeOptions, step } from '../../src/quest/engine.js';
 import { replay } from '../../src/quest/replay.js';
 import { questRouter } from '../../src/quest/routes.js';
@@ -16,38 +16,34 @@ import { ACTION_FIELDS, QuestRuns, cleanAction } from '../../src/quest/runs.js';
 import { makeProfile, profileHash } from '../../src/quest/teams.js';
 
 const profile = (tier = 'average', seed = 'guard') => makeProfile({ teamId: 'g', seed, tier });
-// Tests here set the leader directly, so they don't depend on the `lead` rule.
-const fresh = (tier, leader = 'knight') => {
-  const s = createRun(profile(tier));
-  s.phase = 'map';
-  s.leaderId = leader;
-  for (const m of s.party) m.controlled = m.id === leader;
-  return s;
-};
-// Inputs that are legal in every build: lead, travel to a fight, then let the companions act.
+// The quest has one hero, Kael, in command from the start.
+const fresh = (tier) => createRun(profile(tier));
+// Inputs that are legal in every build: travel to a fight, then wait.
 const simpleInput = (s) => {
-  if (s.phase === 'setup') return { type: 'lead', memberId: 'knight' };
   if (s.phase === 'combat') return { type: 'wait' };
   const opt = routeOptions(s).find((o) => o.fight) ?? routeOptions(s)[0];
   return opt ? { type: opt.type, to: opt.to, memberId: opt.memberId } : null;
 };
 
-test('a run starts with Kael, Lyra, Rook and Mira, waiting for a leader', () => {
+test('a run starts on the map with Kael alone: his Iron Sword sharp and whole, his shield full', () => {
   const p = profile();
   const s = createRun(p);
-  assert.equal(s.phase, 'setup');
-  assert.deepEqual(s.party.map((m) => m.name), ['Kael', 'Lyra', 'Rook', 'Mira']);
+  assert.equal(s.phase, 'map');
+  assert.deepEqual(s.party.map((m) => m.name), ['Kael']);
+  assert.equal(s.party[0].controlled, true);
   assert.equal(s.party[0].hp, p.party.knight.hp);
+  assert.equal(s.party[0].shield, SHIELD.max);
+  assert.ok(s.party[0].sword, 'Kael carries his sword'); // how sharp it starts is hidden test [Q01]
   assert.equal(s.torches, p.torches);
-  assert.equal(CLASSES.ranger.reach, 'ranged');
-  assert.throws(() => step(s, { type: 'travel', to: 'r1' }), /choose the Runewright/i);
+  assert.equal(CLASSES.knight.startingItem, SWORD.name);
+  assert.throws(() => step(s, { type: 'lead', memberId: 'knight' }), /On the map you can/);
 });
 
 test('teams get different starting stats from their seeds', () => {
   const a = profile('average', 'team-a');
   const b = profile('average', 'team-b');
   assert.notDeepEqual(a.party, b.party);
-  assert.ok(profile('strong', 'x').party.rogue.atk > profile('weak', 'x').party.rogue.atk);
+  assert.ok(profile('strong', 'x').party.knight.atk > profile('weak', 'x').party.knight.atk);
   assert.equal(profileHash(a), profileHash(structuredClone(a)));
 });
 
@@ -60,7 +56,7 @@ test('the map: corridors between the rooms; the Throne starts sealed', () => {
   assert.ok(routeOptions(s).every((o) => o.to !== 'r5'));
 });
 
-test('entering a room costs torches, records a decision, and the room’s NPC speaks', () => {
+test('entering a room costs torches, records a decision, and the narrator sets the scene', () => {
   const s0 = fresh();
   const s = step(s0, { type: 'travel', to: 'r1' });
   assert.equal(s.phase, 'combat');
@@ -68,7 +64,8 @@ test('entering a room costs torches, records a decision, and the room’s NPC sp
   assert.equal(s.decisions.length, 1);
   assert.equal(s.decisions[0].choice, 'room1');
   assert.deepEqual(s.combat.enemies.map((e) => e.kind), Array(6).fill('skeleton'));
-  assert.equal(s.speech?.npc, 'grum');
+  assert.equal(s.speech?.npc, null); // no NPC in the rooms now
+  assert.match(s.speech.text, /cage/);
   assert.equal(s0.phase, 'map', 'step never mutates the previous state');
 });
 
@@ -99,16 +96,6 @@ test('below 60% HP Morvath becomes the Shadow Dragon and summons two Skeletons',
   assert.equal(dragon.phase, 2);
   assert.equal(dragon.name, MORVATH.dragonName);
   assert.equal(after.combat.enemies.filter((e) => e.kind === 'skeleton_risen').length, 2);
-});
-
-test('Brakka yields instead of dying', () => {
-  // No room brings Brakka any more; the engine still knows how he yields.
-  const brakkaWave = beginFight(fresh('strong', 'rogue'), 'r3');
-  brakkaWave.combat.enemies = [{ ...brakkaWave.combat.enemies[0], kind: 'brakka', name: 'Brakka the Warrior', boss: true, hp: 210, maxHp: 210 }];
-  const brakka = brakkaWave.combat.enemies[0];
-  brakka.hp = Math.floor(brakka.maxHp * 0.2) + 1;
-  const after = step(brakkaWave, { type: 'skill', targetId: brakka.id });
-  assert.ok(after.log.some((l) => /yields/.test(l)));
 });
 
 test('Pip cooks a Monster Meal from three monster parts', () => {
@@ -152,7 +139,7 @@ test('runs are deterministic: same profile and inputs, same result', () => {
 
 test('replay rebuilds a run from its inputs and stops at the first illegal one', () => {
   const p = profile();
-  const actions = [{ type: 'lead', memberId: 'ranger' }, { type: 'travel', to: 'r1' }, { type: 'wait' }, { type: 'wait' }];
+  const actions = [{ type: 'travel', to: 'r1' }, { type: 'wait' }, { type: 'wait' }, { type: 'wait' }];
   let s = createRun(p);
   for (const a of actions) s = step(s, a);
   assert.deepEqual(replay(p, actions).state, s);
@@ -174,8 +161,8 @@ test('autosave: a new server resumes the same run; illegal saved inputs are drop
   const dir = mkdtempSync(join(tmpdir(), 'quest-'));
   const p = profile();
   const a = new QuestRuns({ profiles: [p], saveDir: dir });
-  a.act('g', { type: 'lead', memberId: 'knight' });
   a.act('g', { type: 'travel', to: 'r1' });
+  a.act('g', { type: 'wait' });
   a.act('g', { type: 'wait' });
   const b = new QuestRuns({ profiles: [p], saveDir: dir });
   assert.deepEqual(b.run('g').state, a.run('g').state);
@@ -199,7 +186,6 @@ test('API: play over HTTP; a team code is required when set', async () => {
     fetch(base + path, { method: 'POST', headers: { 'content-type': 'application/json', ...(code ? { 'x-team-code': code } : {}) }, body: JSON.stringify(body) }).then((r) => r.json());
   try {
     assert.equal((await post('/g/session', {})).ok, false);
-    await post('/g/act', { action: { type: 'lead', memberId: 'mage' } }, 'k3y');
     const ok = await post('/g/act', { action: { type: 'travel', to: 'r1' } }, 'k3y');
     assert.equal(ok.state.phase, 'combat');
     const bad = await post('/g/act', { action: { type: 'fly' } }, 'k3y');
@@ -211,7 +197,7 @@ test('API: play over HTTP; a team code is required when set', async () => {
 
 // ---------- lanes and boss mechanics ----------
 
-const atRoom = (room, leader = 'knight', tier = 'strong') => beginFight(fresh(tier, leader), room);
+const atRoom = (room, tier = 'strong') => beginFight(fresh(tier), room);
 const foe = (s, kind) => s.combat.enemies.find((e) => e.kind === kind);
 
 test('the player walks to a lane with their input, and only real lanes count', () => {
@@ -228,35 +214,13 @@ test('a marked lane is hit; standing elsewhere dodges', () => {
   s.combat.enemies = [{ ...s.combat.enemies[0], kind: 'stone_sentinel', name: 'Stone Sentinel', boss: true, move: 'charge', atk: 30, hp: 999, maxHp: 999, def: 0 }];
   s.combat.round = 2; // the next round is a 3rd round: the charge lands
   s.combat.danger = { by: s.combat.enemies[0].id, name: 'Charge', lanes: ['left'], round: 3, damage: 48 };
-  for (const m of s.party) m.lane = 'left';
+  for (const m of s.party) Object.assign(m, { lane: 'left', shield: 0 }); // the whole blow reaches health
   const leader = s.party.find((m) => m.controlled);
   const hp = leader.hp;
   const dodged = step(s, { type: 'defend', lane: 'right' });
   assert.equal(dodged.party.find((m) => m.controlled).hp, hp, 'the leader stepped out');
   const stayed = step(s, { type: 'defend' });
   assert.ok(stayed.party.find((m) => m.controlled).hp < hp, 'staying in the lane hurts');
-});
-
-test('a hidden Ink Wraith can only be hit from its lane', () => {
-  const s = atRoom('r2', 'mage');
-  s.combat.waveIndex = 1;
-  s.combat.enemies = [{ ...s.combat.enemies[0], kind: 'ink_wraith', name: 'The Ink Wraith', boss: true, flying: true, hp: 500, maxHp: 500, def: 0, hiddenIn: 'right', hiddenFor: 2 }];
-  for (const m of s.party) m.lane = 'left';
-  for (const m of s.party.filter((p) => !p.controlled)) Object.assign(m, { hp: 0, fallen: true });
-  const wrong = step(s, { type: 'attack', targetId: s.combat.enemies[0].id, lane: 'left' });
-  assert.equal(foe(wrong, 'ink_wraith').hp, 500);
-  const right = step(s, { type: 'attack', targetId: s.combat.enemies[0].id, lane: 'right' });
-  assert.ok(foe(right, 'ink_wraith').hp < 500 || right.lastRolls[0].value <= 3);
-});
-
-test('Brakka in counter stance takes half and strikes back', () => {
-  const s = atRoom('r3', 'rogue');
-  s.combat.waveIndex = 1;
-  s.combat.enemies = [{ ...s.combat.enemies[0], kind: 'brakka', name: 'Brakka the Warrior', boss: true, hp: 900, maxHp: 900, def: 0, atk: 20, stance: 'counter' }];
-  for (const m of s.party.filter((p) => !p.controlled)) Object.assign(m, { hp: 0, fallen: true });
-  const after = step(s, { type: 'skill', targetId: s.combat.enemies[0].id });
-  assert.match(after.log.join('\n'), /blocked half/);
-  assert.match(after.log.join('\n'), /Brakka the Warrior's counter hits/);
 });
 
 test('living Skeletons feed Morvath in phase 2', () => {
@@ -277,4 +241,41 @@ test('every second skeleton to fall leaves a monster part: three a room', () => 
   let after = s;
   for (let i = 0; i < 12 && after.combat?.enemies.some((e) => e.hp > 0); i++) after = step(after, { type: 'attack', targetId: after.combat.enemies.find((e) => e.hp > 0).id });
   assert.equal(after.parts, 3);
+});
+
+test('the cage stays shut until its room is cleared; then the Healer and the Weaponsmith put Kael right', () => {
+  const s = fresh();
+  assert.throws(() => step(s, { type: 'healer' }), /opens once this room is cleared/);
+  const won = { ...fresh(), fragments: ['r1'], location: 'r1' };
+  Object.assign(won.party[0], { hp: 10, shield: 0, sword: { sharpness: 5, durability: 0 } });
+  assert.equal(publicState(won).cages, true);
+  // (The shield and the sword's durability are hidden tests [Q06] and [Q19].)
+  const healed = step(won, { type: 'healer' });
+  assert.equal(healed.party[0].hp, healed.party[0].maxHp);
+  const mended = step(healed, { type: 'smith' });
+  assert.equal(mended.party[0].sword.sharpness, SWORD.sharpness);
+  const throne = { ...fresh(), fragments: ['r1', 'r2', 'r3', 'r5'], location: 'r5' };
+  assert.equal(publicState(throne).cages, false, 'the Throne has no cage');
+});
+
+test('every blow that lands dulls and wears the Iron Sword; a broken sword hits for half', () => {
+  const whole = () => ({ sharpness: SWORD.sharpness, durability: SWORD.durability }); // not how a run starts: that is [Q01]
+  let s = beginFight(fresh('strong'), 'r1');
+  s.party[0].sword = whole();
+  for (let i = 0; i < 8 && s.phase === 'combat'; i++) s = step(s, { type: 'attack', targetId: s.combat.enemies.find((e) => e.hp > 0).id });
+  const sword = s.party[0].sword;
+  assert.ok(sword.sharpness < SWORD.sharpness && sword.durability < SWORD.durability);
+  assert.equal(SWORD.sharpness - sword.sharpness, ((SWORD.durability - sword.durability) / SWORD.wearPerHit) * SWORD.dullPerHit);
+  // Same dice, sword whole against sword broken.
+  const a = beginFight(fresh('strong'), 'r1');
+  a.party[0].sword = whole();
+  const b = structuredClone(a);
+  b.party[0].sword.durability = 0;
+  const target = a.combat.enemies[0].id;
+  const hitA = step(a, { type: 'attack', targetId: target }).combat.enemies[0];
+  const hitB = step(b, { type: 'attack', targetId: target }).combat.enemies[0];
+  const lostA = a.combat.enemies[0].hp - hitA.hp;
+  const lostB = b.combat.enemies[0].hp - hitB.hp;
+  // Halved before a critical doubles it, so allow one point either way.
+  if (lostA > 6) assert.ok(Math.abs(lostB - lostA / 2) <= 1, `${lostA} whole, ${lostB} broken`);
 });

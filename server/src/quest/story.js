@@ -1,4 +1,5 @@
-// Scripted lines for the Dungeon Master and the NPCs (from the Story Bible: "The Shattered Heart").
+// Scripted lines for the Dungeon Master and the camp's NPCs (from the Story Bible: "The Shattered Heart").
+// The rooms have no NPCs now: Kael goes alone, and each room's cage holds a Healer and a Weaponsmith.
 // The engine adds them to the chronicle; nothing here changes a number.
 
 export const INTRO = [
@@ -16,20 +17,20 @@ export const LEAD_LINES = {
 
 export const ROOM_LINES = {
   r1: {
-    enter: ['Old Grum: “Another one? The last visitor came four hundred years ago. He didn’t leave.”', 'Old Grum: “The runes on my gate are wrong. Wrong runes make wrong things. Mind the courtyard.”'],
-    clear: ['Old Grum: “Hm. You fixed it. Take the fragment — it was stuck in my lock anyway.”', 'Far below, something huge breathes. Grum mutters: “The Dragon is dreaming again.”'],
+    enter: ['The gate grinds open on a courtyard of bones. Six skeletons turn their skulls towards Kael.', 'At the side, behind iron bars, two figures wait in a locked cage: a Healer and a Weaponsmith.'],
+    clear: ['The last skeleton falls apart. The runes on the gate turn gold, and the cage’s lock clicks open.'],
   },
   r2: {
-    enter: ['Ilsa: “The answer is written somewhere in these portraits… I painted half of them myself. Why can’t I remember?”', 'One portrait shows two young men laughing together: the King and Morvath, as friends.'],
-    clear: ['Ilsa: “Friendship. That was the word. The Royal Diary tells how the Heart broke… and here is a piece of it.”'],
+    enter: ['The Hall of Portraits. Painted eyes follow Kael; six skeletons step out of the frames.', 'One portrait shows two young men laughing together: the King and Morvath, as friends.'],
+    clear: ['The hall falls silent. The cage at its side swings open: the Healer and the Weaponsmith are free.'],
   },
   r3: {
-    enter: ['Seraphine: “Three trials guard the Heart. Strength, wisdom, judgment. The corruption has made us… unkind.”', 'Venn: “Bring me the right page, Runewright. Or the wrong one. I will know.”'],
-    clear: ['The last skeleton falls apart, and the chamber goes quiet.', 'Seraphine: “The truth lies in the shadows. Take the third fragment.”'],
+    enter: ['The Hall of Trials: a cathedral of candles around the Hollow Saint’s tomb. Six skeletons rise from the dais.'],
+    clear: ['The last skeleton falls apart, and the chamber goes quiet. The cage by the tomb opens.'],
   },
   r4: {
-    enter: ['Sir Corin: “Morvath isn’t hiding with the shadows. He became one. The Heart turned him into a dragon… and the King never blamed him.”'],
-    clear: ['Sir Corin: “Their line is broken. The Fortress Gate is open. Go — and spare him if you can.”'],
+    enter: ['The Hollow Barracks. Chains sway overhead; six skeletons stand to attention, swords drawn.'],
+    clear: ['Their line is broken. The Fortress Gate is open, and so is the cage at the barracks wall.'],
   },
   r5: {
     enter: ['Morvath: “You fixed my dungeon, Runewright. Clever. But some wishes cannot be undone.”'],

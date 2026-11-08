@@ -5,7 +5,7 @@
 // rules and numbers still live on the server.
 //
 // vercel.json rewrites /api/quest/<path> to this function as ?path=<path>.
-import { CAMP, CLASSES, EDGES, ENEMIES, FINAL_GROWTH, FRAGMENTS_FOR_THRONE, MORVATH, NPCS, PARTY_ORDER, PIP, POWER_UPS, ROOMS, RUNE_STRIKE } from '../server/src/quest/data.js';
+import { CAMP, CLASSES, EDGES, ENEMIES, FINAL_GROWTH, FRAGMENTS_FOR_THRONE, MORVATH, NPCS, PARTY_ORDER, PIP, POWER_UPS, ROOMS, RUNE_STRIKE, SHIELD, SWORD } from '../server/src/quest/data.js';
 import { QuestError, publicState, step } from '../server/src/quest/engine.js';
 import { loadProfiles } from '../server/src/quest/profiles.js';
 import { replay } from '../server/src/quest/replay.js';
@@ -15,7 +15,7 @@ import { profileHash } from '../server/src/quest/teams.js';
 const MAX_ACTIONS = 5000; // far more than a full run; bounds the replay work per request
 const profiles = new Map(loadProfiles(process.env.QUEST_TEAMS).map((p) => [p.teamId, p]));
 
-const META = { classes: CLASSES, partyOrder: PARTY_ORDER, rooms: ROOMS, edges: EDGES, camp: CAMP, enemies: ENEMIES, npcs: NPCS, morvath: MORVATH, runeStrike: RUNE_STRIKE, powerUps: POWER_UPS, pip: PIP, fragmentsForThrone: FRAGMENTS_FOR_THRONE, finalGrowth: FINAL_GROWTH };
+const META = { classes: CLASSES, partyOrder: PARTY_ORDER, rooms: ROOMS, edges: EDGES, camp: CAMP, enemies: ENEMIES, npcs: NPCS, morvath: MORVATH, runeStrike: RUNE_STRIKE, powerUps: POWER_UPS, pip: PIP, fragmentsForThrone: FRAGMENTS_FOR_THRONE, finalGrowth: FINAL_GROWTH, sword: SWORD, shield: SHIELD };
 
 function teamFor(teamId, code) {
   const p = profiles.get(teamId);
