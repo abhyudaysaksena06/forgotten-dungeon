@@ -14,9 +14,9 @@ cleared (+12% per tier above 1, +6% per room cleared).
 | 0 s | **BATTLE START!** banner (1.5 s). The narrator sets the scene in the dialogue box. The quest tracker shows the room's quest. Kael stands at the south spawn, the skeletons to the north, and the room's **cage** (Healer and Weaponsmith behind locked bars) at the side. |
 | From 0 s | The skeletons start walking toward Kael at once. His shield takes their blows before his health does. |
 | Each round | The player acts (F, right-click, E, Q, R, H, G) or, after **6 s** of doing nothing, the round plays out anyway. Kael acts, then the skeletons; the animations take about 2–2.5 s (0.3 s per fighter). Every blow that lands dulls and wears the Iron Sword. |
-| Six skeletons | Rooms 1–4 hold six skeletons and no boss. Three stand at the room's enemy spawns, the rest in a row behind them. |
-| Last skeleton down | **VICTORY!** (1.7 s) with "The cage is open", then **QUEST CLEAR!** (2.2 s), then **LEVEL UP!** (1.5 s) if Kael levelled. A Heart fragment, gold, potions and XP. The room stays on screen: the cage doors swing open. |
-| The open cage | Walk up to the Healer's door and press **E** (health and shield back to full), then to the Weaponsmith's (sharpness and durability back to full). Free, and open again whenever Kael comes back. Then choose the next room from the Journey list. |
+| Six skeletons | Rooms 1–4 hold six skeletons; only room 3 has a boss, the **Hell Nemesis**, who steps out after all six are down. Three stand at the room's enemy spawns, the rest in a row behind them. |
+| Last skeleton down | **VICTORY!** (1.7 s) with "The cage is open" (or "The cage stays shut: n broken runes left in this round" while the round's bugs are still in the code), then **QUEST CLEAR!** (2.2 s), then **LEVEL UP!** (1.5 s) if Kael levelled. A Heart fragment, gold, potions and XP. The room stays on screen: the cage doors swing open once the round has no broken runes. |
+| The open cage | Opens only when the room is cleared **and** the round's glitches (bugs) are fixed in the code. Walk up to the Healer's door and press **E** (health and shield back to full), then to the Weaponsmith's (sharpness and durability back to full). Free, and open again whenever Kael comes back. Then choose the next room from the Journey list. |
 | Kael falls | **DEFEATED…** (1.9 s). He wakes at the camp at 30% health and shield, minus 2 torches and half the gold. The room resets. |
 
 A clean playthrough takes about **6–10 minutes**: 4–7 minutes of fighting and 1–3 minutes on the map
@@ -53,9 +53,21 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
 - **On entering:** a cathedral of candles around the Hollow Saint's tomb. Quest: **The Three Trials**.
 - **Room:** the Hollow Saint's cathedral. Kael enters from the nave in the south into a round
   rotunda with the saint's tomb on a raised dais (you can step up onto it).
-- **Enemies:** 6 Skeletons, 24% stronger than in room 1 (plus progress).
-- **Length:** about **23 rounds** (21–25). Roughly **70–140 s**. About 56% of Kael's health is lost;
-  about half of first attempts win: the room where a weaker Kael starts to fall.
+- **Enemies:** 6 Skeletons, 24% stronger than in room 1 (plus progress). Only when all six are down
+  does the **Hell Nemesis** step out (**BOSS BATTLE!** banner): 150 HP, ATK 15, DEF 4 before scaling.
+  Kael catches his breath as it appears: his shield is full again and he gets 25% of his health
+  back (no breather before Morvath). Its moves:
+  - **Hellfire Charge**, every third round: it lowers its head at the lane Kael stands in ("Move
+    out!"), and the next round dashes down it for 1.6× its attack. Step into another lane.
+  - **Enraged** below half health, once (**ENRAGED!** banner, hellfire glowing inside it): +25% to
+    its blows, and a special every second round instead of every third.
+  - **Infernal Slam**, enraged, alternating with the Charge: it raises its blade over its head
+    and the next round slams it into the floor, a shockwave of hellfire across **all three lanes**
+    (1.3× its attack). No lane is safe: **Defend (R)** or **Bulwark (E)** halves it.
+- **Length:** about **40 rounds** (37–43), 17 of them against the Nemesis. Roughly **2–4 minutes**.
+  Kael ends about 40% down on health (after the breather); 47% of first attempts win: the room where
+  a weaker Kael starts to fall. Still easier than room 4 (19% of first attempts), and the route
+  planner knows it.
 - **Reward:** fragment, 80 gold, 2 potions, 210 XP. *"The last skeleton falls apart, and the
   chamber goes quiet."*
 
@@ -92,7 +104,7 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
 - **Length:** about **47 rounds** with the guards (41–52). Roughly **2.5–5 minutes**. It costs about
   78% of Kael's health. A careful average Kael wins **49%** of his attempts; one who cleared all four
   rooms first faces a 135% Morvath and wins far less. A Kael who never uses Rune Strike can't win.
-  Overall, about **41%** of careful average runs reach the ending.
+  Overall, about **42%** of careful average runs reach the ending.
 - **Ending:** **VICTORY!**, the fifth fragment, the ending scene (King Aldric forgives Morvath) and
   the end screen with "Download save".
 

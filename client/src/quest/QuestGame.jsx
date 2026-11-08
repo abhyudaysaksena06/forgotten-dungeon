@@ -63,7 +63,7 @@ const SENS_KEY = 'forgotten-dungeon.sensitivity';
 const VIEW_KEY = 'forgotten-dungeon.view';
 const readFirstPerson = () => {
   try {
-    return localStorage.getItem(VIEW_KEY) !== 'third';
+    return localStorage.getItem(VIEW_KEY) === 'first'; // third person by default: Kael is on screen
   } catch {
     return true;
   }
@@ -260,7 +260,7 @@ export default function QuestGame({ session, onLeave }) {
   const reachKind = me && meta ? meta.classes[me.cls].reach : 'melee';
   const reach = REACH[reachKind] ?? REACH.melee;
   const canReach = useCallback((e) => Boolean(e) && (!e.flying || reachKind !== 'melee'), [reachKind]);
-  // Kael walks in a fight, and in a cleared room whose cage is open.
+  // Kael walks in a fight, and in a cleared room (with its cage, open or still locked).
   const walking = phase === 'combat' || Boolean(state?.cages);
 
   // Which cell door of the open cage Kael stands at: 'healer', 'smith' or null.
@@ -476,9 +476,10 @@ export default function QuestGame({ session, onLeave }) {
   }, [phase]);
 
   // The round clock. Restarts after every round; holds while a request is in flight, a picker or
-  // the quest log is open, a banner is showing, or the game window isn't in front.
+  // the quest log is open, a banner is showing, the game window isn't in front, the loading screen
+  // is still up, or the first-fight coach is teaching how to move and attack.
   const holdClock = useRef(false);
-  holdClock.current = busy || Boolean(picker) || logOpen || helpOpen || settingsOpen || banners.length > 0;
+  holdClock.current = busy || Boolean(picker) || logOpen || helpOpen || settingsOpen || banners.length > 0 || !preloaded || coach < 2;
   const turn = state?.turn;
   useEffect(() => {
     if (phase !== 'combat' || !autoRounds) {
@@ -673,7 +674,7 @@ function MapPanel({ state, meta, busy, act, setPicker, atCell }) {
           );
         })}
       </div>
-      {state.cages && <CageSection busy={busy} act={act} atCell={atCell} />}
+      {state.cages && <CageSection busy={busy} act={act} atCell={atCell} runes={state.cageRunes ?? 0} />}
       {atCamp && <p className="eyebrow mt-3">Camp</p>}
       {atCamp && (
         <div className="mt-1.5 grid grid-cols-3 gap-1.5">
@@ -714,11 +715,12 @@ function MapPanel({ state, meta, busy, act, setPicker, atCell }) {
 }
 
 // A cleared room's cage: walk up to a cell's door, then E (or the button).
-function CageSection({ busy, act, atCell }) {
+// It stays shut while the room's round still has broken runes in the code.
+function CageSection({ busy, act, atCell, runes }) {
   const cell = (type, name, does) => (
-    <button className="btn px-2 py-1.5 text-sm" disabled={busy || atCell !== type} onClick={() => act({ type })} title={does}>
+    <button className="btn px-2 py-1.5 text-sm" disabled={busy || runes > 0 || atCell !== type} onClick={() => act({ type })} title={does}>
       {name}
-      <small className="block font-mono text-[10px] text-ash">{atCell === type ? `${does} (E)` : 'walk up to the door'}</small>
+      <small className="block font-mono text-[10px] text-ash">{runes > 0 ? 'locked' : atCell === type ? `${does} (E)` : 'walk up to the door'}</small>
     </button>
   );
   return (
@@ -728,6 +730,11 @@ function CageSection({ busy, act, atCell }) {
         {cell('healer', 'Healer', 'health and shield')}
         {cell('smith', 'Weaponsmith', 'hone and mend')}
       </div>
+      {runes > 0 && (
+        <small className="mt-1.5 block font-mono text-[10px] text-blood">
+          {runes} broken rune{runes > 1 ? 's' : ''} left in this round’s code: fix, restart, come back
+        </small>
+      )}
     </div>
   );
 }

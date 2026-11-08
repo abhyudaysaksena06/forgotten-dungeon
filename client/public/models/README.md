@@ -16,9 +16,11 @@ By hand: drop `<key>.glb` here and add the key to `manifest.json`. An entry can 
   Blender front view, −Y, faces the enemies). `toon: false`: keep the model's own materials instead of
   the game's cel shading and ink outline.
 - Any key not listed keeps its placeholder shape, so models can arrive one at a time.
-- Clips: `idle`, `run` (or `walk`), `jump`, `attack`, `skill`, `hit`, `defend`, `death`, `victory`.
-  Morvath (both `boss_morvath_knight` and `boss_morvath_dragon`) also has `boss_strike`, `boss_sweep`,
-  `transform` and `armour_break`.
+- Clips: `idle`, `run` (or `walk`), `jump`, `attack`, `rune`, `skill`, `hit`, `dodge`, `defend`,
+  `block`, `heal`, `interact`, `death`, `victory`. Morvath (both `boss_morvath_knight` and
+  `boss_morvath_dragon`) also has `boss_strike`, `boss_sweep`, `transform` and `armour_break`. A model
+  with no clips (the Hell Nemesis) is moved by the game itself: a breath at rest, a stride bob when it
+  walks, lunges, the Charge's dash and the Slam's leap.
 - Room naming (spawn empties, colliders, floors) and every model key are in `docs/QUEST.md`.
 
 ## Keep them light
@@ -36,3 +38,58 @@ The game shows a loading screen until every model listed here is downloaded and 
 are compiled (`client/src/quest/preload.js` and the preloader in `scene/Scene.jsx`), so a fight never
 waits for a download. Re-exporting a room from Blender drops its `mini` flag: the map then shows the
 full room until `mini` is run again.
+
+## What's here
+
+| Key | What | From |
+| --- | --- | --- |
+| `room_1` | The Gate Courtyard | The artist's Blender 5.3 scene (`assets/blender/room_1.blend`), converted without Blender by `tools/blender/blend2room.py` (below) |
+| `room_2` … `room_5` | The other rooms | `tools/blender/prepare_room.py` (and `build_room_3.py`) |
+| `enemy_skeleton` | The skeletons | A rigged skeleton (2 clips) |
+| `boss_nemesis` | The Hell Nemesis, room 3's boss | A 78 MB, 1.9-million-triangle sculpt: `optimize.mjs full boss_nemesis --simplify 0.2 --ground` keeps 20% (372k triangles; at 2–10% the chest's highlights go faceted), its own PBR materials (`toon: false`) |
+| `boss_morvath_knight` | Morvath, the Shadow Knight (phase 1) | The Nemesis sculpt in Morvath's violet shadow-fire: `node variant.mjs boss_nemesis boss_morvath_knight --hue 292 --saturation 1.1 --brightness 0.92 --height 3.6` (the story calls the Nemesis his herald, wearing his likeness) |
+| `boss_morvath_dragon` | Morvath after the Change | The artist's dragon (below): `--simplify 0.5 --max 4096` keeps its 4K body textures and all 8 clips |
+| `char_kael`, `npc_healer`, `npc_smith`, `npc_king_ghost`, `npc_pip` | Kael, the cage's keepers, the camp | KayKit Adventurers (Kay Lousberg, **CC0**): Knight, Mage, Barbarian, Knight as a ghost, Barbarian with his mug, built by `tools/models/character.mjs` |
+
+### Characters (KayKit Adventurers, CC0)
+
+Download the source characters from
+`https://raw.githubusercontent.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/main/addons/kaykit_character_pack_adventures/Characters/gltf/<Knight|Mage|Barbarian>.glb`
+(CC0 1.0: free for any use, no attribution required), then, from `tools/models`:
+
+```bash
+node character.mjs Knight.glb char_kael --height 1.85 --drop 1H_Sword_Offhand,Rectangle_Shield,Round_Shield,Spike_Shield,2H_Sword --clips idle=Idle,run=Running_A,walk=Walking_A,jump=Jump_Full_Short,attack=1H_Melee_Attack_Slice_Diagonal,rune=1H_Melee_Attack_Stab,skill=Block,defend=Blocking,block=Block_Hit,hit=Hit_A,dodge=Dodge_Backward,heal=Use_Item,interact=Interact,death=Death_A,victory=Cheer
+node character.mjs Mage.glb npc_healer --height 1.75 --drop Spellbook,Spellbook_open,1H_Wand --clips idle=Idle,skill=Spellcast_Raise,attack=Spellcast_Shoot,interact=Interact,hit=Hit_A,victory=Cheer
+node character.mjs Barbarian.glb npc_smith --height 1.95 --drop 1H_Axe_Offhand,Barbarian_Round_Shield,2H_Axe,Mug --clips idle=Idle,attack=1H_Melee_Attack_Chop,interact=Interact,hit=Hit_A,victory=Cheer
+node character.mjs Knight.glb npc_king_ghost --height 2.0 --ghost --tint '#a8dcff' --drop 1H_Sword_Offhand,Rectangle_Shield,Round_Shield,Spike_Shield,1H_Sword,Badge_Shield --clips idle=Idle,interact=Interact,victory=Cheer
+node character.mjs Barbarian.glb npc_pip --height 1.35 --drop 1H_Axe_Offhand,Barbarian_Round_Shield,2H_Axe,1H_Axe,Barbarian_Hat --clips idle=Idle,interact=Interact,victory=Cheer,attack=Throw
+```
+
+It keeps only the clips the game plays (renamed to its clip names), drops the accessories a character
+shouldn't carry, and compresses the rest: about 0.2–0.5 MB each instead of 3.6 MB.
+
+### Room 1 without Blender
+
+The round 1 arena was saved by Blender 5.3. `tools/blender/blend2room.py` reads the .blend itself (its
+SDNA, through `tools/blender/blendfile.py`) and writes the room exactly as modelled: every mesh with its
+Principled BSDF material (colour or packed texture, metal, roughness, glow), the lamps in the units
+Blender's exporter uses, and the spawn empties; then the layout from `tools/blender/rooms.json`:
+
+```bash
+python3 tools/blender/blend2room.py assets/blender/room_1.blend client/public/models/room_1.glb --layout=room_1
+cd tools/models && node optimize.mjs full room_1 && node optimize.mjs mini room_1
+```
+
+## Morvath, the Shadow Dragon
+
+`boss_morvath_dragon.glb` is built from `assets/blender/boss_morvath_dragon.blend` (no armature: separate
+parts and procedural materials) by:
+
+```bash
+blender -b --disable-autoexec assets/blender/boss_morvath_dragon.blend --python tools/blender/build_dragon.py
+```
+
+It bakes the materials to textures, adds pivots for the body, head, jaw, throat glow and both wings, makes
+the clips `idle`, `boss_strike`, `boss_sweep`, `skill`, `transform`, `armour_break`, `hit` and `death`, and
+exports the .glb. The manifest shows it at 4.8 m with its own materials (`toon: false`), turned 180° (it
+faces -X in Blender).

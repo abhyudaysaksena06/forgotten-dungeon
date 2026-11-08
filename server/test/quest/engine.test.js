@@ -279,3 +279,16 @@ test('every blow that lands dulls and wears the Iron Sword; a broken sword hits 
   // Halved before a critical doubles it, so allow one point either way.
   if (lostA > 6) assert.ok(Math.abs(lostB - lostA / 2) <= 1, `${lostA} whole, ${lostB} broken`);
 });
+
+test('room 3’s boss, the Hell Nemesis, steps out only after its six skeletons fall', () => {
+  const s = beginFight(createRun(makeProfile({ teamId: 'b', seed: 'b', tier: 'strong' })), 'r3');
+  assert.deepEqual(s.combat.enemies.map((e) => e.kind), Array(6).fill('skeleton'), 'six skeletons and no boss at first');
+  s.party[0].shield = 10;
+  s.combat.enemies.forEach((e) => (e.hp = -1)); // all six down: the next round brings the boss
+  const after = step(s, { type: 'wait' });
+  assert.equal(after.phase, 'combat');
+  assert.equal(after.combat.waveIndex, 1);
+  assert.deepEqual(after.combat.enemies.map((e) => e.kind), ['nemesis']);
+  assert.ok(after.combat.enemies[0].boss);
+  assert.equal(after.party[0].shield, after.party[0].maxShield, 'Kael raises his shield again before the boss');
+});

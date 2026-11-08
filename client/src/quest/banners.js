@@ -24,6 +24,11 @@ export function bannersFor(prev, next, meta) {
     const boss = nc.enemies.find((e) => e.boss && e.hp > 0);
     out.push({ kind: 'boss', title: 'Boss Battle!', sub: boss?.name ?? '' });
   }
+  // A room boss is Enraged (the Hell Nemesis below half health).
+  for (const e of nc?.enemies ?? []) {
+    const before = pc?.enemies.find((x) => x.id === e.id);
+    if (e.enraged && before && !before.enraged) out.push({ kind: 'boss', title: 'Enraged!', sub: `${e.name}: harder blows, a special every second round` });
+  }
   // Morvath changes phase.
   const pb = pc?.enemies.find((e) => e.ultimate);
   const nb = nc?.enemies.find((e) => e.ultimate);
@@ -32,7 +37,7 @@ export function bannersFor(prev, next, meta) {
   }
   // A room is won.
   if (prev.phase === 'combat' && next.phase === 'map' && next.fragments.length > prev.fragments.length) {
-    out.push({ kind: 'victory', title: 'Victory!', sub: `Heart fragment ${next.fragments.length} of 5`, note: next.cages ? 'The cage is open: the Healer and the Weaponsmith are free' : '' });
+    out.push({ kind: 'victory', title: 'Victory!', sub: `Heart fragment ${next.fragments.length} of 5`, note: cageNote(next) });
   }
   // The whole party fell.
   if ((next.stats?.wipes ?? 0) > (prev.stats?.wipes ?? 0)) {
@@ -61,3 +66,10 @@ export function cutInFor(action, me, meta) {
 }
 
 export const BANNER_MS = { skill: 950, battle: 1500, boss: 1700, victory: 1700, defeat: 1900, level: 1500, quest: 2200 };
+
+// After a won room: is its cage open, or still held shut by broken runes in the code?
+function cageNote(state) {
+  if (!state.cages) return '';
+  const n = state.cageRunes ?? 0;
+  return n > 0 ? `The cage stays shut: ${n} broken rune${n > 1 ? 's' : ''} left in this round’s code` : 'The cage is open: the Healer and the Weaponsmith are free';
+}

@@ -31,6 +31,13 @@ function sameSecret(a, b) {
 export function createApp({ manager, control, config, quest, stats = () => ({}) }) {
   const app = express();
   app.disable('x-powered-by');
+  // Plain security headers: no MIME sniffing, no framing by other sites, no referrer leaks.
+  app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+  });
   app.use(express.json({ limit: '16kb' }));
 
   const wrap = (fn) => async (req, res) => {
@@ -90,7 +97,13 @@ export function createApp({ manager, control, config, quest, stats = () => ({}) 
 
   // Production: serve the built client from the same origin.
   if (existsSync(clientDist)) {
-    app.use(express.static(clientDist));
+    // Vite's /assets files carry a content hash in their name: cache them for good. Models and the
+    // page itself are revalidated, so a new build shows at once.
+    app.use(
+      express.static(clientDist, {
+        setHeaders: (res, file) => res.setHeader('Cache-Control', /[\\/]assets[\\/]/.test(file) ? 'public, max-age=31536000, immutable' : 'public, max-age=0, must-revalidate'),
+      }),
+    );
     app.get(/^(?!\/api|\/socket\.io).*/, (req, res) => res.sendFile('index.html', { root: clientDist }));
   }
   return app;

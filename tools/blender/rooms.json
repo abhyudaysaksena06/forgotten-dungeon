@@ -1,16 +1,17 @@
 {
-  "_about": "How each Blender room is prepared for play (tools/blender/prepare_room.py). Coordinates are Blender metres (rooms are used at their modelled size): x east, y north. walk = where characters may stand (boxes [minX, maxX, minY, maxY] and circles [x, y, r]); steps = raised floors [minX, maxX, minY, maxY, top]; spawns as [x, y] (z = 0).",
+  "_about": "How each Blender room is prepared for play (tools/blender/prepare_room.py). Coordinates are Blender metres (rooms are used at their modelled size): x east, y north. walk = where characters may stand (boxes [minX, maxX, minY, maxY] and circles [x, y, r]); steps = raised floors [minX, maxX, minY, maxY, top]; spawns as [x, y] (z = 0). Optional: view = where the camera may go when wider than walk (boxes as walk); ceiling = height the camera stays under (metres).",
   "room_1": {
     "source": "assets/blender/room_1.blend",
     "name": "The Gate Courtyard (Level 1)",
     "scale": 1,
+    "converter": "tools/blender/blend2room.py (the room was saved by Blender 5.3; no Blender needed)",
     "walk": {
       "boxes": [
         [
-          -3.6,
-          3.6,
-          -3.6,
-          3.5
+          -5.2,
+          5.2,
+          -5.2,
+          4.8
         ]
       ]
     },
@@ -18,46 +19,73 @@
       "party": [
         [
           0,
-          -2.1
+          -2.0
         ],
         [
-          -1.6,
-          -2.3
+          -1.5,
+          -2.2
         ],
         [
-          1.6,
-          -2.3
+          1.5,
+          -2.2
         ],
         [
           0,
-          -2.7
+          -2.8
         ]
       ],
       "enemies": [
         [
-          -1.6,
-          1.1
+          -1.5,
+          3.5
         ],
         [
-          1.6,
-          1.1
+          1.5,
+          3.5
         ],
         [
           0,
-          1.8
+          2.3
+        ],
+        [
+          -2.6,
+          1.6
+        ],
+        [
+          2.6,
+          1.6
+        ],
+        [
+          0,
+          1.0
         ]
       ],
       "boss": [
         0,
-        1.4
+        2.4
       ],
       "npcs": [
         [
-          -3,
-          1.6
+          -4.4,
+          0.8
         ]
       ]
-    }
+    },
+    "view": {
+      "boxes": [
+        [
+          -5.6,
+          5.6,
+          -5.6,
+          5.4
+        ]
+      ]
+    },
+    "ceiling": 3.9,
+    "prefer_settings": [
+      "party"
+    ],
+    "_note": "The artist placed spawn_player_* 2 m from the south wall, where the third-person camera has no room behind Kael; the game has one hero, so its spawn comes from here (prefer_settings)."
   },
   "room_2": {
     "source": "assets/blender/room_2.blend",

@@ -95,6 +95,8 @@ export function carefulLeaderAction(state) {
     // of, spends every opening in Morvath's armour on Morvath, and otherwise clears the skeletons.
     const warned = (tele && tele.damage >= 30 && (tele.all || tele.targetId === me.id)) || tele?.move === 'charge' || Boolean(state.combat.danger);
     if (me.cooldown === 0 && warned) return withLane({ type: 'skill' });
+    // Every lane marked (the Nemesis's Infernal Slam) and no Bulwark: guard.
+    if (dangerLanes(state).size === LANES.length && !safe) return withLane({ type: 'defend' });
     const feeder = state.combat.enemies.find((e) => e.hp > 0 && e.kind === 'skeleton_risen');
     if (feeder) return withLane({ type: 'attack', targetId: feeder.id }); // they heal Morvath: first
     if (boss && !boss.armoured) return withLane({ type: 'attack', targetId: boss.id });

@@ -4,8 +4,9 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { QuestError, publicState, step } from './engine.js';
+import { cageRunes } from './locks.js';
 import { replay } from './replay.js';
-import { profileHash } from './teams.js';
+import { codeMatches, profileHash } from './teams.js';
 
 export const ACTION_FIELDS = ['type', 'to', 'memberId', 'targetId', 'item', 'lane'];
 
@@ -55,7 +56,7 @@ export class QuestRuns {
 
   checkCode(teamId, code) {
     const p = this.profile(teamId);
-    if (p.accessCode && p.accessCode !== code) throw new QuestError('bad_code', 'Wrong team code.');
+    if (p.accessCode && !codeMatches(p.accessCode, code)) throw new QuestError('bad_code', 'Wrong team code.');
     return p;
   }
 
@@ -89,6 +90,10 @@ export class QuestRuns {
   act(teamId, raw) {
     const run = this.run(teamId);
     const action = cleanAction(raw);
+    if (action.type === 'healer' || action.type === 'smith') {
+      const n = cageRunes(run.state);
+      if (n > 0) throw new QuestError('cage_locked', `The cage stays shut: ${n} broken rune${n > 1 ? 's' : ''} left in this round’s code.`);
+    }
     run.state = step(run.state, action);
     run.actions.push(action);
     run.note = null;
@@ -122,7 +127,7 @@ export class QuestRuns {
   view(teamId) {
     const run = this.run(teamId);
     const p = this.profile(teamId);
-    return { team: { id: p.teamId, name: p.teamName, tier: p.tier }, note: run.note, state: publicState(run.state) };
+    return { team: { id: p.teamId, name: p.teamName, tier: p.tier }, note: run.note, state: { ...publicState(run.state), cageRunes: cageRunes(run.state) } };
   }
 
   saveFile(teamId) {

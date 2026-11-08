@@ -21,15 +21,17 @@ You play **Kael, the Knight**, alone.
 ## The cage
 
 Every room keeps a cage at its side with two cells: a **Healer** and a **Weaponsmith**. The cage is
-locked while the room's skeletons stand. Clear the room and it opens: walk up to a cell's door and
-press **E**. The Healer restores your health and shield; the Weaponsmith restores your sword's
+locked while the room's skeletons stand, and it stays locked while that round still has a broken
+rune in your code (the HUD's "The cage" section says how many). Clear the room and fix the round's
+runes, restart the server, and it opens: walk up to a cell's door and press **E**. The Healer restores your health and shield; the Weaponsmith restores your sword's
 sharpness and durability. It's free, and it opens again whenever you come back to a cleared room.
 
 ## The dungeon
 
 - Five rounds, one room each: the Gate Courtyard, the Hall of Portraits, the Hall of Trials, the
   Hollow Barracks, and the Throne of Eternity.
-- Rooms 1–4 can be taken in any order. Each holds six skeletons and gives a
+- Rooms 1–4 can be taken in any order. Each holds six skeletons (in the Hall of Trials, the Hell
+  Nemesis steps out once they are down) and gives a
   **Heart fragment**, gold, potions and XP. Higher rooms are harder, and every room grows harder as
   your quest goes on.
 - The **Throne** opens with three fragments. Six skeleton guards stand before Morvath, and his fight

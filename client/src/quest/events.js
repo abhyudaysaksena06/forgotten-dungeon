@@ -3,6 +3,11 @@
 
 // Morvath changes his name when he transforms, so his cues address 'the boss' instead of a name.
 export const BOSS = '__boss__';
+// The cage's keepers and the hero, addressed by role.
+export const HEALER = '__healer__';
+export const SMITH = '__smith__';
+const HERO = '__hero__';
+export const KEEPER_IDS = { [HEALER]: 'keeper_healer', [SMITH]: 'keeper_smith' };
 const BOSS_MOVES = {
   'Shadow Blade': 'boss_strike',
   'Black Sweep': 'boss_sweep',
@@ -26,7 +31,10 @@ export function newLogLines(prev, next) {
 
 // [pattern, (match) => [{ who, kind, amount? }, …]]. The first matching pattern wins.
 const PATTERNS = [
-  [/^(.+)'s Rune Strike shatters/, () => [{ who: 1, kind: 'skill' }, { who: BOSS, kind: 'armour_break' }]],
+  [/^(.+)'s Rune Strike shatters/, () => [{ who: 1, kind: 'rune' }, { who: BOSS, kind: 'armour_break' }]],
+  [/^The Healer lays a hand on (.+):/, () => [{ who: HEALER, kind: 'skill' }, { who: 1, kind: 'heal' }]],
+  [/^The Weaponsmith hones and mends/, () => [{ who: SMITH, kind: 'attack' }]],
+  [/ is cleared! Heart fragment/, () => [{ who: HERO, kind: 'victory' }]],
   [/^The shadow armour drinks (.+)'s blow/, () => [{ who: 1, kind: 'attack' }, { who: BOSS, kind: 'block' }]],
   [/^Morvath’s armour bursts open/, () => [{ who: BOSS, kind: 'transform' }]],
   [/^Morvath holds his breath/, () => [{ who: BOSS, kind: 'skill' }]],
@@ -45,6 +53,9 @@ const PATTERNS = [
   [/^(.+) gives (.+) a potion/, () => [{ who: 2, kind: 'heal' }]],
   [/^(.+) drinks a potion/, () => [{ who: 1, kind: 'heal' }]],
   [/^(.+) (cleaves through the line|slams the ground|summons a shadow tide)/, () => [{ who: 1, kind: 'skill' }]],
+  [/^(.+) charges down the /, () => [{ who: 1, kind: 'charge' }]],
+  [/^(.+) drives its blade into the floor/, () => [{ who: 1, kind: 'slam' }]],
+  [/^(.+) roars as hellfire splits its armour/, () => [{ who: 1, kind: 'transform' }]],
   [/^(.+) lowers his axe and laughs/, () => [{ who: 1, kind: 'defend' }]],
   [/^(.+) has Fallen\.$/, () => [{ who: 1, kind: 'death' }]],
   [/^(.+) falls\.$/, () => [{ who: 1, kind: 'death' }]],
@@ -65,10 +76,13 @@ export function parseLine(line) {
 
 // Everyone the scene can animate, by display name.
 export function nameIndex(...states) {
-  const ids = new Map();
+  const ids = new Map(Object.entries(KEEPER_IDS));
   for (const s of states) {
     if (!s) continue;
-    for (const m of s.party) ids.set(m.name, m.id);
+    for (const m of s.party) {
+      ids.set(m.name, m.id);
+      if (m.controlled) ids.set(HERO, m.id);
+    }
     for (const e of s.combat?.enemies ?? []) {
       ids.set(e.name, e.id);
       if (e.ultimate) ids.set(BOSS, e.id);

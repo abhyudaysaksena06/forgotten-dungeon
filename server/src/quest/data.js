@@ -82,6 +82,9 @@ export const ENEMIES = {
   skeleton: { name: 'Skeleton', model: 'enemy_skeleton', hp: 50, atk: 13, def: 4, part: true, partEvery: 2 },
   skeleton_guard: { name: 'Skeleton', model: 'enemy_skeleton', hp: 10, atk: 0, def: 0 },
   skeleton_risen: { name: 'Skeleton', model: 'enemy_skeleton', hp: 20, atk: 6, def: 2, part: true },
+  // The Hall of Trials' boss: it steps out only once its six skeletons are down (the room's second
+  // wave). Its moves are in NEMESIS below.
+  nemesis: { name: 'The Hell Nemesis', model: 'boss_nemesis', hp: 150, atk: 15, def: 4, boss: true, move: 'charge' },
   // No room places these any more; the engine still knows their moves.
   shadow_crawler: { name: 'Shadow Crawler', model: 'enemy_shadow_crawler', hp: 34, atk: 11, def: 3, part: true },
   stone_sentinel: { name: 'Stone Sentinel', model: 'boss_stone_sentinel', hp: 150, atk: 16, def: 6, boss: true, move: 'charge' },
@@ -96,13 +99,13 @@ export const ENEMIES = {
   morvath: { name: 'Morvath, the Shadow Knight', model: 'boss_morvath_knight', hp: 350, atk: 34, def: 8, boss: true, ultimate: true },
 };
 
-// The rulebook's five rounds, one room each. Rooms 1–4: six skeletons. Room 5: six skeleton
-// guards, then Morvath.
+// The rulebook's five rounds, one room each. Rooms 1–4: six skeletons (room 3: then the Hell
+// Nemesis). Room 5: six skeleton guards, then Morvath.
 const SKELETONS = Array(6).fill('skeleton');
 export const ROOMS = {
   r1: { round: 1, roundName: 'The Entrance', name: 'The Gate Courtyard', tier: 1, model: 'room_1', npc: 'grum', waves: [SKELETONS], loot: { gold: 40, potions: 1 } },
   r2: { round: 2, roundName: 'The Forgotten Hall', name: 'The Hall of Portraits', tier: 2, model: 'room_2', npc: 'ilsa', waves: [SKELETONS], loot: { gold: 60, potions: 1 } },
-  r3: { round: 3, roundName: 'The Trial Chambers', name: 'The Hall of Trials', tier: 3, model: 'room_3', npc: 'seraphine', waves: [SKELETONS], loot: { gold: 80, potions: 2 } },
+  r3: { round: 3, roundName: 'The Trial Chambers', name: 'The Hall of Trials', tier: 3, model: 'room_3', npc: 'seraphine', waves: [SKELETONS, ['nemesis']], loot: { gold: 80, potions: 2 } },
   r4: { round: 4, roundName: 'The Shadow Depths', name: 'The Hollow Barracks', tier: 4, model: 'room_4', npc: 'corin', waves: [SKELETONS], loot: { gold: 100, potions: 2 } },
   r5: { round: 5, roundName: 'The Boss Round', name: 'The Throne of Eternity', tier: 6, model: 'room_5', npc: 'king', waves: [Array(6).fill('skeleton_guard'), ['morvath']], loot: { gold: 0, potions: 0 }, final: true },
 };
@@ -152,6 +155,12 @@ export const MECHANICS = {
   counter: { every: 4, rounds: 2, reflect: 0.5 }, // Brakka's counter stance
 };
 
+// The Hell Nemesis (room 3's boss). Every third round it marks a lane a round ahead and charges down
+// it (MECHANICS.charge: step out of the lane). Below half health it is Enraged, once: its blows hit
+// harder and every second round brings a special, alternating the Charge with the Infernal Slam,
+// which floods all three lanes with hellfire (no safe lane: Defend or Bulwark halves it).
+export const NEMESIS = { every: 3, enragedEvery: 2, enrageAt: 0.5, enragedAtk: 1.25, slam: 1.3 };
+
 // Difficulty rises with the room's tier and with how far the run has progressed.
 export const TIER_SCALE = 0.12;
 export const PROGRESS_SCALE = 0.06;
@@ -174,6 +183,9 @@ export const PIP = {
   potion: { gold: 25, parts: 0, text: 'A Health Potion (restores 40 HP).' },
   meal: { gold: 0, parts: 3, text: 'A Monster Meal from 3 monster parts (restores 70 HP).' },
 };
+
+// Before a room's boss (not Morvath) Kael catches his breath: full shield and this share of his health.
+export const BREATHER_HEAL = 0.25;
 
 export const POTION_HEAL = 40;
 export const MEAL_HEAL = 70;

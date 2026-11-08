@@ -3,6 +3,7 @@
 // autosave (replay the log) and the judge's cheat check (replay on a clean copy) work.
 import { createRng, hashSeed } from '../engine/rng.js';
 import {
+  BREATHER_HEAL,
   CAMP,
   CAN_HIT_FLYING,
   CLASSES,
@@ -17,6 +18,7 @@ import {
   LEVEL_GROWTH,
   MEAL_HEAL,
   MORVATH,
+  NEMESIS,
   NPCS,
   PARTY_ORDER,
   PIP,
@@ -202,7 +204,17 @@ function startWave(state) {
   state.combat.enemies = kinds.map((kind, i) => spawn(state, kind, i));
   state.combat.danger = null;
   nameDuplicates(state.combat.enemies);
-  say(state, `${kinds.length > 1 ? 'Enemies' : 'A foe'} rise: ${state.combat.enemies.map((e) => e.name).join(', ')}.`);
+  say(state, `${kinds.length > 1 ? 'Enemies rise' : 'A foe rises'}: ${state.combat.enemies.map((e) => e.name).join(', ')}.`);
+  // A room's boss steps out only after its skeletons fall; Kael catches his breath and raises his
+  // shield again and gets back a little health. Not before Morvath: the Throne has no breather.
+  if (state.combat.waveIndex > 0 && !room.final) {
+    for (const m of alive(state)) {
+      m.shield = m.maxShield;
+      m.hp = Math.min(m.maxHp, m.hp + Math.round(m.maxHp * BREATHER_HEAL));
+    }
+    say(state, `${controlled(state).name} catches his breath (+${Math.round(BREATHER_HEAL * 100)}% health) and raises his shield again.`);
+  }
+  if (state.combat.enemies.some((e) => e.kind === 'nemesis')) say(state, NEMESIS_LINE);
   const morvath = state.combat.enemies.find((e) => e.ultimate);
   if (morvath) telegraphMorvath(state, createRng(state), morvath);
 }
@@ -639,6 +651,7 @@ function morvathPhases(state, boss) {
 
 function enemyTurn(state, rng, e) {
   if (e.ultimate) return morvathTurn(state, e);
+  if (e.kind === 'nemesis') return nemesisTurn(state, rng, e);
   const special = e.boss && e.move && state.combat.round % 3 === 0;
   if (!special) {
     const t = enemyTarget(state, rng);
@@ -688,6 +701,7 @@ function endOfRound(state, rng) {
     m.defending = false;
   }
   state.combat.bulwark = false;
+  for (const e of liveEnemies(state)) if (e.kind === 'nemesis') nemesisEnrage(state, e);
   bossMechanics(state, rng);
   const boss = state.combat.enemies.find((e) => e.ultimate && e.hp > 0);
   if (boss) {
@@ -706,12 +720,68 @@ function endOfRound(state, rng) {
   }
 }
 
+// ---------- the Hell Nemesis ----------
+
+const NEMESIS_LINE = 'Its armour is shaped like Morvath’s own: his herald, sent to stop the Runewright before the Throne.';
+
+// Below half health, once: Enraged. Its blows hit harder and its specials come every second round.
+function nemesisEnrage(state, e) {
+  if (e.enraged || e.hp >= e.maxHp * NEMESIS.enrageAt) return;
+  e.enraged = true;
+  e.atk = Math.round(e.atk * NEMESIS.enragedAtk);
+  e.specials = 0;
+  say(state, `${e.name} roars as hellfire splits its armour. It is Enraged: it hits harder, and its specials come every second round!`);
+}
+
+// Its tell for the next round: a Charge down a marked lane, or (Enraged, every other special) the
+// Infernal Slam over every lane.
+function nemesisPlan(state, rng, e, next) {
+  const c = state.combat;
+  if (next % (e.enraged ? NEMESIS.enragedEvery : NEMESIS.every) !== 0) return;
+  const slam = e.enraged && (e.specials ?? 0) % 2 === 1;
+  e.specials = (e.specials ?? 0) + 1;
+  if (slam) {
+    c.danger = { by: e.id, name: 'Infernal Slam', lanes: [...LANES], round: next, damage: Math.round(e.atk * NEMESIS.slam), slam: true };
+    say(state, `${e.name} raises its blade over its head: next round hellfire floods every lane. Defend!`);
+    return;
+  }
+  const spec = MECHANICS.charge;
+  const lanes = pickLanes(state, rng, spec.lanes, true);
+  c.danger = { by: e.id, name: 'Charge', lanes, round: next, damage: Math.round(e.atk * spec.mult), poison: false };
+  say(state, `${e.name} lowers its head at the ${laneList(lanes)}. Move out!`);
+}
+
+function nemesisTurn(state, rng, e) {
+  const d = state.combat.danger;
+  if (!d || d.by !== e.id || d.round !== state.combat.round) {
+    const t = enemyTarget(state, rng);
+    if (!t) return;
+    const r = strike(state, rng, e, t);
+    if (r.miss) return say(state, `${e.name} misses ${t.name}.`);
+    return hurt(state, t, r.damage, e.name);
+  }
+  state.combat.danger = null;
+  if (d.slam) {
+    say(state, `${e.name} drives its blade into the floor: hellfire bursts across every lane!`);
+    for (const h of alive(state)) hurt(state, h, d.damage, 'The Infernal Slam');
+    return;
+  }
+  say(state, `${e.name} charges down the ${laneList(d.lanes)}!`);
+  const hit = alive(state).filter((h) => d.lanes.includes(h.lane));
+  if (!hit.length) say(state, 'It hits nothing but stone.');
+  for (const h of hit) hurt(state, h, d.damage, e.name);
+}
+
 // The room bosses' tells, decided at the end of a round for the next one.
 function bossMechanics(state, rng) {
   const c = state.combat;
   const next = c.round + 1;
   for (const e of liveEnemies(state)) {
     if (e.ultimate) continue;
+    if (e.kind === 'nemesis') {
+      nemesisPlan(state, rng, e, next);
+      continue;
+    }
     const t = ENEMIES[e.kind];
     if ((e.move === 'charge' || e.move === 'shadow_tide') && next % 3 === 0) {
       const spec = MECHANICS[e.move];

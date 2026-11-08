@@ -27,7 +27,7 @@ clear lines, camp lines, Morvath's phase lines, the ending and the defeat line.
 | Hero | **Kael** the Knight, alone (260 HP, ATK 15, DEF 13 before the team's tier): no leader to choose and no companions. Skill: **Bulwark** (half damage this round). He is the Runewright: only his **Rune Strike** (cooldown 3) breaks Morvath's shadow armour. |
 | Iron Sword | Adds its **edge** (up to 14, by **sharpness**) to every blow. Each blow that lands dulls it (−3 sharpness) and wears it (−2 **durability**); at 0 durability it is broken and hits for half. |
 | Shield | 100 points that take every blow before health does. |
-| The cage | Every room but the Throne keeps a cage at its side with two cells: a **Healer** and a **Weaponsmith**. It opens when the room is cleared (its skeletons down, its runes put right) and stays open whenever Kael comes back. Walk up to a cell's door and press **E**: the Healer restores health and shield, the Weaponsmith sharpness and durability. Free. |
+| The cage | Every room but the Throne keeps a cage at its side with two cells: a **Healer** and a **Weaponsmith**. It opens when the room is cleared **and** its round has no broken runes left in the code, and stays open whenever Kael comes back. The **cage locks** (`server/src/quest/locks.js`) hold one behaviour check per bug of rounds 1–4; they run once per server start, so a team that fixes a rune and restarts sees the cage open. A locked cage shows "locked" on its buttons and "n broken runes left in this round’s code" under them, and the server refuses the Healer and the Weaponsmith (`cage_locked`). The clean game (and the hosted Vercel build, which skips the locks) always opens. `scripts/quest-verify.mjs` proves each bug alone locks exactly its own round's cage. Walk up to a cell's door and press **E**: the Healer restores health and shield, the Weaponsmith sharpness and durability. Free. |
 | Map | Camp plus five rooms joined by corridors: camp–r1, camp–r2, r1–r2, r1–r3, r2–r4, r3–r4, r3–r5, r4–r5. Each corridor costs 1 torch. A cleared room's waystone links it to the camp. Rooms 1–4 can be done in any order. |
 | Rooms 1–4 | Six **Skeletons** (50 HP, ATK 13, DEF 4 before scaling); there are no room bosses and no NPCs. Reward: a **Heart fragment**, gold, potions, XP. Every second skeleton to fall drops a monster part (three a room). |
 | Room 5 | The Throne of Eternity opens at 3 fragments. Six brittle skeleton guards (10 HP, ATK 0), then **Morvath**. No retreat. Beating him gives the fifth fragment. |
@@ -44,7 +44,7 @@ clear lines, camp lines, Morvath's phase lines, the ending and the defeat line.
 | --- | --- | --- | --- | --- |
 | 1 · The Entrance | The Gate Courtyard | 6 Skeletons | none | Old Grum, the gatekeeper |
 | 2 · The Forgotten Hall | The Hall of Portraits | 6 Skeletons | none | Ilsa, the ink-keeper |
-| 3 · The Trial Chambers | The Hall of Trials | 6 Skeletons | none | Seraphine, the oracle; Venn, the scholar |
+| 3 · The Trial Chambers | The Hall of Trials | 6 Skeletons | The Hell Nemesis (after the skeletons) | Seraphine, the oracle; Venn, the scholar |
 | 4 · The Shadow Depths | The Hollow Barracks | 6 Skeletons | none | Sir Corin, the last loyal knight |
 | 5 · The Boss Round | The Throne of Eternity | 6 skeleton guards | Morvath | King Aldric's ghost (voice only) |
 
@@ -56,7 +56,32 @@ knows their moves, but no room places them.
 NPCs speak when you enter and clear their room (`state.speech`; the client shows it as a speech
 bubble). King Aldric's ghost and Pip wait at the camp.
 
+### The Hell Nemesis (room 3)
+
+Steps out once the Hall of Trials' six skeletons are down (the room's second wave). Kael catches his
+breath first: full shield, +25% health (`BREATHER_HEAL`). Every third round a **Hellfire Charge** down
+a lane marked a round ahead (step out of it). Below half health it is **Enraged**, once: +25% to its
+blows and a special every second round, alternating the Charge with the **Infernal Slam**, which
+floods all three lanes a round after it's announced (Defend or Bulwark halves it). Numbers in
+`NEMESIS` (`server/src/quest/data.js`); tests in `server/test/nemesis.test.js`. The model is a
+78 MB sculpt with no rig, so the client moves it itself: it breathes at rest, bobs as it walks,
+leans into its blows, dashes down the lane for the Charge and leaps for the Slam, whose shockwave
+rolls out across the floor.
+
+### Characters
+
+Kael, the Healer, the Weaponsmith, King Aldric's ghost and Pip are KayKit Adventurers (CC0) rigged
+characters: Knight with sword and shield, Mage with a staff, Barbarian with an axe, a pale Knight,
+and a stout Barbarian with his mug, each with the clips the game plays (run, slash, stab, block,
+hit, dodge, drink, interact, cheer, death). The keepers act out their service (the Healer casts,
+the Weaponsmith hammers) and Kael cheers when a room is won. The camera is third person by default
+so Kael is on screen, and Kael carries a torch: a warm light around him, so whoever he fights stays
+readable in the darkest room. The hosted build (Vercel, `VITE_VILLAINS_ONLY=1`) leaves out only the
+characters that still have no real model (stand-in figures); every character above has one.
+
 ### Morvath
+
+His first form, the Shadow Knight, is the Nemesis sculpt recoloured in his violet shadow-fire (`boss_morvath_knight`; the Nemesis is his herald, wearing his likeness), 3.6 m tall; while his shadow armour holds, a violet shell breathes around him. After the Change he is the artist's Shadow Dragon (`boss_morvath_dragon`, 4.8 m, its own clips).
 
 350 HP, DEF 8 (more if Kael cleared a fourth room first). Each round he announces his next move, so the player can react.
 
@@ -73,7 +98,7 @@ Per-team starting stats (`server/src/quest/teams.js`): tier × ±12% per stat, f
 
 | Tier | Stats | Torches | Gold | Potions |
 | --- | --- | --- | --- | --- |
-| Weak | 0.92× | 13 (±1) | 20 | 2 |
+| Weak | 0.95× | 14 (±1) | 30 | 2 |
 | Average | 1.0× | 14 (±1) | 40 | 2 |
 | Strong | 1.10× | 16 (±1) | 60 | 3 |
 
@@ -83,12 +108,15 @@ planner at boldness 1.2, 60 teams per tier. All numbers are for one hero with sw
 
 | Tier | Careful player | Careless player |
 | --- | --- | --- |
-| Weak | 12% | 0% |
-| Average | 33% | 0% |
+| Weak | 13% | 0% |
+| Average | 38% | 0% |
 | Strong | 88% | 0% |
 
 (Under the four-hero rules the same measure gave 8%, 19% and 80%.) Rooms 1 and 2 are nearly always
-won; room 3 is where weaker heroes start to fall (about half of first attempts). Going to the Throne
+won; room 3 is where weaker heroes start to fall (about half of first attempts), now with the Hell
+Nemesis after its skeletons. Before a room's boss Kael catches his breath (full shield, +25% health,
+`BREATHER_HEAL`), and the planner's `roomThreat` counts that boss at a quarter of its weight, so it
+still rates room 3 as easier than room 4, which it is. Going to the Throne
 with three fragments, healed and mended at the last cage, is the better play than clearing all four
 rooms, because Morvath grows with each extra room. That's what the forest judges.
 
@@ -188,7 +216,7 @@ says "move closer" and sends nothing.
 to the same deterministic engine, so autosave by inputs, replay, cheat-proofing and judging are
 unchanged. Positions are never saved and never scored.
 
-**After a fight.** A cleared room stays on screen with its cage open: walk up to the Healer's or the
+**After a fight.** A cleared room stays on screen with its cage (open once the round's runes are fixed): walk up to the Healer's or the
 Weaponsmith's door (the HUD's "The cage" section says when you're there) and press E, then pick the
 next room from the Journey list. The cage is placed by `cageSpot` in `scene/world.js`: the nearest
 spot to the room's old NPC spot where the whole cage fits off to the side of the fight.
@@ -227,9 +255,9 @@ the target room's tier and threat, travel cost, power-to-threat ratio, who leads
    estimates its win chance from 40 simulated continuations with fresh dice. An option is "good" if it's
    within 10 points of the best option in that exact situation. About 4 minutes.
 2. `python ml/train_forest.py` trains a scikit-learn RandomForestClassifier (120 trees, depth 12),
-   split by team. Current result (retrained for the one-hero game with the cages): **86.5% accuracy on unseen
-   teams** (majority baseline 50.7%), ROC AUC 0.945, on 15,174 decisions. By tier: weak 89%, average
-   85%, strong 85%. Top inputs: party power, party DEF, power-to-threat ratio, gold, target tier.
+   split by team. Current result (retrained with the Nemesis's full kit and the new weak tier): **85.9% accuracy on
+   unseen teams** (majority baseline 52.8%), ROC AUC 0.942, on 15,459 decisions. By tier: weak 85%,
+   average 87%, strong 86%. Top inputs: party power, party DEF, power-to-threat ratio, gold, target tier.
 3. The model ships as JSON (`server/src/quest/model/route-forest.json`); `forest.js` evaluates it in
    Node. `server/test/forest.test.js` proves Node and scikit-learn agree, and that the forest beats the
    baseline by at least 10 points.
@@ -452,6 +480,8 @@ and textures; add `"toon": false` to the model's manifest entry to keep the orig
 | `npc_healer`, `npc_smith` | The Healer and the Weaponsmith in each room's cage (stand-ins until models arrive). |
 | `enemy_skeleton` | Every room's villains, the Throne's guards and Morvath's summons. Shipped (`enemy_skeleton.glb`, clips `Idle` and `Run`). |
 | `enemy_shadow_crawler`, `enemy_ink_bat`, `enemy_hollow_scribe`, `enemy_trial_spirit`, `enemy_hollow_knight` | The old minions; no room places them now. |
+| `boss_nemesis` | The Hell Nemesis, room 3's boss (no clips: the game moves the whole model). From a 78 MB sculpt with `optimize.mjs full boss_nemesis --simplify 0.2 --ground` (3.7 MB, 372k triangles; lower ratios facet its armour), with its own materials (`toon: false`). |
+| `char_kael`, `npc_healer`, `npc_smith`, `npc_king_ghost`, `npc_pip` | KayKit Adventurers (CC0), built by `tools/models/character.mjs` (see `client/public/models/README.md`). |
 | `boss_stone_sentinel`, `boss_ink_wraith`, `boss_brakka`, `boss_hollow_captain` | The old room bosses; no room places them now. |
 | `boss_morvath_knight`, `boss_morvath_dragon` | Morvath before and after the Change. |
 | `npc_king_ghost`, `npc_grum`, `npc_ilsa`, `npc_venn`, `npc_seraphine`, `npc_corin`, `npc_pip` | NPCs (idle only). |

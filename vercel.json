@@ -3,11 +3,47 @@
   "installCommand": "npm install",
   "buildCommand": "VITE_HOSTED=1 VITE_VILLAINS_ONLY=1 npm run build -w client",
   "outputDirectory": "client/dist",
-  "rewrites": [{ "source": "/api/quest/:path*", "destination": "/api/quest?path=:path*" }],
+  "rewrites": [
+    {
+      "source": "/api/quest/:path*",
+      "destination": "/api/quest?path=:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/models/(.*)",
-      "headers": [{ "key": "cache-control", "value": "public, max-age=0, must-revalidate" }]
+      "headers": [
+        {
+          "key": "cache-control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "cache-control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
     }
   ]
 }

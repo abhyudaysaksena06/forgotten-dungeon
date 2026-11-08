@@ -18,19 +18,19 @@ export const LEAD_LINES = {
 export const ROOM_LINES = {
   r1: {
     enter: ['The gate grinds open on a courtyard of bones. Six skeletons turn their skulls towards Kael.', 'At the side, behind iron bars, two figures wait in a locked cage: a Healer and a Weaponsmith.'],
-    clear: ['The last skeleton falls apart. The runes on the gate turn gold, and the cage’s lock clicks open.'],
+    clear: ['The last skeleton falls apart, and the runes on the gate turn gold. The cage opens once no broken rune is left in this round.'],
   },
   r2: {
     enter: ['The Hall of Portraits. Painted eyes follow Kael; six skeletons step out of the frames.', 'One portrait shows two young men laughing together: the King and Morvath, as friends.'],
-    clear: ['The hall falls silent. The cage at its side swings open: the Healer and the Weaponsmith are free.'],
+    clear: ['The hall falls silent. The cage at its side opens once no broken rune is left in this round.'],
   },
   r3: {
     enter: ['The Hall of Trials: a cathedral of candles around the Hollow Saint’s tomb. Six skeletons rise from the dais.'],
-    clear: ['The last skeleton falls apart, and the chamber goes quiet. The cage by the tomb opens.'],
+    clear: ['The last skeleton falls apart, and the chamber goes quiet. The cage by the tomb opens once no broken rune is left in this round.'],
   },
   r4: {
     enter: ['The Hollow Barracks. Chains sway overhead; six skeletons stand to attention, swords drawn.'],
-    clear: ['Their line is broken. The Fortress Gate is open, and so is the cage at the barracks wall.'],
+    clear: ['Their line is broken. The Fortress Gate is open; the cage at the barracks wall opens once no broken rune is left in this round.'],
   },
   r5: {
     enter: ['Morvath: “You fixed my dungeon, Runewright. Clever. But some wishes cannot be undone.”'],
