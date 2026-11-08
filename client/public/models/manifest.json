@@ -25,6 +25,34 @@
   },
   {
     "key": "boss_nemesis",
-    "height": 3.2
+    "height": 3.2,
+    "toon": false
+  },
+  {
+    "key": "boss_morvath_dragon",
+    "height": 4.8,
+    "turn": 180,
+    "toon": false
+  },
+  {
+    "key": "char_kael",
+    "height": 1.85
+  },
+  {
+    "key": "npc_healer",
+    "height": 1.75
+  },
+  {
+    "key": "npc_smith",
+    "height": 1.95
+  },
+  {
+    "key": "npc_king_ghost",
+    "height": 2,
+    "toon": false
+  },
+  {
+    "key": "npc_pip",
+    "height": 1.35
   }
 ]

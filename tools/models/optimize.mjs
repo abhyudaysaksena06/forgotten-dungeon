@@ -6,13 +6,19 @@
 //   node optimize.mjs mini room_1 room_5      # the map's miniature: room_N.mini.glb (simplified, 256 px
 //                                             # textures, flat-shaded) and `mini: true` in manifest.json
 //   node optimize.mjs full enemy_skeleton --simplify 0.35   # also keep 35% of the triangles
+//   node optimize.mjs full boss_nemesis --simplify 0.2 --ground   # feet on the floor, centred
+//   node optimize.mjs full boss_morvath_dragon --simplify 0.5 --max 4096   # keep 4K textures
+//
+// --max caps texture size (default 2048). Transmission (glass-like materials) becomes plain alpha
+// blending: three.js renders the whole scene again every frame for transmission, which would halve
+// the frame rate in the fight that shows it, for a few drops of saliva.
 //
 // Run `full` after exporting from Blender, then `mini` for a room. Re-exporting a room from Blender
 // drops its `mini` flag, so the map shows the full room until `mini` is run again.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join as joinPath, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { NodeIO } from '@gltf-transform/core';
+import { NodeIO, getBounds } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { dedup, flatten, instance, join, meshopt, palette, prune, simplify, textureCompress, weld } from '@gltf-transform/functions';
 import draco3d from 'draco3dgltf';
@@ -21,7 +27,8 @@ import sharp from 'sharp';
 
 const MODELS = resolve(dirname(fileURLToPath(import.meta.url)), '../../client/public/models');
 const [mode, ...rest] = process.argv.slice(2);
-const keys = rest.filter((a, i) => !a.startsWith('--') && !rest[i - 1]?.startsWith('--'));
+const valued = new Set(['--simplify', '--max']);
+const keys = rest.filter((a, i) => !a.startsWith('--') && !valued.has(rest[i - 1]));
 const flag = (name) => { const i = rest.indexOf(`--${name}`); return i >= 0 ? rest[i + 1] : undefined; };
 if (!['full', 'mini'].includes(mode) || !keys.length) {
   console.error('usage: node optimize.mjs full|mini <key>... [--simplify <ratio>]');
@@ -44,6 +51,14 @@ for (const key of keys) {
   const before = mb(src);
   if (mode === 'full') {
     const ratio = flag('simplify');
+    const max = Number(flag('max') ?? 2048);
+    for (const mat of doc.getRoot().listMaterials()) {
+      const tr = mat.getExtension('KHR_materials_transmission');
+      if (!tr) continue;
+      const amount = tr.getTransmissionFactor();
+      mat.setExtension('KHR_materials_transmission', null);
+      mat.setAlphaMode('BLEND').setBaseColorFactor([...mat.getBaseColorFactor().slice(0, 3), Math.max(0.25, 1 - amount * 0.75)]);
+    }
     await doc.transform(
       dedup(),
       instance({ min: 5 }),
@@ -53,9 +68,19 @@ for (const key of keys) {
       weld(),
       ...(ratio ? [simplify({ simplifier: MeshoptSimplifier, ratio: Number(ratio), error: 0.002 })] : []),
       prune({ keepLeaves: true }), // spawn_* empties stay
-      textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [2048, 2048] }),
+      textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [max, max] }),
       meshopt({ encoder: MeshoptEncoder, level: 'high' }),
     );
+    if (rest.includes('--ground')) {
+      // Feet on the floor and centred: the game stands characters on their origin.
+      const scene = doc.getRoot().listScenes()[0];
+      const b = getBounds(scene);
+      const shift = [-(b.min[0] + b.max[0]) / 2, -b.min[1], -(b.min[2] + b.max[2]) / 2];
+      for (const n of scene.listChildren()) {
+        const t = n.getTranslation();
+        n.setTranslation([t[0] + shift[0], t[1] + shift[1], t[2] + shift[2]]);
+      }
+    }
     dropDraco(doc);
     await io.write(src, doc);
     console.log(`${key}: ${before} MB -> ${mb(src)} MB`);

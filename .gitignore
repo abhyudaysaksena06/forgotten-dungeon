@@ -12,3 +12,5 @@ organiser/
 ml/data/
 .claude/
 .vercel
+.dragon_build/
+__pycache__/
