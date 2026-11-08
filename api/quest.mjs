@@ -10,7 +10,7 @@ import { QuestError, publicState, step } from '../server/src/quest/engine.js';
 import { loadProfiles } from '../server/src/quest/profiles.js';
 import { replay } from '../server/src/quest/replay.js';
 import { cleanAction } from '../server/src/quest/runs.js';
-import { profileHash } from '../server/src/quest/teams.js';
+import { codeMatches, profileHash } from '../server/src/quest/teams.js';
 
 const MAX_ACTIONS = 5000; // far more than a full run; bounds the replay work per request
 const profiles = new Map(loadProfiles(process.env.QUEST_TEAMS).map((p) => [p.teamId, p]));
@@ -20,7 +20,7 @@ const META = { classes: CLASSES, partyOrder: PARTY_ORDER, rooms: ROOMS, edges: E
 function teamFor(teamId, code) {
   const p = profiles.get(teamId);
   if (!p) throw new QuestError('no_team', `No team called ${teamId}.`);
-  if (p.accessCode && p.accessCode !== code) throw new QuestError('bad_code', 'Wrong team code.');
+  if (p.accessCode && !codeMatches(p.accessCode, code)) throw new QuestError('bad_code', 'Wrong team code.');
   return p;
 }
 

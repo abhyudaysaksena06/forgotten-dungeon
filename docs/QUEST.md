@@ -253,9 +253,9 @@ the target room's tier and threat, travel cost, power-to-threat ratio, who leads
    estimates its win chance from 40 simulated continuations with fresh dice. An option is "good" if it's
    within 10 points of the best option in that exact situation. About 4 minutes.
 2. `python ml/train_forest.py` trains a scikit-learn RandomForestClassifier (120 trees, depth 12),
-   split by team. Current result (retrained with room 3's boss): **84.3% accuracy on unseen teams** (majority
-   baseline 50.6%), ROC AUC 0.932, on 15,319 decisions. By tier: weak 87%, average 82%, strong 84%.
-   Top inputs: party power, party DEF, power-to-threat ratio, gold, target tier.
+   split by team. Current result (retrained with the Nemesis's full kit and the new weak tier): **85.9% accuracy on
+   unseen teams** (majority baseline 52.8%), ROC AUC 0.942, on 15,459 decisions. By tier: weak 85%,
+   average 87%, strong 86%. Top inputs: party power, party DEF, power-to-threat ratio, gold, target tier.
 3. The model ships as JSON (`server/src/quest/model/route-forest.json`); `forest.js` evaluates it in
    Node. `server/test/forest.test.js` proves Node and scikit-learn agree, and that the forest beats the
    baseline by at least 10 points.

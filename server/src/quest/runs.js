@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { QuestError, publicState, step } from './engine.js';
 import { cageRunes } from './locks.js';
 import { replay } from './replay.js';
-import { profileHash } from './teams.js';
+import { codeMatches, profileHash } from './teams.js';
 
 export const ACTION_FIELDS = ['type', 'to', 'memberId', 'targetId', 'item', 'lane'];
 
@@ -56,7 +56,7 @@ export class QuestRuns {
 
   checkCode(teamId, code) {
     const p = this.profile(teamId);
-    if (p.accessCode && p.accessCode !== code) throw new QuestError('bad_code', 'Wrong team code.');
+    if (p.accessCode && !codeMatches(p.accessCode, code)) throw new QuestError('bad_code', 'Wrong team code.');
     return p;
   }
 

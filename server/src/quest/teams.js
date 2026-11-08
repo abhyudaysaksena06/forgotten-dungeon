@@ -1,6 +1,6 @@
 // Team profiles: each team starts with different stats, torches, gold and potions, derived from a
 // seed. The organiser's registry is the source of truth; a participant's copy is never trusted.
-import { createHash } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { createRng, hashSeed } from '../engine/rng.js';
 import { CLASSES, PARTY_ORDER } from './data.js';
 
@@ -38,6 +38,13 @@ function stable(value) {
   if (Array.isArray(value)) return `[${value.map(stable).join(',')}]`;
   if (value && typeof value === 'object') return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${stable(value[k])}`).join(',')}}`;
   return JSON.stringify(value);
+}
+
+// A team's access code, compared in constant time.
+export function codeMatches(expected, given) {
+  const a = Buffer.from(String(given ?? ''));
+  const b = Buffer.from(String(expected));
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 export function profileHash(profile) {

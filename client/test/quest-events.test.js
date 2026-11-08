@@ -39,3 +39,17 @@ test('a round plays in order: attacker first, then the hit', () => {
   assert.equal(skeletonHit.amount, 14);
   assert.ok(hero.at < skeletonHit.at && skeletonHit.at < mageHit.at);
 });
+
+test('the keepers, the hero and the Hell Nemesis act out their lines', () => {
+  const solo = [{ id: 'knight', name: 'Kael', controlled: true }];
+  const nemesis = [{ id: 'nemesis-1-0', name: 'The Hell Nemesis' }];
+  const prev = { log: ['…'], party: solo, combat: { enemies: nemesis } };
+  const at = (line) => cuesFor(prev, { ...prev, log: ['…', line] }, 0).map((c) => `${c.id}:${c.kind}`);
+  assert.deepEqual(at('The Healer lays a hand on Kael: health and shield are whole again.'), ['keeper_healer:skill', 'knight:heal']);
+  assert.deepEqual(at('The Weaponsmith hones and mends the Iron Sword: sharp and whole again.'), ['keeper_smith:attack']);
+  assert.deepEqual(at('The Gate Courtyard is cleared! Heart fragment 1, 40 gold, 1 potion(s), 70 XP.'), ['knight:victory']);
+  assert.deepEqual(at("Kael's Rune Strike shatters Morvath's shadow armour! He can be hurt for 3 rounds."), ['knight:rune']);
+  assert.deepEqual(at('The Hell Nemesis charges down the centre lane!'), ['nemesis-1-0:charge']);
+  assert.deepEqual(at('The Hell Nemesis drives its blade into the floor: hellfire bursts across every lane!'), ['nemesis-1-0:slam']);
+  assert.deepEqual(at('The Hell Nemesis roars as hellfire splits its armour. It is Enraged!'), ['nemesis-1-0:transform']);
+});
