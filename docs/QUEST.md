@@ -228,10 +228,9 @@ the target room's tier and threat, travel cost, power-to-threat ratio, who leads
    estimates its win chance from 40 simulated continuations with fresh dice. An option is "good" if it's
    within 10 points of the best option in that exact situation. About 4 minutes.
 2. `python ml/train_forest.py` trains a scikit-learn RandomForestClassifier (120 trees, depth 12),
-   split by team. Current result (retrained for the skeleton rooms): **71.5% accuracy on unseen
-   teams** (majority baseline 54.9%), ROC AUC 0.81, on 16,958 decisions. By tier: weak 75%, average
-   68%, strong 72%. Top inputs: party power, power-to-threat ratio, torches, party ATK, torches left
-   after the move.
+   split by team. Current result (retrained for the skeleton rooms): **71.8% accuracy on unseen
+   teams** (majority baseline 53.4%), ROC AUC 0.80, on 16,859 decisions. By tier: weak 76%, average
+   71%, strong 68%. Top inputs: party power, power-to-threat ratio, torches, party ATK, gold.
 3. The model ships as JSON (`server/src/quest/model/route-forest.json`); `forest.js` evaluates it in
    Node. `server/test/forest.test.js` proves Node and scikit-learn agree, and that the forest beats the
    baseline by at least 10 points.
