@@ -130,6 +130,23 @@ const SFX = {
     tone({ freq: 80, slideTo: 35, decay: 0.45, peak: 0.6, type: 'triangle' });
     noise({ decay: 0.3, peak: 0.35, freq: 500, filter: 'lowpass' });
   },
+  whoosh: () => noise({ attack: 0.02, decay: 0.22, peak: 0.12, freq: 600, sweepTo: 2200, q: 0.8 }),
+  // Rune Strike: a rising chime, then the blade.
+  rune: () => {
+    [523, 784, 1175].forEach((f, i) => tone({ freq: f, at: i * 0.04, decay: 0.3, peak: 0.1, type: 'triangle', slideTo: f * 1.5 }));
+    SFX.slash();
+  },
+  // Hellfire Charge: hooves of stone and a rush of air.
+  charge: () => {
+    [0, 0.09, 0.18, 0.27].forEach((at) => tone({ freq: 70, slideTo: 45, at, decay: 0.16, peak: 0.35, type: 'triangle' }));
+    noise({ at: 0.1, attack: 0.15, decay: 0.5, peak: 0.22, freq: 500, sweepTo: 1800, q: 0.7 });
+  },
+  // Infernal Slam: the blade hits the floor, the floor answers.
+  slam: () => {
+    tone({ freq: 60, slideTo: 28, at: 0.42, decay: 0.9, peak: 0.75, type: 'triangle' });
+    noise({ at: 0.42, decay: 0.7, peak: 0.45, freq: 300, filter: 'lowpass', sweepTo: 90 });
+    noise({ at: 0.45, attack: 0.05, decay: 0.9, peak: 0.18, freq: 2200, filter: 'bandpass', q: 0.6, sweepTo: 600 });
+  },
   step: () => noise({ decay: 0.04, peak: 0.05, freq: 700, filter: 'lowpass' }),
   jump: () => noise({ attack: 0.02, decay: 0.2, peak: 0.08, freq: 800, sweepTo: 2400, q: 1.5 }),
   click: () => tone({ freq: 660, decay: 0.06, peak: 0.06, type: 'triangle' }),
@@ -155,7 +172,7 @@ export function play(name, arg) {
 }
 
 // The 3D cues (see events.js) carry what happened and when; sound follows them.
-const CUE_SOUND = { attack: 'slash', skill: 'skill', hit: 'hit', heal: 'heal', death: 'death', block: 'block', boss_strike: 'heavy', boss_sweep: 'roar', transform: 'roar', armour_break: 'shatter' };
+const CUE_SOUND = { attack: 'slash', rune: 'rune', skill: 'skill', hit: 'hit', heal: 'heal', death: 'death', block: 'block', defend: 'block', dodge: 'whoosh', boss_strike: 'heavy', boss_sweep: 'roar', transform: 'roar', armour_break: 'shatter', charge: 'charge', slam: 'slam' };
 
 export function playCues(cues) {
   if (!ctx || ctx.state !== 'running') return;

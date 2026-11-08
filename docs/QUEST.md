@@ -81,6 +81,8 @@ characters that still have no real model (stand-in figures); every character abo
 
 ### Morvath
 
+His first form, the Shadow Knight, is the Nemesis sculpt recoloured in his violet shadow-fire (`boss_morvath_knight`; the Nemesis is his herald, wearing his likeness), 3.6 m tall; while his shadow armour holds, a violet shell breathes around him. After the Change he is the artist's Shadow Dragon (`boss_morvath_dragon`, 4.8 m, its own clips).
+
 350 HP, DEF 8 (more if Kael cleared a fourth room first). Each round he announces his next move, so the player can react.
 
 | Phase | When | Moves |

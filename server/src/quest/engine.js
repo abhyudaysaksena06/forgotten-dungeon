@@ -214,6 +214,7 @@ function startWave(state) {
     }
     say(state, `${controlled(state).name} catches his breath (+${Math.round(BREATHER_HEAL * 100)}% health) and raises his shield again.`);
   }
+  if (state.combat.enemies.some((e) => e.kind === 'nemesis')) say(state, NEMESIS_LINE);
   const morvath = state.combat.enemies.find((e) => e.ultimate);
   if (morvath) telegraphMorvath(state, createRng(state), morvath);
 }
@@ -720,6 +721,8 @@ function endOfRound(state, rng) {
 }
 
 // ---------- the Hell Nemesis ----------
+
+const NEMESIS_LINE = 'Its armour is shaped like Morvath’s own: his herald, sent to stop the Runewright before the Throne.';
 
 // Below half health, once: Enraged. Its blows hit harder and its specials come every second round.
 function nemesisEnrage(state, e) {

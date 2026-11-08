@@ -54,5 +54,10 @@
   {
     "key": "npc_pip",
     "height": 1.35
+  },
+  {
+    "key": "boss_morvath_knight",
+    "height": 3.6,
+    "toon": false
   }
 ]

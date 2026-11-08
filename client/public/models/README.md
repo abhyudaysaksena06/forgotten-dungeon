@@ -47,6 +47,7 @@ full room until `mini` is run again.
 | `room_2` … `room_5` | The other rooms | `tools/blender/prepare_room.py` (and `build_room_3.py`) |
 | `enemy_skeleton` | The skeletons | A rigged skeleton (2 clips) |
 | `boss_nemesis` | The Hell Nemesis, room 3's boss | A 78 MB, 1.9-million-triangle sculpt: `optimize.mjs full boss_nemesis --simplify 0.2 --ground` keeps 20% (372k triangles; at 2–10% the chest's highlights go faceted), its own PBR materials (`toon: false`) |
+| `boss_morvath_knight` | Morvath, the Shadow Knight (phase 1) | The Nemesis sculpt in Morvath's violet shadow-fire: `node variant.mjs boss_nemesis boss_morvath_knight --hue 292 --saturation 1.1 --brightness 0.92 --height 3.6` (the story calls the Nemesis his herald, wearing his likeness) |
 | `boss_morvath_dragon` | Morvath after the Change | The artist's dragon (below): `--simplify 0.5 --max 4096` keeps its 4K body textures and all 8 clips |
 | `char_kael`, `npc_healer`, `npc_smith`, `npc_king_ghost`, `npc_pip` | Kael, the cage's keepers, the camp | KayKit Adventurers (Kay Lousberg, **CC0**): Knight, Mage, Barbarian, Knight as a ghost, Barbarian with his mug, built by `tools/models/character.mjs` |
 

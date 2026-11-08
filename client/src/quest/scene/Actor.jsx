@@ -3,7 +3,7 @@
 import { Suspense, useContext, useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html, useAnimations, useGLTF } from '@react-three/drei';
-import { Box3, LoopOnce } from 'three';
+import { AdditiveBlending, BackSide, Box3, LoopOnce } from 'three';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { IS_FLYER, InkContext, PALETTE, Placeholder, TOON_RAMP } from './placeholders.jsx';
 import { toonify } from './toon.js';
@@ -167,6 +167,7 @@ export function Actor({
   const ring = useRef();
   const shock = useRef();
   const shockMat = useRef();
+  const aura = useRef();
   const rage = useRef();
   const clipsRef = useRef(null);
   const flyer = IS_FLYER.has(modelKey);
@@ -226,6 +227,7 @@ export function Actor({
       shock.current.scale.setScalar(0.5 + q * 5.5);
       if (shockMat.current) shockMat.current.opacity = on ? 0.85 * (1 - q) : 0;
     }
+    if (aura.current) aura.current.opacity = 0.11 + Math.sin(t * 2.6 + seed) * 0.05;
     if (rage.current) rage.current.intensity = enraged && !fallen ? 5 + Math.sin(t * 6 + seed) * 1.6 + Math.sin(t * 15.3) * 0.7 : 0;
     // Fallen: topple once the death cue has played (or straight away if there was none).
     const down = fallen && (!death || now >= death.at);
@@ -284,6 +286,14 @@ export function Actor({
         </group>
       </group>
 
+      {/* Morvath's shadow armour on a real model: a violet shell that breathes. It is a mesh, not a
+          light, so it comes and goes without recompiling every material in the scene. */}
+      {armoured && useGlb && !fallen && (
+        <mesh position={[0, height * 0.5, 0]} scale={[height * 0.3, height * 0.56, height * 0.3]}>
+          <sphereGeometry args={[1, 24, 16]} />
+          <meshBasicMaterial ref={aura} color="#8a4dff" transparent opacity={0.12} blending={AdditiveBlending} depthWrite={false} side={BackSide} />
+        </mesh>
+      )}
       {/* The Infernal Slam's shockwave, rolling out across the floor. */}
       <mesh ref={shock} position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
         <ringGeometry args={[0.8, 1.05, 48]} />
