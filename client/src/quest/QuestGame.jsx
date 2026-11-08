@@ -673,7 +673,7 @@ function MapPanel({ state, meta, busy, act, setPicker, atCell }) {
           );
         })}
       </div>
-      {state.cages && <CageSection busy={busy} act={act} atCell={atCell} />}
+      {state.cages && <CageSection busy={busy} act={act} atCell={atCell} runes={state.cageRunes ?? 0} />}
       {atCamp && <p className="eyebrow mt-3">Camp</p>}
       {atCamp && (
         <div className="mt-1.5 grid grid-cols-3 gap-1.5">
@@ -714,11 +714,16 @@ function MapPanel({ state, meta, busy, act, setPicker, atCell }) {
 }
 
 // A cleared room's cage: walk up to a cell's door, then E (or the button).
-function CageSection({ busy, act, atCell }) {
+// It stays shut while the room's round still has broken runes in the code.
+function CageSection({ busy, act, atCell, runes }) {
   const cell = (type, name, does) => (
-    <button className="btn px-2 py-1.5 text-sm" disabled={busy || atCell !== type} onClick={() => act({ type })} title={does}>
+    <button className="btn px-2 py-1.5 text-sm" disabled={busy || runes > 0 || atCell !== type} onClick={() => act({ type })} title={does}>
       {name}
-      <small className="block font-mono text-[10px] text-ash">{atCell === type ? `${does} (E)` : 'walk up to the door'}</small>
+      {runes > 0 ? (
+        <small className="block font-mono text-[10px] text-blood">locked · {runes} broken rune{runes > 1 ? 's' : ''}</small>
+      ) : (
+        <small className="block font-mono text-[10px] text-ash">{atCell === type ? `${does} (E)` : 'walk up to the door'}</small>
+      )}
     </button>
   );
   return (

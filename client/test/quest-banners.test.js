@@ -31,6 +31,9 @@ test('entering a room starts a battle; clearing it shows victory and a quest cle
   assert.equal(t[0], 'Victory!');
   assert.match(b[0].note, /cage is open/);
   assert.ok(t.includes('Quest Clear!'));
+  // With broken runes left in the round (counted by the server), the cage stays shut.
+  const locked = bannersFor(view(last), { ...view(won), cageRunes: 2 }, meta);
+  assert.match(locked[0].note, /stays shut: 2 broken runes/);
 });
 
 test('skills get a cut-in, plain attacks do not', () => {

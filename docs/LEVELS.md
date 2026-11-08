@@ -15,8 +15,8 @@ cleared (+12% per tier above 1, +6% per room cleared).
 | From 0 s | The skeletons start walking toward Kael at once. His shield takes their blows before his health does. |
 | Each round | The player acts (F, right-click, E, Q, R, H, G) or, after **6 s** of doing nothing, the round plays out anyway. Kael acts, then the skeletons; the animations take about 2–2.5 s (0.3 s per fighter). Every blow that lands dulls and wears the Iron Sword. |
 | Six skeletons | Rooms 1–4 hold six skeletons and no boss. Three stand at the room's enemy spawns, the rest in a row behind them. |
-| Last skeleton down | **VICTORY!** (1.7 s) with "The cage is open", then **QUEST CLEAR!** (2.2 s), then **LEVEL UP!** (1.5 s) if Kael levelled. A Heart fragment, gold, potions and XP. The room stays on screen: the cage doors swing open. |
-| The open cage | Walk up to the Healer's door and press **E** (health and shield back to full), then to the Weaponsmith's (sharpness and durability back to full). Free, and open again whenever Kael comes back. Then choose the next room from the Journey list. |
+| Last skeleton down | **VICTORY!** (1.7 s) with "The cage is open" (or "The cage stays shut: n broken runes left in this round" while the round's bugs are still in the code), then **QUEST CLEAR!** (2.2 s), then **LEVEL UP!** (1.5 s) if Kael levelled. A Heart fragment, gold, potions and XP. The room stays on screen: the cage doors swing open once the round has no broken runes. |
+| The open cage | Opens only when the room is cleared **and** the round's glitches (bugs) are fixed in the code. Walk up to the Healer's door and press **E** (health and shield back to full), then to the Weaponsmith's (sharpness and durability back to full). Free, and open again whenever Kael comes back. Then choose the next room from the Journey list. |
 | Kael falls | **DEFEATED…** (1.9 s). He wakes at the camp at 30% health and shield, minus 2 torches and half the gold. The room resets. |
 
 A clean playthrough takes about **6–10 minutes**: 4–7 minutes of fighting and 1–3 minutes on the map

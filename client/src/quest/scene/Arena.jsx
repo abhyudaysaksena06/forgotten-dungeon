@@ -649,7 +649,8 @@ export function Arena({ state, meta, models, cues, targetId, onTarget, world, re
   // The rooms have no NPCs: Kael goes alone. Each room but the Throne keeps a cage at its side.
   const room = world.room;
   const cage = useMemo(() => (meta.rooms[roomId]?.final ? null : cageSpot(room)), [room, roomId, meta]);
-  const open = state.fragments.includes(roomId) && state.phase !== 'combat';
+  // Cleared, and no broken runes left in the room's round (cageRunes: counted by the server's locks).
+  const open = state.fragments.includes(roomId) && state.phase !== 'combat' && !state.cageRunes;
   // What the HUD needs to know: the cells' doors, while the cage is open.
   world.cage = cage && open ? { cells: cage.cells } : null;
 

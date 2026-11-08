@@ -27,7 +27,7 @@ clear lines, camp lines, Morvath's phase lines, the ending and the defeat line.
 | Hero | **Kael** the Knight, alone (260 HP, ATK 15, DEF 13 before the team's tier): no leader to choose and no companions. Skill: **Bulwark** (half damage this round). He is the Runewright: only his **Rune Strike** (cooldown 3) breaks Morvath's shadow armour. |
 | Iron Sword | Adds its **edge** (up to 14, by **sharpness**) to every blow. Each blow that lands dulls it (−3 sharpness) and wears it (−2 **durability**); at 0 durability it is broken and hits for half. |
 | Shield | 100 points that take every blow before health does. |
-| The cage | Every room but the Throne keeps a cage at its side with two cells: a **Healer** and a **Weaponsmith**. It opens when the room is cleared (its skeletons down, its runes put right) and stays open whenever Kael comes back. Walk up to a cell's door and press **E**: the Healer restores health and shield, the Weaponsmith sharpness and durability. Free. |
+| The cage | Every room but the Throne keeps a cage at its side with two cells: a **Healer** and a **Weaponsmith**. It opens when the room is cleared **and** its round has no broken runes left in the code, and stays open whenever Kael comes back. The **cage locks** (`server/src/quest/locks.js`) hold one behaviour check per bug of rounds 1–4; they run once per server start, so a team that fixes a rune and restarts sees the cage open. A locked cage shows "locked · n broken runes" in the HUD, and the server refuses the Healer and the Weaponsmith (`cage_locked`). The clean game (and the hosted Vercel build, which skips the locks) always opens. `scripts/quest-verify.mjs` proves each bug alone locks exactly its own round's cage. Walk up to a cell's door and press **E**: the Healer restores health and shield, the Weaponsmith sharpness and durability. Free. |
 | Map | Camp plus five rooms joined by corridors: camp–r1, camp–r2, r1–r2, r1–r3, r2–r4, r3–r4, r3–r5, r4–r5. Each corridor costs 1 torch. A cleared room's waystone links it to the camp. Rooms 1–4 can be done in any order. |
 | Rooms 1–4 | Six **Skeletons** (50 HP, ATK 13, DEF 4 before scaling); there are no room bosses and no NPCs. Reward: a **Heart fragment**, gold, potions, XP. Every second skeleton to fall drops a monster part (three a room). |
 | Room 5 | The Throne of Eternity opens at 3 fragments. Six brittle skeleton guards (10 HP, ATK 0), then **Morvath**. No retreat. Beating him gives the fifth fragment. |
@@ -188,7 +188,7 @@ says "move closer" and sends nothing.
 to the same deterministic engine, so autosave by inputs, replay, cheat-proofing and judging are
 unchanged. Positions are never saved and never scored.
 
-**After a fight.** A cleared room stays on screen with its cage open: walk up to the Healer's or the
+**After a fight.** A cleared room stays on screen with its cage (open once the round's runes are fixed): walk up to the Healer's or the
 Weaponsmith's door (the HUD's "The cage" section says when you're there) and press E, then pick the
 next room from the Journey list. The cage is placed by `cageSpot` in `scene/world.js`: the nearest
 spot to the room's old NPC spot where the whole cage fits off to the side of the fight.
