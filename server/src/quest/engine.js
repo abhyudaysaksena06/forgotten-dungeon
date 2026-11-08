@@ -270,11 +270,12 @@ function travel(state, { to }) {
   if (to !== CAMP && !state.fragments.includes(to)) beginFight(state, to);
 }
 
-// Starts a room's first wave. Exported for tests that set up a fight directly.
-export function beginFight(state, roomId) {
+// Starts a room's first wave. Exported for tests that set up a fight directly; they can start at
+// a later wave (Morvath is the Throne's second).
+export function beginFight(state, roomId, waveIndex = 0) {
   state.phase = 'combat';
   state.location = roomId;
-  state.combat = { roomId, waveIndex: 0, enemies: [], round: 0, telegraph: null, bulwark: false };
+  state.combat = { roomId, waveIndex, enemies: [], round: 0, telegraph: null, bulwark: false };
   say(state, `Round ${ROOMS[roomId].round} — ${ROOMS[roomId].roundName}: ${ROOMS[roomId].name}.`);
   for (const line of ROOM_LINES[roomId].enter) speak(state, line);
   startWave(state);
@@ -386,7 +387,9 @@ function hitEnemy(state, attacker, enemy, result, { rune = false, volley = false
   if (enemy.hp === 0) {
     state.stats.kills += 1;
     say(state, `${enemy.name} falls.`);
-    if (t.part) {
+    // `partEvery: n`: only every n-th of its kind to fall in this fight leaves a part.
+    const fallenOfKind = state.combat.enemies.filter((e) => e.kind === enemy.kind && e.hp <= 0).length;
+    if (t.part && fallenOfKind % (t.partEvery ?? 1) === 0) {
       state.parts += 1;
       say(state, `A monster part for Pip's pot (${state.parts}).`);
     }
@@ -576,10 +579,10 @@ function morvathPhases(state, boss) {
     boss.name = MORVATH.dragonName;
     boss.model = MORVATH.dragonModel;
     say(state, MORVATH_LINES.change);
-    const crawlers = [0, 1].map((i) => spawn(state, 'shadow_crawler', i, `summon${state.combat.round}`));
-    state.combat.enemies.push(...crawlers);
-    nameDuplicates(state.combat.enemies.filter((e) => e.kind === 'shadow_crawler'));
-    say(state, 'Two Shadow Crawlers claw out of the floor!');
+    const summoned = [0, 1].map((i) => spawn(state, 'skeleton_risen', i, `summon${state.combat.round}`));
+    state.combat.enemies.push(...summoned);
+    nameDuplicates(state.combat.enemies.filter((e) => e.kind === 'skeleton_risen'));
+    say(state, 'Two Skeletons claw out of the floor!');
   }
   if (boss.phase === 2 && boss.hp < boss.maxHp * MORVATH.breathAt) {
     boss.phase = 3;
@@ -642,11 +645,11 @@ function endOfRound(state, rng) {
   const boss = state.combat.enemies.find((e) => e.ultimate && e.hp > 0);
   if (boss) {
     morvathPhases(state, boss);
-    const crawlers = liveEnemies(state).filter((e) => e.kind === 'shadow_crawler').length;
-    if (boss.phase >= 2 && crawlers > 0 && boss.hp < boss.maxHp) {
-      const fed = Math.min(boss.maxHp - boss.hp, crawlers * MECHANICS.crawlerFeed);
+    const summoned = liveEnemies(state).filter((e) => e.kind === 'skeleton_risen').length;
+    if (boss.phase >= 2 && summoned > 0 && boss.hp < boss.maxHp) {
+      const fed = Math.min(boss.maxHp - boss.hp, summoned * MECHANICS.summonFeed);
       boss.hp += fed;
-      say(state, `The Shadow Crawlers feed Morvath: +${fed} HP. Kill them!`);
+      say(state, `The Skeletons feed Morvath: +${fed} HP. Kill them!`);
     }
     if (!boss.armoured && --boss.armourDown <= 0) {
       boss.armoured = true;

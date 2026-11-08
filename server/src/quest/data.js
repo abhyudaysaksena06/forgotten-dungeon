@@ -65,8 +65,15 @@ export const RUNE_STRIKE = { name: 'Rune Strike', cooldown: 3, text: 'A sure str
 // Melee can't reach flying enemies; magic and ranged can. Magic ignores half of DEF.
 export const CAN_HIT_FLYING = new Set(['magic', 'ranged']);
 
-// `part`: drops a monster part for Pip. `yieldsAt`: gives up (counts as beaten) below this HP share.
+// `part`: drops a monster part for Pip (`partEvery: n`: every n-th of its kind in a fight). `yieldsAt`: gives up (counts as beaten) below this HP share.
 export const ENEMIES = {
+  // Skeletons are the villains. All three look and are named alike; their numbers differ so each
+  // fight keeps its balance: six in every room, six brittle guards before Morvath, and the two
+  // Morvath raises in phase 2 (with the stats of the Shadow Crawlers they replace).
+  skeleton: { name: 'Skeleton', model: 'enemy_skeleton', hp: 65, atk: 12, def: 5, part: true, partEvery: 2 },
+  skeleton_guard: { name: 'Skeleton', model: 'enemy_skeleton', hp: 10, atk: 0, def: 0 },
+  skeleton_risen: { name: 'Skeleton', model: 'enemy_skeleton', hp: 34, atk: 11, def: 3, part: true },
+  // No room places these any more; the engine still knows their moves.
   shadow_crawler: { name: 'Shadow Crawler', model: 'enemy_shadow_crawler', hp: 34, atk: 11, def: 3, part: true },
   stone_sentinel: { name: 'Stone Sentinel', model: 'boss_stone_sentinel', hp: 150, atk: 16, def: 6, boss: true, move: 'charge' },
   ink_bat: { name: 'Ink Bat', model: 'enemy_ink_bat', hp: 26, atk: 10, def: 1, flying: true },
@@ -80,14 +87,15 @@ export const ENEMIES = {
   morvath: { name: 'Morvath, the Shadow Knight', model: 'boss_morvath_knight', hp: 725, atk: 34, def: 8, boss: true, ultimate: true },
 };
 
-// The rulebook's five rounds, one room each. Rooms 1–4: minions, then the room's boss.
-// Room 5 holds only Morvath.
+// The rulebook's five rounds, one room each. Rooms 1–4: six skeletons. Room 5: six skeleton
+// guards, then Morvath.
+const SKELETONS = Array(6).fill('skeleton');
 export const ROOMS = {
-  r1: { round: 1, roundName: 'The Entrance', name: 'The Gate Courtyard', tier: 1, model: 'room_1', npc: 'grum', waves: [['shadow_crawler', 'shadow_crawler', 'shadow_crawler'], ['stone_sentinel']], loot: { gold: 40, potions: 1 } },
-  r2: { round: 2, roundName: 'The Forgotten Hall', name: 'The Hall of Portraits', tier: 2, model: 'room_2', npc: 'ilsa', waves: [['ink_bat', 'ink_bat', 'hollow_scribe'], ['ink_wraith']], loot: { gold: 60, potions: 1 } },
-  r3: { round: 3, roundName: 'The Trial Chambers', name: 'The Hall of Trials', tier: 3, model: 'room_3', npc: 'seraphine', waves: [['trial_spirit', 'trial_spirit', 'trial_spirit'], ['brakka']], loot: { gold: 80, potions: 2 } },
-  r4: { round: 4, roundName: 'The Shadow Depths', name: 'The Hollow Barracks', tier: 4, model: 'room_4', npc: 'corin', waves: [['shadow_crawler', 'shadow_crawler', 'hollow_knight'], ['hollow_captain']], loot: { gold: 100, potions: 2 } },
-  r5: { round: 5, roundName: 'The Boss Round', name: 'The Throne of Eternity', tier: 6, model: 'room_5', npc: 'king', waves: [['morvath']], loot: { gold: 0, potions: 0 }, final: true },
+  r1: { round: 1, roundName: 'The Entrance', name: 'The Gate Courtyard', tier: 1, model: 'room_1', npc: 'grum', waves: [SKELETONS], loot: { gold: 40, potions: 1 } },
+  r2: { round: 2, roundName: 'The Forgotten Hall', name: 'The Hall of Portraits', tier: 2, model: 'room_2', npc: 'ilsa', waves: [SKELETONS], loot: { gold: 60, potions: 1 } },
+  r3: { round: 3, roundName: 'The Trial Chambers', name: 'The Hall of Trials', tier: 3, model: 'room_3', npc: 'seraphine', waves: [SKELETONS], loot: { gold: 80, potions: 2 } },
+  r4: { round: 4, roundName: 'The Shadow Depths', name: 'The Hollow Barracks', tier: 4, model: 'room_4', npc: 'corin', waves: [SKELETONS], loot: { gold: 100, potions: 2 } },
+  r5: { round: 5, roundName: 'The Boss Round', name: 'The Throne of Eternity', tier: 6, model: 'room_5', npc: 'king', waves: [Array(6).fill('skeleton_guard'), ['morvath']], loot: { gold: 0, potions: 0 }, final: true },
 };
 export const ROOM_IDS = ['r1', 'r2', 'r3', 'r4', 'r5'];
 export const CAMP = 'camp';
@@ -130,7 +138,7 @@ export const MECHANICS = {
   charge: { mult: 1.6, lanes: 1 }, // Stone Sentinel: the most crowded lane
   shadow_tide: { mult: 0.8, lanes: 2, poison: true }, // Hollow Captain: two of three lanes
   breathLanes: 2, // Morvath's Dragon's Breath covers two of three lanes
-  crawlerFeed: 10, // each living Shadow Crawler heals Morvath this much a round in phase 2
+  summonFeed: 10, // each living Skeleton heals Morvath this much a round in phase 2
   hide: { every: 4, rounds: 2 }, // Ink Wraith hides in one lane's portrait
   counter: { every: 4, rounds: 2, reflect: 0.5 }, // Brakka's counter stance
 };
@@ -164,8 +172,8 @@ export const POISON_DAMAGE = 4;
 export const POISON_ROUNDS = 3;
 
 // Morvath: shadow armour blocks all damage until the leader's Rune Strike breaks it.
-// Phase 1 Shadow Knight (100–60%), Phase 2 the Change (60–30%: dragon, summons 2 Shadow
-// Crawlers, hits harder), Phase 3 Dragon's Breath (<30%: charges, then breathes, alternately).
+// Phase 1 Shadow Knight (100–60%), Phase 2 the Change (60–30%: dragon, summons 2
+// Skeletons, hits harder), Phase 3 Dragon's Breath (<30%: charges, then breathes, alternately).
 export const MORVATH = {
   armourRegrowRounds: 3,
   changeAt: 0.6,

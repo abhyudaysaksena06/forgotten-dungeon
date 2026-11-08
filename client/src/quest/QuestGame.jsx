@@ -9,6 +9,10 @@ import Scene from './scene/Scene.jsx';
 import { morvathStrength } from './scene/MapView.jsx';
 import { REACH, createWorld, gap, laneOf, nearestEnemy, yawTo } from './scene/world.js';
 
+// Draco-compressed models (room 3) decode with three.js's own decoder, served from public/draco/,
+// so no model depends on a CDN being reachable during the event.
+useGLTF.setDecoderPath('/draco/');
+
 const MOVE_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright']);
 
 // The party acts on its own: if the leader does nothing for this long in a fight, the round plays
@@ -129,8 +133,9 @@ export default function QuestGame({ session, onLeave }) {
         metaRef.current = m;
         setMeta(m);
         setModels(manifest);
-        // Start fetching the Blender rooms now, so a fight doesn't wait for a big download.
-        for (const key of manifest.keys()) if (key.startsWith('room_')) useGLTF.preload(`/models/${key}.glb`);
+        // Start fetching every Blender model now (the rooms and the skeletons), so a fight doesn't
+        // wait for a big download.
+        for (const key of manifest.keys()) useGLTF.preload(`/models/${key}.glb`);
         apply(v);
       })
       .catch((err) => alive && onLeave(err.message));

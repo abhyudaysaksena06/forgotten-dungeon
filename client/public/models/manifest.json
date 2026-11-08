@@ -3,5 +3,6 @@
   "room_2",
   "room_3",
   "room_4",
-  "room_5"
+  "room_5",
+  { "key": "enemy_skeleton", "height": 1.8 }
 ]

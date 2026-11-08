@@ -10,7 +10,7 @@ const waveDone = (s, room, i) => cleared(s, room) || (fightingIn(s, room) && s.c
 
 function roomQuest({ id, room, giver, title, text, opensWhen }) {
   const r = ROOMS[room];
-  const [minions, [bossKind]] = r.waves;
+  const [minions, [bossKind] = []] = r.waves;
   const counts = {};
   for (const k of minions) counts[k] = (counts[k] ?? 0) + 1;
   const minionText = Object.entries(counts)
@@ -28,7 +28,7 @@ function roomQuest({ id, room, giver, title, text, opensWhen }) {
     steps: (s) => [
       { text: `Reach ${the(r.name)}`, done: cleared(s, room) || s.location === room },
       { text: `Defeat ${minionText}`, done: waveDone(s, room, 0) },
-      { text: `Defeat ${the(ENEMIES[bossKind].name)}`, done: cleared(s, room) },
+      ...(bossKind ? [{ text: `Defeat ${the(ENEMIES[bossKind].name)}`, done: cleared(s, room) }] : []),
     ],
   };
 }
@@ -57,7 +57,7 @@ export const QUESTS = [
     room: 'r2',
     giver: 'ilsa',
     title: 'The Unfinished Portraits',
-    text: 'Ink has come alive in the Hall of Portraits. Ilsa needs the Ink Wraith gone to remember what she painted.',
+    text: 'Ink has come alive in the Hall of Portraits. Ilsa needs its skeletons gone to remember what she painted.',
     opensWhen: () => true,
   }),
   roomQuest({
@@ -65,7 +65,7 @@ export const QUESTS = [
     room: 'r3',
     giver: 'seraphine',
     title: 'The Three Trials',
-    text: 'Seraphine guards the Trial Chambers. Prove your strength against Brakka the Warrior.',
+    text: 'Seraphine guards the Trial Chambers. Prove your strength against the skeletons of the trials.',
     opensWhen: (s) => cleared(s, 'r1') || cleared(s, 'r2') || s.location === 'r3',
   }),
   roomQuest({
@@ -73,7 +73,7 @@ export const QUESTS = [
     room: 'r4',
     giver: 'corin',
     title: 'The Last Loyal Knight',
-    text: 'Sir Corin has held the Hollow Barracks alone for four hundred years. Break the Hollow Captain’s line.',
+    text: 'Sir Corin has held the Hollow Barracks alone for four hundred years. Break the skeletons’ line.',
     opensWhen: (s) => cleared(s, 'r1') || cleared(s, 'r2') || s.location === 'r4',
   }),
   {
@@ -98,7 +98,7 @@ export const QUESTS = [
     kind: 'side',
     giver: 'pip',
     title: 'Monster Stew',
-    text: 'Pip the goblin cook wants crawler legs. Bring three monster parts back to camp.',
+    text: 'Pip the goblin cook wants skeleton bones. Bring three monster parts back to camp.',
     reward: 'A Monster Meal (heals 70)',
     opensWhen: (s) => s.parts > 0 || s.stats.mealsCooked > 0 || s.fragments.length > 0,
     steps: (s) => [

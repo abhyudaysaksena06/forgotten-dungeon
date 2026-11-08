@@ -21,7 +21,7 @@ const fresh = (tier, leader = 'knight') => {
   for (const m of s.party) m.controlled = m.id === leader;
   return s;
 };
-const atThrone = (leader) => beginFight(fresh('strong', leader), 'r5');
+const atThrone = (leader) => beginFight(fresh('strong', leader), 'r5', ROOMS.r5.waves.length - 1); // Morvath's wave
 const boss = (s) => s.combat.enemies.find((e) => e.ultimate);
 const hero = (s, id) => s.party.find((m) => m.id === id);
 

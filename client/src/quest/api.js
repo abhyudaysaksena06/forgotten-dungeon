@@ -78,7 +78,9 @@ export function loadQuestMeta() {
 // Which Blender models have been dropped into client/public/models/ (see the README there).
 let manifestPromise;
 export function loadModelManifest() {
-  manifestPromise ??= fetch('/models/manifest.json')
+  // Always asked of the server (a cached list would hide a model added since), however the
+  // host caches the folder.
+  manifestPromise ??= fetch('/models/manifest.json', { cache: 'no-cache' })
     .then((r) => (r.ok ? r.json() : []))
     // Each entry is a model key, or { key, turn, height } for a model that needs turning or sizing.
     .then((list) => new Map((Array.isArray(list) ? list : []).map((e) => (typeof e === 'string' ? [e, {}] : [e.key, e]))))

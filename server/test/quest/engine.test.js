@@ -67,43 +67,45 @@ test('entering a room costs torches, records a decision, and the room’s NPC sp
   assert.ok(s.torches < s0.torches);
   assert.equal(s.decisions.length, 1);
   assert.equal(s.decisions[0].choice, 'room1');
-  assert.equal(s.combat.enemies.length, 3);
+  assert.deepEqual(s.combat.enemies.map((e) => e.kind), Array(6).fill('skeleton'));
   assert.equal(s.speech?.npc, 'grum');
   assert.equal(s0.phase, 'map', 'step never mutates the previous state');
 });
 
 test('melee cannot reach flyers; magic and ranged can', () => {
   const s = beginFight(fresh(), 'r2');
-  const bat = s.combat.enemies.find((e) => e.flying);
+  const bat = Object.assign(s.combat.enemies[0], { flying: true });
   assert.throws(() => step(s, { type: 'attack', targetId: bat.id }), /reach/);
 });
 
-test('the Throne holds only Morvath, armoured, announcing his move; no retreat', () => {
+test('the Throne holds six skeleton guards, then Morvath, armoured, announcing his move; no retreat', () => {
   const s = beginFight(fresh('strong'), 'r5');
-  assert.deepEqual(s.combat.enemies.map((e) => e.kind), ['morvath']);
-  assert.equal(s.combat.enemies[0].armoured, true);
-  assert.ok(s.combat.telegraph);
+  assert.deepEqual(s.combat.enemies.map((e) => e.kind), Array(6).fill('skeleton_guard'));
   assert.throws(() => step(s, { type: 'retreat' }), /no retreat/);
+  s.combat.enemies.forEach((e) => (e.hp = -1));
+  const morvathWave = step(s, { type: 'wait' });
+  assert.deepEqual(morvathWave.combat.enemies.map((e) => e.kind), ['morvath']);
+  assert.equal(morvathWave.combat.enemies[0].armoured, true);
+  assert.ok(morvathWave.combat.telegraph);
+  assert.throws(() => step(morvathWave, { type: 'retreat' }), /no retreat/);
 });
 
-test('below 60% HP Morvath becomes the Shadow Dragon and summons two Shadow Crawlers', () => {
-  const s = beginFight(fresh('strong'), 'r5');
+test('below 60% HP Morvath becomes the Shadow Dragon and summons two Skeletons', () => {
+  const s = beginFight(fresh('strong'), 'r5', 1);
   const m = s.combat.enemies[0];
   m.hp = Math.floor(m.maxHp * 0.55);
   const after = step(s, { type: 'wait' });
   const dragon = after.combat.enemies.find((e) => e.ultimate);
   assert.equal(dragon.phase, 2);
   assert.equal(dragon.name, MORVATH.dragonName);
-  assert.equal(after.combat.enemies.filter((e) => e.kind === 'shadow_crawler').length, 2);
+  assert.equal(after.combat.enemies.filter((e) => e.kind === 'skeleton_risen').length, 2);
 });
 
 test('Brakka yields instead of dying', () => {
-  // Clear the first wave so the next round brings Brakka.
-  const first = beginFight(fresh('strong', 'rogue'), 'r3');
-  first.combat.enemies.forEach((e) => (e.hp = -1));
-  const brakkaWave = step(first, { type: 'wait' });
+  // No room brings Brakka any more; the engine still knows how he yields.
+  const brakkaWave = beginFight(fresh('strong', 'rogue'), 'r3');
+  brakkaWave.combat.enemies = [{ ...brakkaWave.combat.enemies[0], kind: 'brakka', name: 'Brakka the Warrior', boss: true, hp: 210, maxHp: 210 }];
   const brakka = brakkaWave.combat.enemies[0];
-  assert.equal(brakka.kind, 'brakka');
   brakka.hp = Math.floor(brakka.maxHp * 0.2) + 1;
   const after = step(brakkaWave, { type: 'skill', targetId: brakka.id });
   assert.ok(after.log.some((l) => /yields/.test(l)));
@@ -257,12 +259,22 @@ test('Brakka in counter stance takes half and strikes back', () => {
   assert.match(after.log.join('\n'), /Brakka the Warrior's counter hits/);
 });
 
-test('living Shadow Crawlers feed Morvath in phase 2', () => {
-  const s = atRoom('r5');
+test('living Skeletons feed Morvath in phase 2', () => {
+  const s = beginFight(fresh('strong'), 'r5', 1);
   const b = s.combat.enemies[0];
   Object.assign(b, { phase: 2, hp: 300, armoured: true });
-  s.combat.enemies.push({ ...b, id: 'c1', kind: 'shadow_crawler', name: 'Shadow Crawler', ultimate: false, boss: false, hp: 999, maxHp: 999, atk: 1 });
+  s.combat.enemies.push({ ...b, id: 'c1', kind: 'skeleton_risen', name: 'Skeleton', ultimate: false, boss: false, hp: 999, maxHp: 999, atk: 1 });
   const after = step(s, { type: 'defend' });
   assert.match(after.log.join('\n'), /feed Morvath/);
   assert.ok(after.combat.enemies.find((e) => e.ultimate).hp > 300);
+});
+
+test('every second skeleton to fall leaves a monster part: three a room', () => {
+  const s = beginFight({ ...fresh('strong'), parts: 0 }, 'r1');
+  s.combat.enemies.forEach((e) => (e.hp = 1));
+  for (const m of s.party) m.atk = 999;
+  // Count the parts as the six fall; whether the fight then ends is another test's business.
+  let after = s;
+  for (let i = 0; i < 12 && after.combat?.enemies.some((e) => e.hp > 0); i++) after = step(after, { type: 'attack', targetId: after.combat.enemies.find((e) => e.hp > 0).id });
+  assert.equal(after.parts, 3);
 });

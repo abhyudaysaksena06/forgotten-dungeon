@@ -1,13 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
-  "buildCommand": "VITE_HOSTED=1 npm run build -w client",
+  "buildCommand": "VITE_HOSTED=1 VITE_VILLAINS_ONLY=1 npm run build -w client",
   "outputDirectory": "client/dist",
   "rewrites": [{ "source": "/api/quest/:path*", "destination": "/api/quest?path=:path*" }],
   "headers": [
     {
       "source": "/models/(.*)",
-      "headers": [{ "key": "cache-control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
+      "headers": [{ "key": "cache-control", "value": "public, max-age=0, must-revalidate" }]
     }
   ]
 }
