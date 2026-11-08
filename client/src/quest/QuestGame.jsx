@@ -9,6 +9,10 @@ import Scene from './scene/Scene.jsx';
 import { morvathStrength } from './scene/MapView.jsx';
 import { REACH, createWorld, gap, laneOf, nearestEnemy, yawTo } from './scene/world.js';
 
+// Draco-compressed models (room 3) decode with three.js's own decoder, served from public/draco/,
+// so no model depends on a CDN being reachable during the event.
+useGLTF.setDecoderPath('/draco/');
+
 const MOVE_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright']);
 
 // The party acts on its own: if the leader does nothing for this long in a fight, the round plays

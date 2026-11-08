@@ -28,7 +28,8 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
   visitor came four hundred years ago."* Quest: **Mind the Courtyard**.
 - **Room:** a candle-lit vault with a pentagram floor, corner piers, the throne with a skeleton to the
   north, lecterns, crates and a barrel.
-- **Enemies:** 6 Skeletons (65 HP, ATK 12, DEF 5). Each drops a monster part for Pip.
+- **Enemies:** 6 Skeletons (65 HP, ATK 12, DEF 5). Every second one to fall drops a monster part
+  for Pip: three a room, enough for one Monster Meal.
 - **Length:** about **10 rounds** (9–10). Roughly **30–60 s**. About 27% of the party's HP is lost:
   the first room is the sharpest test for a level-1 party.
 - **Reward:** fragment 1, 40 gold, 1 potion, 70 XP each. Grum: *"You fixed it. Take the fragment."*
@@ -89,13 +90,13 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
 | Phase | Starts | Lasts (avg) | What he does |
 | --- | --- | --- | --- |
 | 1 · The Shadow Knight | 100% HP | 9 rounds | Shadow Blade (36 to one hero) or Black Sweep (15 to all) |
-| 2 · The Change | below 60% | 15 rounds | **THE CHANGE** banner: he becomes the Shadow Dragon and 2 Skeletons burst from the floor. **Each living skeleton heals him 10 HP a round**: kill them first. Dragon Claw (36 to one) or Shadowflame (14 to all + poison) |
+| 2 · The Change | below 60% | 13 rounds | **THE CHANGE** banner: he becomes the Shadow Dragon and 2 Skeletons burst from the floor. **Each living skeleton heals him 10 HP a round**: kill them first. Dragon Claw (36 to one) or Shadowflame (14 to all + poison) |
 | 3 · Dragon's Breath | below 30% | 14 rounds | **DRAGON'S BREATH** banner. He alternates: draws in fire (no damage, a warning), then Dragon's Breath (48 to everyone in **two of the three lanes**, red on the floor). Stand in the safe lane. **Defend (R) on the warning** halves it |
 
-- **Length:** about **40 rounds** with the guards (34–45). Roughly **2–4 minutes**. It costs about
-  73% of the party's HP. A careful average team wins **24%** of its attempts; a team that cleared all
+- **Length:** about **39 rounds** with the guards (31–41). Roughly **2–4 minutes**. It costs about
+  76% of the party's HP. A careful average team wins **13%** of its attempts; a team that cleared all
   four rooms first faces a 135% Morvath and wins far less. A leader who never uses Rune Strike can't
-  win. Overall, about **31%** of careful average runs reach the ending (14% before the skeleton
+  win. Overall, about **17%** of careful average runs reach the ending (14% before the skeleton
   rooms, measured the same way).
 - **Ending:** **VICTORY!**, the fifth fragment, the ending scene (King Aldric forgives Morvath) and
   the end screen with "Download save".

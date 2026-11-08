@@ -387,7 +387,9 @@ function hitEnemy(state, attacker, enemy, result, { rune = false, volley = false
   if (enemy.hp === 0) {
     state.stats.kills += 1;
     say(state, `${enemy.name} falls.`);
-    if (t.part) {
+    // `partEvery: n`: only every n-th of its kind to fall in this fight leaves a part.
+    const fallenOfKind = state.combat.enemies.filter((e) => e.kind === enemy.kind && e.hp <= 0).length;
+    if (t.part && fallenOfKind % (t.partEvery ?? 1) === 0) {
       state.parts += 1;
       say(state, `A monster part for Pip's pot (${state.parts}).`);
     }

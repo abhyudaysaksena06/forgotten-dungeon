@@ -65,12 +65,12 @@ export const RUNE_STRIKE = { name: 'Rune Strike', cooldown: 3, text: 'A sure str
 // Melee can't reach flying enemies; magic and ranged can. Magic ignores half of DEF.
 export const CAN_HIT_FLYING = new Set(['magic', 'ranged']);
 
-// `part`: drops a monster part for Pip. `yieldsAt`: gives up (counts as beaten) below this HP share.
+// `part`: drops a monster part for Pip (`partEvery: n`: every n-th of its kind in a fight). `yieldsAt`: gives up (counts as beaten) below this HP share.
 export const ENEMIES = {
   // Skeletons are the villains. All three look and are named alike; their numbers differ so each
   // fight keeps its balance: six in every room, six brittle guards before Morvath, and the two
   // Morvath raises in phase 2 (with the stats of the Shadow Crawlers they replace).
-  skeleton: { name: 'Skeleton', model: 'enemy_skeleton', hp: 65, atk: 12, def: 5, part: true },
+  skeleton: { name: 'Skeleton', model: 'enemy_skeleton', hp: 65, atk: 12, def: 5, part: true, partEvery: 2 },
   skeleton_guard: { name: 'Skeleton', model: 'enemy_skeleton', hp: 10, atk: 0, def: 0 },
   skeleton_risen: { name: 'Skeleton', model: 'enemy_skeleton', hp: 34, atk: 11, def: 3, part: true },
   // No room places these any more; the engine still knows their moves.

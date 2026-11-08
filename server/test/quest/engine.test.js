@@ -268,3 +268,13 @@ test('living Skeletons feed Morvath in phase 2', () => {
   assert.match(after.log.join('\n'), /feed Morvath/);
   assert.ok(after.combat.enemies.find((e) => e.ultimate).hp > 300);
 });
+
+test('every second skeleton to fall leaves a monster part: three a room', () => {
+  const s = beginFight({ ...fresh('strong'), parts: 0 }, 'r1');
+  s.combat.enemies.forEach((e) => (e.hp = 1));
+  for (const m of s.party) m.atk = 999;
+  let after = s;
+  for (let i = 0; i < 12 && after.phase === 'combat'; i++) after = step(after, { type: 'attack', targetId: after.combat.enemies.find((e) => e.hp > 0)?.id });
+  assert.equal(after.phase, 'map');
+  assert.equal(after.parts, 3);
+});

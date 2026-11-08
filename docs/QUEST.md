@@ -27,7 +27,7 @@ clear lines, camp lines, Morvath's phase lines, the ending and the defeat line.
 | Party | **Kael** the Knight (defence, Bulwark), **Lyra** the Mage (healer, Mend), **Rook** the Rogue (striker, Twin Strike), **Mira** the Ranger (long range, Volley). The player picks one as **leader** at the start; the other three are AI companions (`server/src/quest/ai.js`). |
 | Leader | Has every skill of their hero plus **Rune Strike** (cooldown 3). Only the leader's Rune Strike breaks Morvath's shadow armour. |
 | Map | Camp plus five rooms joined by corridors: camp–r1, camp–r2, r1–r2, r1–r3, r2–r4, r3–r4, r3–r5, r4–r5. Each corridor costs 1 torch. A cleared room's waystone links it to the camp. Rooms 1–4 can be done in any order. |
-| Rooms 1–4 | Six **Skeletons** (65 HP, ATK 12, DEF 5 before scaling); there are no room bosses. Reward: a **Heart fragment**, gold, potions, XP. Every skeleton drops a monster part. |
+| Rooms 1–4 | Six **Skeletons** (65 HP, ATK 12, DEF 5 before scaling); there are no room bosses. Reward: a **Heart fragment**, gold, potions, XP. Every second skeleton to fall drops a monster part (three a room). |
 | Room 5 | The Throne of Eternity opens at 3 fragments. Six brittle skeleton guards (10 HP, ATK 0), then **Morvath**. No retreat. Beating him gives the fifth fragment. |
 | Difficulty | Enemy strength = 1 + 0.12 × (tier − 1) + 0.06 × rooms already cleared. Higher rooms and later progress hit harder. Morvath grows **+35% for every room cleared beyond the three** that open the Throne (shown on the map), so clearing everything first buys XP at a price. |
 | Camp | Rest (1 torch: full heal and revive), Rune Altar (1 torch + 30 gold: +3 ATK and +3 DEF for one hero), Forge (50 gold: +5 ATK for one hero). |
@@ -396,6 +396,14 @@ can't carry:
   stands in), as are render-hidden helpers; cameras aren't exported;
 - curves become meshes, and **procedural node materials are baked** into textures (glTF can't carry
   node textures; they would turn white). Image-textured materials are untouched.
+
+**Room 3 has its own build**, `tools/blender/build_room_3.py` (`blender -b --python
+tools/blender/build_room_3.py`). The cathedral was too heavy for `prepare_room.py` (29.7 MB, black
+bakes, broken chains), so this script decimates it to a triangle budget, bakes each object on its own
+UVs, keeps the 16 lamps around the fight, measures the dais steps and blockers with rays, and exports
+with **Draco** mesh compression (3.8 MB). The game decodes Draco with three.js's own decoder, served
+from `client/public/draco/` (no CDN needed); `useGLTF.setDecoderPath('/draco/')` is set in
+`QuestGame.jsx`.
 
 The game's layout is **not** put into the room. It goes to a separate `room_N.layout.json` next to
 the model: walkable areas and raised floors (from `tools/blender/rooms.json`), blockers for every
