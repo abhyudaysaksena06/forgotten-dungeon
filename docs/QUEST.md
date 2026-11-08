@@ -404,6 +404,12 @@ with **Draco** mesh compression (3.8 MB). The game decodes Draco with three.js's
 from `client/public/draco/` (no CDN needed); `useGLTF.setDecoderPath('/draco/')` is set in
 `QuestGame.jsx`.
 
+**Every model is optimized after export** with `tools/models/optimize.mjs` (see
+`client/public/models/README.md`): rooms 1, 2, 4 and 5 and the skeleton went from 73 MB to 14 MB
+without changing how they look, and each room has a light `room_N.mini.glb` for the map. The game shows
+a loading screen until every model is downloaded and each room's shaders are compiled, so entering a
+fight never stalls.
+
 The game's layout is **not** put into the room. It goes to a separate `room_N.layout.json` next to
 the model: walkable areas and raised floors (from `tools/blender/rooms.json`), blockers for every
 standing prop, and spawn points. The artist's own `spawn_*` empties are used where they were placed;

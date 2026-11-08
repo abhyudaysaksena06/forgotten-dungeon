@@ -1,12 +1,15 @@
 // The 3D canvas: the map between fights, the room during a fight. In a fight the camera follows
 // the leader from behind; drag with the mouse (or use ← →) to look around, scroll to zoom.
-import { useEffect, useRef } from 'react';
+import { Component, Suspense, useEffect, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
-import { ACESFilmicToneMapping, AgXToneMapping, Vector3 } from 'three';
-import { Arena } from './Arena.jsx';
+import { ACESFilmicToneMapping, AgXToneMapping, AmbientLight, DirectionalLight, HemisphereLight, Scene as ThreeScene, Vector3 } from 'three';
+import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { Arena, loadRoomLayout, prepareRoom } from './Arena.jsx';
 import { MapView } from './MapView.jsx';
-import { InkContext, PALETTE } from './placeholders.jsx';
+import { InkContext, PALETTE, TOON_RAMP } from './placeholders.jsx';
+import { toonify } from './toon.js';
 import { CAMERA, forwardOf, insideShape, rightOf } from './world.js';
 
 const EYE_HEIGHT = 1.6; // metres: a first-person camera at the leader's eyes
@@ -187,7 +190,78 @@ function CameraControls({ world, active }) {
   return null;
 }
 
-export default function Scene({ state, meta, models, cues, targetId, onTarget, onTravel, lowSpec, world, reach, firstPerson }) {
+// The preloader: every model (and the map's miniatures) and every room layout is loaded before the
+// game shows, then each room's shaders are compiled the way its fight draws it: its own lamps, the
+// game's light rig (one ambient, one hemisphere, two directional, no shadow), a skeleton, and
+// Blender's tone mapping. Entering a room then waits for neither a download nor a shader compile.
+const roomKeys = (models) => [...models.keys()].filter((k) => k.startsWith('room_'));
+export function modelUrls(models) {
+  return [...models.keys()].flatMap((k) => [`/models/${k}.glb`, ...(models.get(k)?.mini ? [`/models/${k}.mini.glb`] : [])]);
+}
+
+function Warmup({ models, lowSpec, onDone }) {
+  const urls = modelUrls(models);
+  const loaded = useGLTF(urls); // suspends until every model is in
+  const gl = useThree((s) => s.gl);
+  const camera = useThree((s) => s.camera);
+  const live = useThree((s) => s.scene);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const byUrl = new Map(urls.map((u, i) => [u, loaded[i]]));
+      await Promise.all(roomKeys(models).map(loadRoomLayout));
+      const villains = [...models.keys()]
+        .filter((k) => !k.startsWith('room_'))
+        .map((k) => {
+          const copy = cloneSkinned(byUrl.get(`/models/${k}.glb`).scene);
+          return models.get(k)?.toon === false ? copy : toonify(copy, { ramp: TOON_RAMP, outline: !lowSpec });
+        });
+      const tone = gl.toneMapping;
+      for (const key of roomKeys(models)) {
+        if (!alive) break;
+        const room = byUrl.get(`/models/${key}.glb`).scene;
+        prepareRoom(room, models.get(key)?.toon);
+        const home = room.parent; // a fight already showing this room gets it back afterwards
+        const rig = new ThreeScene();
+        rig.fog = live.fog;
+        rig.add(new AmbientLight(), new HemisphereLight(), new DirectionalLight(), new DirectionalLight(), room, ...villains);
+        gl.toneMapping = AgXToneMapping;
+        try {
+          await gl.compileAsync(rig, camera);
+        } catch {
+          // a shader that fails here fails the same way in the fight; nothing to gain by stopping
+        }
+        rig.remove(room, ...villains);
+        home?.add(room);
+      }
+      gl.toneMapping = tone;
+      if (alive) onDone();
+    })();
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+}
+
+// A model that fails to load must not keep the game behind the loading screen: let it start, and let
+// the fight show the stand-in.
+class PreloadGuard extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(err) {
+    console.warn('Preloading stopped early:', err?.message ?? err);
+    this.props.onDone();
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+export default function Scene({ state, meta, models, cues, targetId, onTarget, onTravel, lowSpec, world, reach, firstPerson, preloaded, downloaded, onPreloaded }) {
   const view = state.phase === 'combat' ? 'arena' : 'map';
   // In a Blender room its own lamps set the mood, so the generic fill lights step back.
   const roomKey = state.combat ? `room_${state.combat.roomId.slice(1)}` : null;
@@ -198,7 +272,7 @@ export default function Scene({ state, meta, models, cues, targetId, onTarget, o
   return (
     <Canvas
       shadows={!lowSpec}
-      dpr={lowSpec ? 1 : [1, 1.75]}
+      dpr={lowSpec ? 1 : [1, 1.5]}
       camera={{ fov: 50, position: MAP_VIEW.pos.toArray(), near: 0.1, far: 90 }}
       onPointerMissed={() => (document.body.style.cursor = 'default')}
     >
@@ -212,7 +286,7 @@ export default function Scene({ state, meta, models, cues, targetId, onTarget, o
         position={[-6, 10, 6]}
         intensity={1.9 * fill}
         color="#ffe2b8"
-        castShadow={!lowSpec}
+        castShadow={!lowSpec && !blenderRoom} // a Blender room turns this light off: no shadow pass for nothing
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-12}
         shadow-camera-right={12}
@@ -221,6 +295,13 @@ export default function Scene({ state, meta, models, cues, targetId, onTarget, o
       />
       {/* Cool rim light from behind separates the characters from the dark walls. */}
       <directionalLight position={[4, 6, -9]} intensity={0.9 * fill} color="#8fb3ff" />
+      {!preloaded && downloaded && (
+        <PreloadGuard onDone={onPreloaded}>
+          <Suspense fallback={null}>
+            <Warmup models={models} lowSpec={lowSpec} onDone={onPreloaded} />
+          </Suspense>
+        </PreloadGuard>
+      )}
       <CameraRig view={view} world={world} />
       <CameraControls world={world} active={view === 'arena'} />
       {view === 'arena' && <AimProbe world={world} />}

@@ -768,3 +768,31 @@
     animation: none;
   }
 }
+
+/* ---- loading screen: over everything until the models are in and the rooms compiled ---- */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.75rem;
+  background: var(--color-crypt);
+}
+.clock-bar,
+.load-bar {
+  height: 3px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.1);
+}
+.load-bar {
+  width: 14rem;
+}
+.load-bar span {
+  display: block;
+  height: 100%;
+  background: var(--color-gold);
+  transition: width 0.2s linear;
+}

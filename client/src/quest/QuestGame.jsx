@@ -5,13 +5,37 @@ import { applySettings, play, playCues, readAudioSettings, setMusic, unlock } fr
 import { AbilityBar, BossBar, EnemyList, HelpPanel, PartyPanel, Subtitle, TopBar } from './hud.jsx';
 import { BANNER_MS, bannersFor, cutInFor } from './banners.js';
 import { cuesFor } from './events.js';
-import Scene from './scene/Scene.jsx';
+import { download, downloadAll } from './preload.js';
+import Scene, { modelUrls } from './scene/Scene.jsx';
 import { morvathStrength } from './scene/MapView.jsx';
 import { REACH, createWorld, gap, laneOf, nearestEnemy, yawTo } from './scene/world.js';
 
 // Draco-compressed models (room 3) decode with three.js's own decoder, served from public/draco/,
 // so no model depends on a CDN being reachable during the event.
 useGLTF.setDecoderPath('/draco/');
+
+const PRELOAD_LIMIT_MS = 120000;
+
+// Covers the game until the preloader is done: the same words as the first loading line and how much
+// of the models has arrived; then, while each room's shaders compile, a second line.
+const mb = (bytes) => (bytes / 1e6).toFixed(1);
+function LoadingScreen() {
+  const [d, setD] = useState({ ...download });
+  useEffect(() => {
+    const t = setInterval(() => setD({ ...download }), 150);
+    return () => clearInterval(t);
+  }, []);
+  const share = d.done ? 1 : d.total ? Math.min(0.99, d.got / d.total) : 0;
+  return (
+    <div className="loading-screen" role="status" aria-live="polite">
+      <p className="font-mono text-sm text-ash">{d.done ? 'Raising the skeletons…' : 'Lighting the torches…'}</p>
+      <span className="load-bar" aria-hidden="true">
+        <span style={{ width: `${Math.round(share * 100)}%` }} />
+      </span>
+      <p className="font-mono text-[11px] text-ash/70">{d.done ? 'Preparing the rooms' : `${Math.round(share * 100)}% · ${mb(d.got)} of ${mb(d.total)} MB`}</p>
+    </div>
+  );
+}
 
 const MOVE_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright']);
 
@@ -86,6 +110,15 @@ export default function QuestGame({ session, onLeave }) {
   const [logOpen, setLogOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // The game shows once every model is loaded and every room's shaders are compiled (see Scene's
+  // preloader). A slow or broken connection never keeps a team out for more than PRELOAD_LIMIT_MS.
+  const [downloaded, setDownloaded] = useState(false);
+  const [preloaded, setPreloaded] = useState(false);
+  const markPreloaded = useCallback(() => setPreloaded(true), []);
+  useEffect(() => {
+    const t = setTimeout(markPreloaded, PRELOAD_LIMIT_MS);
+    return () => clearTimeout(t);
+  }, [markPreloaded]);
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'F1') {
@@ -133,9 +166,9 @@ export default function QuestGame({ session, onLeave }) {
         metaRef.current = m;
         setMeta(m);
         setModels(manifest);
-        // Start fetching every Blender model now (the rooms and the skeletons), so a fight doesn't
-        // wait for a big download.
-        for (const key of manifest.keys()) useGLTF.preload(`/models/${key}.glb`);
+        // Download every model now (rooms, their map miniatures, the skeletons), counting bytes for
+        // the loading screen; then Scene's preloader parses them and compiles the rooms.
+        downloadAll(modelUrls(manifest)).then(() => alive && setDownloaded(true));
         apply(v);
       })
       .catch((err) => alive && onLeave(err.message));
@@ -475,8 +508,12 @@ export default function QuestGame({ session, onLeave }) {
           world={world}
           reach={reach}
           firstPerson={firstPerson}
+          preloaded={preloaded}
+          downloaded={downloaded}
+          onPreloaded={markPreloaded}
         />
       </div>
+      {!preloaded && <LoadingScreen />}
 
       <TopBar view={view} meta={meta} lowSpec={lowSpec} onLowSpec={toggleLowSpec} onLeave={() => onLeave()} sensitivity={sensitivity} onSensitivity={changeSensitivity} audio={audio} onAudio={changeAudio} firstPerson={firstPerson} onToggleView={toggleView} onHelp={() => setHelpOpen(true)} onMenu={setSettingsOpen} />
       {view.note && <div className="hud-note">{view.note}</div>}

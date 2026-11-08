@@ -272,18 +272,30 @@ export function roomFromLayout(L) {
 }
 
 const layoutCache = new Map();
+const layoutLoads = new Map();
+// Fetches a room's layout file once (null when it has none). The preloader calls it, so a fight
+// starts with its real spawns instead of switching to them a moment later.
+export function loadRoomLayout(modelKey) {
+  if (!layoutLoads.has(modelKey)) {
+    layoutLoads.set(
+      modelKey,
+      fetch(`/models/${modelKey}.layout.json`)
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null)
+        .then((l) => {
+          layoutCache.set(modelKey, l);
+          return l;
+        }),
+    );
+  }
+  return layoutLoads.get(modelKey);
+}
+
 export function useRoomLayout(modelKey) {
   const [layout, setLayout] = useState(() => layoutCache.get(modelKey));
   useEffect(() => {
-    if (layoutCache.has(modelKey)) return setLayout(layoutCache.get(modelKey));
     let alive = true;
-    fetch(`/models/${modelKey}.layout.json`)
-      .then((r) => (r.ok ? r.json() : null))
-      .catch(() => null)
-      .then((l) => {
-        layoutCache.set(modelKey, l);
-        if (alive) setLayout(l);
-      });
+    loadRoomLayout(modelKey).then((l) => alive && setLayout(l));
     return () => {
       alive = false;
     };
@@ -291,17 +303,21 @@ export function useRoomLayout(modelKey) {
   return layout;
 }
 
+// Readies an artist's room once: cel shading only if the manifest asks (toon: true), lamps tamed.
+// The preloader and the fight both call it, so the shaders compiled ahead are the ones the fight uses.
+export function prepareRoom(scene, toon) {
+  if (scene.userData.prepared) return;
+  if (toon === true) toonify(scene, { ramp: TOON_RAMP, outline: false });
+  tameLights(scene);
+  scene.userData.prepared = true;
+}
+
 function RoomModel({ modelKey, world, toon, onReady }) {
   const { scene } = useGLTF(`/models/${modelKey}.glb`);
   const layoutFile = useRoomLayout(modelKey);
   // The room gets the same cel shading (no outline: walls would look heavy), then its layout is read.
   const layout = useMemo(() => {
-    if (!scene.userData.prepared) {
-      // The room keeps the artist's own materials; cel shading only if the manifest asks (toon: true).
-      if (toon === true) toonify(scene, { ramp: TOON_RAMP, outline: false });
-      tameLights(scene);
-      scene.userData.prepared = true;
-    }
+    prepareRoom(scene, toon); // the room keeps the artist's own materials
     return layoutFile ? roomFromLayout(layoutFile) : readRoom(scene);
   }, [scene, toon, layoutFile]);
   useLayoutEffect(() => {
