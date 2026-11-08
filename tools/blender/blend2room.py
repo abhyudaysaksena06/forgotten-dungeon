@@ -617,9 +617,13 @@ def layout(scene, cfg):
             own['boss'] = _pt(*p)
     sp = cfg['spawns']
 
+    prefer = set(cfg.get('prefer_settings', []))  # kinds where rooms.json's spawns win over the empties
+
     def merged(kind):
         mine = [own[kind][i] for i in sorted(own[kind])]
         extra = [_pt(x, y) for x, y in sp.get(kind, [])]
+        if kind in prefer and extra:
+            return extra
         return mine + extra[len(mine):]
 
     spawns = {'party': merged('party'), 'enemies': merged('enemies'),

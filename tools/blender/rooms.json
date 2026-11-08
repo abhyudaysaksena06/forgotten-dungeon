@@ -19,19 +19,19 @@
       "party": [
         [
           0,
-          -4.0
+          -2.0
         ],
         [
           -1.5,
-          -4.0
+          -2.2
         ],
         [
           1.5,
-          -4.0
+          -2.2
         ],
         [
           0,
-          -4.6
+          -2.8
         ]
       ],
       "enemies": [
@@ -81,7 +81,11 @@
         ]
       ]
     },
-    "ceiling": 3.9
+    "ceiling": 3.9,
+    "prefer_settings": [
+      "party"
+    ],
+    "_note": "The artist placed spawn_player_* 2 m from the south wall, where the third-person camera has no room behind Kael; the game has one hero, so its spawn comes from here (prefer_settings)."
   },
   "room_2": {
     "source": "assets/blender/room_2.blend",
