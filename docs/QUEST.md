@@ -51,7 +51,7 @@ bubble). King Aldric's ghost and Pip wait at the camp.
 
 ### Morvath
 
-725 HP, DEF 8 (more if the party cleared a fourth room first). Each round he announces his next move, so the player can react.
+850 HP, DEF 8 (more if the party cleared a fourth room first). Each round he announces his next move, so the player can react.
 
 | Phase | When | Moves |
 | --- | --- | --- |

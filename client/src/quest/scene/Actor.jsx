@@ -44,6 +44,7 @@ function GlbModel({ modelKey, cues, fallen, motion, opts = {} }) {
     return { scale: opts.height && h > 0 ? opts.height / h : 1, turn: ((opts.turn ?? 90) * Math.PI) / 180 };
   }, [model, opts.height, opts.turn]);
   const loco = useRef(null);
+  const wasDown = useRef(false);
   useEffect(() => {
     loco.current = actions.idle ?? null;
     actions.idle?.reset().fadeIn(0.2).play();
@@ -61,16 +62,35 @@ function GlbModel({ modelKey, cues, fallen, motion, opts = {} }) {
     const timers = cues.map((c) =>
       setTimeout(() => {
         const clip = actions[GLB_CLIP[c.kind]];
-        if (!clip) return;
+        if (!clip || clip === loco.current) return;
         clip.reset().setLoop(LoopOnce, 1);
         clip.clampWhenFinished = c.kind === 'death';
         clip.fadeIn(0.08).play();
+        // Let the one-shot play at full strength: the looping clip steps aside, then returns.
+        const back = loco.current;
+        if (!back) return;
+        back.fadeOut(0.08);
+        if (c.kind === 'death') return;
+        const ms = Math.max(0, clip.getClip().duration * 1000 - 200);
+        timers.push(
+          setTimeout(() => {
+            if (loco.current === back) back.reset().fadeIn(0.2).play();
+            clip.fadeOut(0.2);
+          }, ms),
+        );
       }, Math.max(0, c.at - performance.now())),
     );
     return () => timers.forEach(clearTimeout);
   }, [cues, actions]);
   useEffect(() => {
-    if (!fallen) actions.death?.stop();
+    if (fallen) {
+      wasDown.current = true;
+      return;
+    }
+    actions.death?.stop();
+    if (!wasDown.current) return;
+    wasDown.current = false; // revived: back on its feet
+    loco.current?.reset().fadeIn(0.2).play();
   }, [fallen, actions]);
   model.traverse((o) => {
     if (o.isMesh) o.castShadow = true;
@@ -151,7 +171,9 @@ export function Actor({
     if (ring.current) ring.current.rotation.z = t * (telegraphed ? 2 : 0.6);
   });
 
-  const height = 2 * scale * (modelKey.startsWith('boss_morvath') ? 1.7 : modelKey.startsWith('boss_') ? 1.3 : 1);
+  // Name tag height: a Blender model sized in the manifest puts it just over its head.
+  const glbHeight = useGlb ? models.get?.(modelKey)?.height : null;
+  const height = glbHeight ? glbHeight * scale : 2 * scale * (modelKey.startsWith('boss_morvath') ? 1.7 : modelKey.startsWith('boss_') ? 1.3 : 1);
   const recentNumbers = cues.filter((c) => (c.kind === 'hit' || c.kind === 'heal') && c.amount);
 
   return (

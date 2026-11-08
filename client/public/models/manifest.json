@@ -3,5 +3,6 @@
   "room_2",
   "room_3",
   "room_4",
-  "room_5"
+  "room_5",
+  { "key": "boss_morvath_dragon", "height": 4.8, "turn": 180, "toon": false }
 ]

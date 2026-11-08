@@ -7,7 +7,7 @@
 
 export const MOVE = { speed: 4.6, response: 12, turn: 14, jump: 5.8, gravity: 16 };
 export const REACH = { melee: 2.4, magic: 9, ranged: 12 }; // how close the leader must be to act
-export const RADIUS = { hero: 0.4, npc: 0.5, minion: 0.5, boss: 0.9, ultimate: 1.3 };
+export const RADIUS = { hero: 0.4, npc: 0.5, minion: 0.5, boss: 0.9, ultimate: 1.3, dragon: 2.3 };
 export const CAMERA = { distance: 7.5, min: 4.5, max: 12, height: 4.4, lookHeight: 1.1 };
 
 // The default room: a round floor with a back wall and pillars.
@@ -236,7 +236,8 @@ export function nearestEnemy(world, enemies, canHit = () => true) {
 }
 
 export function radiusFor(enemy) {
-  if (enemy.ultimate) return RADIUS.ultimate;
+  // Morvath's dragon form is far bigger than the knight: heroes stop at its claws, not inside it.
+  if (enemy.ultimate) return enemy.model === 'boss_morvath_dragon' ? RADIUS.dragon : RADIUS.ultimate;
   if (enemy.boss) return RADIUS.boss;
   return RADIUS.minion;
 }

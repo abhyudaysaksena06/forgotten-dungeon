@@ -454,6 +454,7 @@ function useFighters(world, state, roomId) {
       world.actors.set(e.id, a);
     }
     a.alive = e.hp > 0;
+    a.radius = radiusFor(e); // Morvath grows when he becomes the dragon
   });
 }
 

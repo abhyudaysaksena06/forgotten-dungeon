@@ -77,7 +77,7 @@ export const ENEMIES = {
   hollow_knight: { name: 'Hollow Knight', model: 'enemy_hollow_knight', hp: 50, atk: 15, def: 6, part: true },
   hollow_captain: { name: 'The Hollow Captain', model: 'boss_hollow_captain', hp: 240, atk: 19, def: 9, boss: true, move: 'shadow_tide' },
   // atk is not used in combat (Morvath only uses his telegraphed moves); it feeds threat estimates.
-  morvath: { name: 'Morvath, the Shadow Knight', model: 'boss_morvath_knight', hp: 725, atk: 34, def: 8, boss: true, ultimate: true },
+  morvath: { name: 'Morvath, the Shadow Knight', model: 'boss_morvath_knight', hp: 850, atk: 34, def: 8, boss: true, ultimate: true },
 };
 
 // The rulebook's five rounds, one room each. Rooms 1–4: minions, then the room's boss.

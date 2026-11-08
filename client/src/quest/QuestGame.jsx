@@ -129,8 +129,9 @@ export default function QuestGame({ session, onLeave }) {
         metaRef.current = m;
         setMeta(m);
         setModels(manifest);
-        // Start fetching the Blender rooms now, so a fight doesn't wait for a big download.
-        for (const key of manifest.keys()) if (key.startsWith('room_')) useGLTF.preload(`/models/${key}.glb`);
+        // Start fetching the Blender rooms and bosses now, so a fight (or Morvath's Change into the
+        // dragon, mid-fight) doesn't wait for a big download.
+        for (const key of manifest.keys()) if (key.startsWith('room_') || key.startsWith('boss_')) useGLTF.preload(`/models/${key}.glb`);
         apply(v);
       })
       .catch((err) => alive && onLeave(err.message));

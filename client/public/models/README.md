@@ -20,3 +20,17 @@ By hand: drop `<key>.glb` here and add the key to `manifest.json`. An entry can 
   Morvath (both `boss_morvath_knight` and `boss_morvath_dragon`) also has `boss_strike`, `boss_sweep`,
   `transform` and `armour_break`.
 - Room naming (spawn empties, colliders, floors) and every model key are in `docs/QUEST.md`.
+
+## Morvath, the Shadow Dragon
+
+`boss_morvath_dragon.glb` is built from `assets/blender/boss_morvath_dragon.blend` (no armature: separate
+parts and procedural materials) by:
+
+```bash
+blender -b --disable-autoexec assets/blender/boss_morvath_dragon.blend --python tools/blender/build_dragon.py
+```
+
+It bakes the materials to textures, adds pivots for the body, head, jaw, throat glow and both wings, makes
+the clips `idle`, `boss_strike`, `boss_sweep`, `skill`, `transform`, `armour_break`, `hit` and `death`, and
+exports the .glb. The manifest shows it at 4.8 m with its own materials (`toon: false`), turned 180° (it
+faces -X in Blender).

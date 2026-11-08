@@ -89,7 +89,7 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
   But some wishes cannot be undone."* Quest: **The Throne of Eternity**.
 - **Room:** the blood-castle arena: towers all round, summoning circles on the floor and the great
   dragon on its pedestal to the north.
-- **Only enemy:** Morvath (725 HP, DEF 8, **+35% for every room cleared beyond three**: the map shows his strength). He **announces his next move every round** (top-right
+- **Only enemy:** Morvath (850 HP, DEF 8, **+35% for every room cleared beyond three**: the map shows his strength). He **announces his next move every round** (top-right
   panel). His **shadow armour** blocks all damage until the leader's **Rune Strike** (Q or
   middle-click) breaks it; it grows back after 3 rounds.
 
