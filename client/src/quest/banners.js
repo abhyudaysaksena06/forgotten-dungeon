@@ -66,5 +66,5 @@ export const BANNER_MS = { skill: 950, battle: 1500, boss: 1700, victory: 1700, 
 function cageNote(state) {
   if (!state.cages) return '';
   const n = state.cageRunes ?? 0;
-  return n > 0 ? `The cage stays shut: ${n} broken rune${n > 1 ? 's' : ''} left in this round` : 'The cage is open: the Healer and the Weaponsmith are free';
+  return n > 0 ? `The cage stays shut: ${n} broken rune${n > 1 ? 's' : ''} left in this round’s code` : 'The cage is open: the Healer and the Weaponsmith are free';
 }

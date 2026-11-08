@@ -92,7 +92,7 @@ export class QuestRuns {
     const action = cleanAction(raw);
     if (action.type === 'healer' || action.type === 'smith') {
       const n = cageRunes(run.state);
-      if (n > 0) throw new QuestError('cage_locked', `The cage stays shut: ${n} broken rune${n > 1 ? 's' : ''} left in this round.`);
+      if (n > 0) throw new QuestError('cage_locked', `The cage stays shut: ${n} broken rune${n > 1 ? 's' : ''} left in this round’s code.`);
     }
     run.state = step(run.state, action);
     run.actions.push(action);

@@ -260,7 +260,7 @@ export default function QuestGame({ session, onLeave }) {
   const reachKind = me && meta ? meta.classes[me.cls].reach : 'melee';
   const reach = REACH[reachKind] ?? REACH.melee;
   const canReach = useCallback((e) => Boolean(e) && (!e.flying || reachKind !== 'melee'), [reachKind]);
-  // Kael walks in a fight, and in a cleared room whose cage is open.
+  // Kael walks in a fight, and in a cleared room (with its cage, open or still locked).
   const walking = phase === 'combat' || Boolean(state?.cages);
 
   // Which cell door of the open cage Kael stands at: 'healer', 'smith' or null.
@@ -719,11 +719,7 @@ function CageSection({ busy, act, atCell, runes }) {
   const cell = (type, name, does) => (
     <button className="btn px-2 py-1.5 text-sm" disabled={busy || runes > 0 || atCell !== type} onClick={() => act({ type })} title={does}>
       {name}
-      {runes > 0 ? (
-        <small className="block font-mono text-[10px] text-blood">locked · {runes} broken rune{runes > 1 ? 's' : ''}</small>
-      ) : (
-        <small className="block font-mono text-[10px] text-ash">{atCell === type ? `${does} (E)` : 'walk up to the door'}</small>
-      )}
+      <small className="block font-mono text-[10px] text-ash">{runes > 0 ? 'locked' : atCell === type ? `${does} (E)` : 'walk up to the door'}</small>
     </button>
   );
   return (
@@ -733,6 +729,11 @@ function CageSection({ busy, act, atCell, runes }) {
         {cell('healer', 'Healer', 'health and shield')}
         {cell('smith', 'Weaponsmith', 'hone and mend')}
       </div>
+      {runes > 0 && (
+        <small className="mt-1.5 block font-mono text-[10px] text-blood">
+          {runes} broken rune{runes > 1 ? 's' : ''} left in this round’s code: fix, restart, come back
+        </small>
+      )}
     </div>
   );
 }
