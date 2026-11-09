@@ -29,6 +29,12 @@
     "toon": false
   },
   {
+    "key": "boss_hollow_king",
+    "height": 3.4,
+    "turn": 180,
+    "toon": false
+  },
+  {
     "key": "boss_morvath_dragon",
     "height": 4.8,
     "turn": 180,

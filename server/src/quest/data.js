@@ -85,6 +85,10 @@ export const ENEMIES = {
   // The Hall of Trials' boss: it steps out only once its six skeletons are down (the room's second
   // wave). Its moves are in NEMESIS below.
   nemesis: { name: 'The Hell Nemesis', model: 'boss_nemesis', hp: 150, atk: 15, def: 4, boss: true, move: 'charge' },
+  // The Hollow Barracks' boss: the barracks' dead king, crowned by Morvath in hollow iron. He steps out
+  // once the room's six skeletons are down. Every third round he floods two lanes with a poisoning
+  // Shadow Tide (marked a round ahead); below half health he roars, once, and raises two Skeletons.
+  hollow_king: { name: 'The Hollow King', model: 'boss_hollow_king', hp: 110, atk: 16, def: 4, boss: true, move: 'shadow_tide' },
   // No room places these any more; the engine still knows their moves.
   shadow_crawler: { name: 'Shadow Crawler', model: 'enemy_shadow_crawler', hp: 34, atk: 11, def: 3, part: true },
   stone_sentinel: { name: 'Stone Sentinel', model: 'boss_stone_sentinel', hp: 150, atk: 16, def: 6, boss: true, move: 'charge' },
@@ -100,13 +104,13 @@ export const ENEMIES = {
 };
 
 // The rulebook's five rounds, one room each. Rooms 1–4: six skeletons (room 3: then the Hell
-// Nemesis). Room 5: six skeleton guards, then Morvath.
+// Nemesis; room 4: then the Hollow King). Room 5: six skeleton guards, then Morvath.
 const SKELETONS = Array(6).fill('skeleton');
 export const ROOMS = {
   r1: { round: 1, roundName: 'The Entrance', name: 'The Gate Courtyard', tier: 1, model: 'room_1', npc: 'grum', waves: [SKELETONS], loot: { gold: 40, potions: 1 } },
   r2: { round: 2, roundName: 'The Forgotten Hall', name: 'The Hall of Portraits', tier: 2, model: 'room_2', npc: 'ilsa', waves: [SKELETONS], loot: { gold: 60, potions: 1 } },
   r3: { round: 3, roundName: 'The Trial Chambers', name: 'The Hall of Trials', tier: 3, model: 'room_3', npc: 'seraphine', waves: [SKELETONS, ['nemesis']], loot: { gold: 80, potions: 2 } },
-  r4: { round: 4, roundName: 'The Shadow Depths', name: 'The Hollow Barracks', tier: 4, model: 'room_4', npc: 'corin', waves: [SKELETONS], loot: { gold: 100, potions: 2 } },
+  r4: { round: 4, roundName: 'The Shadow Depths', name: 'The Hollow Barracks', tier: 4, model: 'room_4', npc: 'corin', waves: [SKELETONS, ['hollow_king']], loot: { gold: 100, potions: 2 } },
   r5: { round: 5, roundName: 'The Boss Round', name: 'The Throne of Eternity', tier: 6, model: 'room_5', npc: 'king', waves: [Array(6).fill('skeleton_guard'), ['morvath']], loot: { gold: 0, potions: 0 }, final: true },
 };
 export const ROOM_IDS = ['r1', 'r2', 'r3', 'r4', 'r5'];
@@ -148,7 +152,7 @@ export const DODGE_CHANCE = 0.7;
 // Boss mechanics.
 export const MECHANICS = {
   charge: { mult: 1.6, lanes: 1 }, // Stone Sentinel: the most crowded lane
-  shadow_tide: { mult: 0.8, lanes: 2, poison: true }, // Hollow Captain: two of three lanes
+  shadow_tide: { mult: 0.8, lanes: 2, poison: true }, // the Hollow King: two of three lanes
   breathLanes: 2, // Morvath's Dragon's Breath covers two of three lanes
   summonFeed: 10, // each living Skeleton heals Morvath this much a round in phase 2
   hide: { every: 4, rounds: 2 }, // Ink Wraith hides in one lane's portrait
@@ -160,6 +164,10 @@ export const MECHANICS = {
 // harder and every second round brings a special, alternating the Charge with the Infernal Slam,
 // which floods all three lanes with hellfire (no safe lane: Defend or Bulwark halves it).
 export const NEMESIS = { every: 3, enragedEvery: 2, enrageAt: 0.5, enragedAtk: 1.25, slam: 1.3 };
+
+// The Hollow King (room 4's boss): below this share of his health he roars, once, and this many
+// Skeletons claw out of the floor.
+export const HOLLOW_KING = { roarAt: 0.5, summon: 2 };
 
 // Difficulty rises with the room's tier and with how far the run has progressed.
 export const TIER_SCALE = 0.12;

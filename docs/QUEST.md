@@ -45,7 +45,7 @@ clear lines, camp lines, Morvath's phase lines, the ending and the defeat line.
 | 1 · The Entrance | The Gate Courtyard | 6 Skeletons | none | Old Grum, the gatekeeper |
 | 2 · The Forgotten Hall | The Hall of Portraits | 6 Skeletons | none | Ilsa, the ink-keeper |
 | 3 · The Trial Chambers | The Hall of Trials | 6 Skeletons | The Hell Nemesis (after the skeletons) | Seraphine, the oracle; Venn, the scholar |
-| 4 · The Shadow Depths | The Hollow Barracks | 6 Skeletons | none | Sir Corin, the last loyal knight |
+| 4 · The Shadow Depths | The Hollow Barracks | 6 Skeletons | The Hollow King (after the skeletons) | Sir Corin, the last loyal knight |
 | 5 · The Boss Round | The Throne of Eternity | 6 skeleton guards | Morvath | King Aldric's ghost (voice only) |
 
 The skeletons use the model `enemy_skeleton`. Three kinds share it and the name: `skeleton` (the
@@ -67,6 +67,16 @@ floods all three lanes a round after it's announced (Defend or Bulwark halves it
 78 MB sculpt with no rig, so the client moves it itself: it breathes at rest, bobs as it walks,
 leans into its blows, dashes down the lane for the Charge and leaps for the Slam, whose shockwave
 rolls out across the floor.
+
+### The Hollow King (room 4)
+
+Rises once the Hollow Barracks' six skeletons are down, after the same breather. Every third round
+the **Shadow Tide** (`MECHANICS.shadow_tide`): two of the three lanes marked a round ahead (venom
+green on the floor), then flooded for 0.8× his attack and poison. Below half health he **roars**, once,
+and two `skeleton_risen` claw out of the floor (`HOLLOW_KING` in `server/src/quest/data.js`); tests in
+`server/test/hollow-king.test.js`. His model is the team's "dung king", reforged by
+`tools/models/reforge-king.mjs` and rigged by `tools/models/rig-king.mjs`: his own clips for the
+Shadow Tide (blade raised, plunged, one knee down while the venom ring rolls out) and the roar.
 
 ### Characters
 
@@ -109,12 +119,12 @@ planner at boldness 1.2, 60 teams per tier. All numbers are for one hero with sw
 | Tier | Careful player | Careless player |
 | --- | --- | --- |
 | Weak | 13% | 0% |
-| Average | 38% | 0% |
-| Strong | 88% | 0% |
+| Average | 30% | 0% |
+| Strong | 86% | 0% |
 
 (Under the four-hero rules the same measure gave 8%, 19% and 80%.) Rooms 1 and 2 are nearly always
 won; room 3 is where weaker heroes start to fall (about half of first attempts), now with the Hell
-Nemesis after its skeletons. Before a room's boss Kael catches his breath (full shield, +25% health,
+Nemesis after its skeletons; room 4 adds the Hollow King after its own. Before a room's boss Kael catches his breath (full shield, +25% health,
 `BREATHER_HEAL`), and the planner's `roomThreat` counts that boss at a quarter of its weight, so it
 still rates room 3 as easier than room 4, which it is. Going to the Throne
 with three fragments, healed and mended at the last cage, is the better play than clearing all four
@@ -255,9 +265,9 @@ the target room's tier and threat, travel cost, power-to-threat ratio, who leads
    estimates its win chance from 40 simulated continuations with fresh dice. An option is "good" if it's
    within 10 points of the best option in that exact situation. About 4 minutes.
 2. `python ml/train_forest.py` trains a scikit-learn RandomForestClassifier (120 trees, depth 12),
-   split by team. Current result (retrained with the Nemesis's full kit and the new weak tier): **85.9% accuracy on
-   unseen teams** (majority baseline 52.8%), ROC AUC 0.942, on 15,459 decisions. By tier: weak 85%,
-   average 87%, strong 86%. Top inputs: party power, party DEF, power-to-threat ratio, gold, target tier.
+   split by team. Current result (retrained with the Hollow King in room 4): **85.4% accuracy on
+   unseen teams** (majority baseline 52.2%), ROC AUC 0.938, on 15,492 decisions. By tier: weak 87%,
+   average 84%, strong 85%. Top inputs: party power, party DEF, power-to-threat ratio, gold, target tier.
 3. The model ships as JSON (`server/src/quest/model/route-forest.json`); `forest.js` evaluates it in
    Node. `server/test/forest.test.js` proves Node and scikit-learn agree, and that the forest beats the
    baseline by at least 10 points.
@@ -482,6 +492,7 @@ and textures; add `"toon": false` to the model's manifest entry to keep the orig
 | `enemy_shadow_crawler`, `enemy_ink_bat`, `enemy_hollow_scribe`, `enemy_trial_spirit`, `enemy_hollow_knight` | The old minions; no room places them now. |
 | `boss_nemesis` | The Hell Nemesis, room 3's boss (no clips: the game moves the whole model). From a 78 MB sculpt with `optimize.mjs full boss_nemesis --simplify 0.2 --ground` (3.7 MB, 372k triangles; lower ratios facet its armour), with its own materials (`toon: false`). |
 | `char_kael`, `npc_healer`, `npc_smith`, `npc_king_ghost`, `npc_pip` | KayKit Adventurers (CC0), built by `tools/models/character.mjs` (see `client/public/models/README.md`). |
+| `boss_hollow_king` | The Hollow King, room 4's boss: the "dung king" sculpt reforged (`reforge-king.mjs`: smooth normals, a grimmer 2K texture, glowing reds) and rigged (`rig-king.mjs`), 3.4 m, `toon: false`, `turn: 180`. |
 | `boss_stone_sentinel`, `boss_ink_wraith`, `boss_brakka`, `boss_hollow_captain` | The old room bosses; no room places them now. |
 | `boss_morvath_knight`, `boss_morvath_dragon` | Morvath before and after the Change. |
 | `npc_king_ghost`, `npc_grum`, `npc_ilsa`, `npc_venn`, `npc_seraphine`, `npc_corin`, `npc_pip` | NPCs (idle only). |

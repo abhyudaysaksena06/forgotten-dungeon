@@ -53,3 +53,10 @@ test('the keepers, the hero and the Hell Nemesis act out their lines', () => {
   assert.deepEqual(at('The Hell Nemesis drives its blade into the floor: hellfire bursts across every lane!'), ['nemesis-1-0:slam']);
   assert.deepEqual(at('The Hell Nemesis roars as hellfire splits its armour. It is Enraged!'), ['nemesis-1-0:transform']);
 });
+
+test('the Hollow King plunges his blade for the Shadow Tide and roars for his Skeletons', () => {
+  const prev = { log: ['…'], party: [{ id: 'knight', name: 'Kael', controlled: true }], combat: { enemies: [{ id: 'hollow_king-1-0', name: 'The Hollow King' }] } };
+  const at = (line) => cuesFor(prev, { ...prev, log: ['…', line] }, 0).map((c) => `${c.id}:${c.kind}`);
+  assert.deepEqual(at('The Hollow King floods the left and centre lanes with a shadow tide!'), ['hollow_king-1-0:skill']);
+  assert.deepEqual(at('The Hollow King roars, and the barracks answer: two Skeletons claw out of the floor!'), ['hollow_king-1-0:transform']);
+});

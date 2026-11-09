@@ -445,14 +445,15 @@ function Mover({ id, world, children }) {
   );
 }
 
-// The three lanes on the floor: faint guides, red where a blow lands next round, purple where the
-// Ink Wraith hides.
+// The three lanes on the floor: faint guides, red where a blow lands next round (venom green where the
+// Hollow King's poisoning Shadow Tide will flood), purple where the Ink Wraith hides.
 function LaneMarks({ world, state }) {
   const g = useRef();
   const mats = useRef([]);
   const c = state.combat;
   const danger = new Set([...(c?.danger && c.danger.round === c.round + 1 ? c.danger.lanes : []), ...(c?.telegraph?.lanes ?? [])]);
   const hidden = c?.enemies.find((e) => e.hp > 0 && e.hiddenIn)?.hiddenIn;
+  const red = c?.danger?.poison ? PALETTE.venom : '#ff2a2a';
   useFrame(({ clock }) => {
     const a = world.axis;
     if (!g.current || !a) return;
@@ -463,7 +464,7 @@ function LaneMarks({ world, state }) {
       if (!m) return;
       const lane = LANE_NAMES[i];
       m.opacity = danger.has(lane) ? pulse : hidden === lane ? 0.22 : 0; // nothing drawn on the room unless it matters
-      m.color.set(danger.has(lane) ? '#ff2a2a' : hidden === lane ? '#a46bff' : '#e9dfc9');
+      m.color.set(danger.has(lane) ? red : hidden === lane ? '#a46bff' : '#e9dfc9');
     });
   });
   return (
