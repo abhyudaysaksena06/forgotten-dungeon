@@ -50,7 +50,7 @@ function storeActions(teamId, actions) {
 }
 
 export async function questApi(path, options = {}) {
-  const run = HOSTED && path.match(/^\/([^/]+)\/(session|act|reset|save)$/);
+  const run = HOSTED && path.match(/^\/([^/]+)\/(session|act|reset|save|rewind)$/);
   if (!run) return request(path, options);
   const teamId = decodeURIComponent(run[1]);
   const data = await request(path, { ...options, method: 'POST', body: { ...options.body, actions: loadActions(teamId) } });

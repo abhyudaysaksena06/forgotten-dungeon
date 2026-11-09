@@ -83,6 +83,15 @@ function GlbModel({ modelKey, cues, fallen, motion, opts = {}, clipsRef }) {
   }, [actions]);
   // Walk, run and jump clips follow the movement.
   useFrame(() => {
+    // Down: the walk and idle loops stop (a model with no death clip is toppled by the actor; its legs
+    // must not keep walking on the floor).
+    if (fallen) {
+      if (loco.current) {
+        loco.current.fadeOut(0.2);
+        loco.current = null;
+      }
+      return;
+    }
     const m = motion?.() ?? 'idle';
     const want = m === 'run' ? actions.run ?? actions.walk ?? actions.idle : m === 'jump' ? actions.jump ?? actions.run ?? actions.idle : actions.idle;
     if (!want || want === loco.current) return;
@@ -133,6 +142,7 @@ function GlbModel({ modelKey, cues, fallen, motion, opts = {}, clipsRef }) {
     actions.death?.stop();
     if (!wasDown.current) return;
     wasDown.current = false; // revived: back on its feet
+    loco.current = actions.idle ?? null;
     loco.current?.reset().fadeIn(0.2).play();
   }, [fallen, actions]);
   model.traverse((o) => {
@@ -172,6 +182,7 @@ export function Actor({
   const aura = useRef();
   const rage = useRef();
   const clipsRef = useRef(null);
+  const downSince = useRef(null);
   const flyer = IS_FLYER.has(modelKey);
   const useGlb = models?.has(modelKey);
   const seed = useMemo(() => Math.random() * 10, []);
@@ -243,7 +254,12 @@ export function Actor({
     const ownFall = Boolean(useGlb && clips?.death);
     const targetRot = down && !ownFall ? -Math.PI / 2 : running && !strides ? -0.14 : lean; // lean into the run
     g.rotation.z += (targetRot - g.rotation.z) * 0.12;
-    g.position.set(x, down && !ownFall ? (flyer ? -0.9 : -0.05) : y, z);
+    // A beaten enemy lies still a moment, then sinks through the floor and is gone (Arena drops it
+    // from the scene three seconds after it falls).
+    if (down) downSince.current ??= now;
+    else downSince.current = null;
+    const sink = villain && down ? Math.min(1, Math.max(0, (now - downSince.current - 1500) / 1200)) * 2.2 : 0;
+    g.position.set(x, (down && !ownFall ? (flyer ? -0.9 : -0.05) : y) - sink, z);
     g.scale.setScalar(s);
 
     if (flash.current) {
@@ -331,7 +347,7 @@ export function Actor({
         </mesh>
       )}
 
-      {label && (
+      {label && !(villain && fallen) && (
         <Html position={[0, height + 0.25, 0]} center zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}>
           <div className={`actor-tag ${dim ? 'is-dim' : ''}`}>
             <div className="actor-name">

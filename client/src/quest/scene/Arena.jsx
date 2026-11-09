@@ -228,9 +228,18 @@ export function readRoom(scene) {
   };
 }
 
-// A room's own lamps, at the strength the artist set. Only the count is capped (every light costs
-// every pixel, and a browser can't run dozens), and they cast no shadows.
-const ROOM_LIGHTS = 16;
+// A room's own lamps, at the strength the artist set. Every light costs every pixel, so on a machine
+// that can't keep up (Scene's quality ladder) only the brightest few stay lit; they cast no shadows.
+let lampCap = 16;
+const roomLamps = new Set(); // each prepared room's lamps, brightest first
+function capLamps(lamps) {
+  lamps.forEach((l, i) => (l.visible = i < lampCap));
+}
+export function setLampCap(n) {
+  if (n === lampCap) return;
+  lampCap = n;
+  roomLamps.forEach(capLamps);
+}
 function tameLights(scene) {
   const lamps = [];
   scene.traverse((o) => {
@@ -240,8 +249,7 @@ function tameLights(scene) {
     else o.visible = false;
   });
   lamps.sort((a, b) => b.intensity - a.intensity);
-  lamps.forEach((l, i) => {
-    l.visible = i < ROOM_LIGHTS; // only the count is capped
+  lamps.forEach((l) => {
     // Blender's exporter turns watts into candela by multiplying by 683 lm/W; the browser renderer
     // has no matching photometric scale, so undo it: the lamp is then exactly as bright as in Blender.
     if (!l.userData.blenderUnits) {
@@ -249,6 +257,8 @@ function tameLights(scene) {
       l.userData.blenderUnits = true;
     }
   });
+  roomLamps.add(lamps);
+  capLamps(lamps);
 }
 
 // The game's layout for a Blender room (spawns, walkable area, blockers, raised floors), written by
@@ -655,6 +665,27 @@ export function Arena({ state, meta, models, cues, targetId, onTarget, world, re
   const roomId = state.combat?.roomId ?? state.location;
   const roomKey = `room_${roomId.slice(1)}`;
   const enemies = state.combat?.enemies ?? [];
+  // Beaten enemies leave the scene three seconds after they fall (their death, then they sink away).
+  const fellAt = useRef(new Map());
+  const [gone, setGone] = useState(() => new Set());
+  const goneTimers = useRef([]);
+  useEffect(() => () => goneTimers.current.forEach(clearTimeout), []);
+  useEffect(() => {
+    for (const e of enemies) {
+      if (e.hp > 0) {
+        fellAt.current.delete(e.id);
+        continue;
+      }
+      if (fellAt.current.has(e.id)) continue;
+      fellAt.current.set(e.id, performance.now());
+      goneTimers.current.push(setTimeout(() => setGone((g) => new Set(g).add(e.id)), 3000));
+    }
+    // A revived or new enemy with a reused id is drawn again.
+    setGone((g) => {
+      const next = new Set([...g].filter((id) => enemies.some((e) => e.id === id && e.hp <= 0)));
+      return next.size === g.size ? g : next;
+    });
+  }, [enemies]);
   const tele = state.combat?.telegraph;
   const byId = (id) => cues.filter((c) => c.id === id);
   const useRoomModel = models.has(roomKey);
@@ -719,7 +750,7 @@ export function Arena({ state, meta, models, cues, targetId, onTarget, world, re
         </Mover>
       ))}
 
-      {enemies.map((e) => (
+      {enemies.filter((e) => !gone.has(e.id)).map((e) => (
         <Mover key={e.id} id={e.id} world={world}>
           <Actor
             modelKey={e.model}

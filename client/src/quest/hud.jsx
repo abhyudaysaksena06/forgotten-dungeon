@@ -34,7 +34,7 @@ export function Icon({ name, size = 22, className = '' }) {
 
 // ---------- top bar ----------
 
-export function TopBar({ view, meta, lowSpec, onLowSpec, onLeave, sensitivity, onSensitivity, audio, onAudio, firstPerson, onToggleView, onHelp, onMenu }) {
+export function TopBar({ view, meta, lowSpec, onLowSpec, onLeave, sensitivity, onSensitivity, audio, onAudio, firstPerson, onToggleView, onHelp, onMenu, onRewind, onReset, busy }) {
   const [open, setOpen] = useState(false);
   useEffect(() => onMenu?.(open), [open, onMenu]);
   const s = view.state;
@@ -78,6 +78,20 @@ export function TopBar({ view, meta, lowSpec, onLowSpec, onLeave, sensitivity, o
             <Toggle label="First-person view (V)" checked={firstPerson} onChange={onToggleView} />
             <Toggle label="Mute all sound" checked={audio.muted} onChange={() => onAudio({ muted: !audio.muted })} />
             <Toggle label="Low spec (no shadows or glow)" checked={lowSpec} onChange={onLowSpec} />
+            <p className="settings-title mt-3">Progress</p>
+            <p className="text-xs text-ash">Saved automatically after every move{view.saved ? ` (turn ${view.saved.turn})` : ''}. Come back any time to carry on.</p>
+            {(view.checkpoints ?? []).length > 0 && (
+              <div className="mt-1.5 grid gap-1">
+                {view.checkpoints.map((cp) => (
+                  <button key={cp.room} className="btn px-2 py-1 text-left text-xs" disabled={busy} onClick={() => onRewind?.(cp)}>
+                    Play Round {cp.round} again <small className="font-mono text-[10px] text-ash">· {cp.name}</small>
+                  </button>
+                ))}
+              </div>
+            )}
+            <button className="btn mt-1.5 w-full px-2 py-1 text-xs text-blood" disabled={busy} onClick={() => onReset?.()}>
+              Reset the whole game
+            </button>
           </div>
         )}
       </div>

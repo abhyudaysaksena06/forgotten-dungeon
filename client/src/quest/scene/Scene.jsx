@@ -1,12 +1,13 @@
 // The 3D canvas: the map between fights, the room during a fight. In a fight the camera follows
 // the leader from behind; drag with the mouse (or use ← →) to look around, scroll to zoom.
-import { Component, Suspense, useEffect, useRef } from 'react';
+import { Component, Suspense, useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { PerformanceMonitor } from '@react-three/drei';
 import { useGLTF } from '@react-three/drei';
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
 import { ACESFilmicToneMapping, AgXToneMapping, AmbientLight, DirectionalLight, HemisphereLight, PointLight, Scene as ThreeScene, Vector3 } from 'three';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { Arena, loadRoomLayout, prepareRoom } from './Arena.jsx';
+import { Arena, loadRoomLayout, prepareRoom, setLampCap } from './Arena.jsx';
 import { MapView } from './MapView.jsx';
 import { InkContext, PALETTE, TOON_RAMP } from './placeholders.jsx';
 import { toonify } from './toon.js';
@@ -309,6 +310,48 @@ class PreloadGuard extends Component {
   }
 }
 
+// The quality ladder. The game watches its own frame rate in a fight: when it can't hold its pace it
+// steps down (sharpness first, then the glow, then the rooms' dimmer lamps), and steps back up when
+// there is room to spare. The step a machine settles on is remembered for the next visit.
+const QUALITY = [
+  { dpr: 1.5, lamps: 16, bloom: true },
+  { dpr: 1.25, lamps: 16, bloom: true },
+  { dpr: 1, lamps: 16, bloom: false },
+  { dpr: 1, lamps: 8, bloom: false },
+  { dpr: 0.85, lamps: 5, bloom: false },
+  { dpr: 0.7, lamps: 3, bloom: false },
+];
+const QUALITY_KEY = 'forgotten-dungeon.quality';
+function readQuality() {
+  try {
+    const q = Number(localStorage.getItem(QUALITY_KEY));
+    return Number.isInteger(q) && q >= 0 && q < QUALITY.length ? q : 0;
+  } catch {
+    return 0;
+  }
+}
+
+// Judges the frame rate only once a view has settled (entering a room compiles shaders: a hitch that
+// says nothing about the machine).
+function QualityWatch({ settleKey, onStep }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    setReady(false);
+    const t = setTimeout(() => setReady(true), 2500);
+    return () => clearTimeout(t);
+  }, [settleKey]);
+  if (!ready) return null;
+  return (
+    <PerformanceMonitor
+      key={settleKey}
+      bounds={(refresh) => (refresh > 90 ? [55, 85] : [45, 57])}
+      flipflops={4}
+      onDecline={() => onStep(1)}
+      onIncline={() => onStep(-1)}
+    />
+  );
+}
+
 export default function Scene({ state, meta, models, cues, targetId, onTarget, onTravel, lowSpec, world, reach, firstPerson, batches, loaded, warmed, onWarmed }) {
   // A fight, or a cleared room whose cage is open, shows the room; anywhere else, the map.
   const view = state.phase === 'combat' || state.cages ? 'arena' : 'map';
@@ -319,10 +362,22 @@ export default function Scene({ state, meta, models, cues, targetId, onTarget, o
   // In the artist's rooms only their own lamps light the scene (a faint ambient keeps the heroes
   // readable), with Blender's AgX tone mapping and no added effects.
   const fill = blenderRoom ? 0 : 1;
+  const [quality, setQuality] = useState(() => (lowSpec ? Math.max(3, readQuality()) : readQuality()));
+  const q = QUALITY[quality];
+  useEffect(() => {
+    setLampCap(q.lamps);
+    try {
+      localStorage.setItem(QUALITY_KEY, String(quality));
+    } catch {
+      // Not remembered: the next visit learns again.
+    }
+  }, [q.lamps, quality]);
+  const stepQuality = (d) => setQuality((v) => Math.min(QUALITY.length - 1, Math.max(lowSpec ? 3 : 0, v + d)));
+  const devicePr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
   return (
     <Canvas
       shadows={!lowSpec}
-      dpr={lowSpec ? 1 : [1, 1.5]}
+      dpr={Math.min(devicePr, lowSpec ? Math.min(1, q.dpr) : q.dpr)}
       camera={{ fov: 50, position: MAP_VIEW.pos.toArray(), near: 0.1, far: 140 }}
       onPointerMissed={() => (document.body.style.cursor = 'default')}
     >
@@ -359,6 +414,7 @@ export default function Scene({ state, meta, models, cues, targetId, onTarget, o
           </Suspense>
         </PreloadGuard>
       )}
+      {batches && warmed >= batches.length && <QualityWatch settleKey={`${view}:${roomKey}`} onStep={stepQuality} />}
       <CameraRig view={view} world={world} />
       <CameraControls world={world} active={view === 'arena'} />
       {view === 'arena' && <AimProbe world={world} />}
@@ -370,7 +426,7 @@ export default function Scene({ state, meta, models, cues, targetId, onTarget, o
         )}
       </InkContext.Provider>
       {/* Glow: candles, lava, runes and fire bloom; a soft vignette frames the scene. */}
-      {!lowSpec && !blenderRoom && (
+      {!lowSpec && !blenderRoom && q.bloom && (
         <EffectComposer multisampling={0}>
           <Bloom mipmapBlur luminanceThreshold={0.9} luminanceSmoothing={0.15} intensity={0.6} />
           <Vignette offset={0.25} darkness={0.55} />

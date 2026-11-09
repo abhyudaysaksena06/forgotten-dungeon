@@ -20,6 +20,7 @@ import {
   MORVATH,
   NEMESIS,
   HOLLOW_KING,
+  CAMP_SERVICES,
   NPCS,
   PARTY_ORDER,
   PIP,
@@ -341,6 +342,26 @@ function weaponsmith(state) {
     m.sword.durability = SWORD.durability;
   }
   say(state, `The Weaponsmith hones and mends the ${SWORD.name}: sharp and whole again.`);
+}
+
+// Whether the Healer and the Weaponsmith work at the camp: once a cleared room's cage has freed them.
+export function campHelpers(state) {
+  return state.phase === 'map' && state.location === CAMP && state.fragments.some((r) => !ROOMS[r].final);
+}
+
+function campService(state, who) {
+  need(state.location === CAMP, 'not_at_camp', 'Only at the camp.');
+  need(campHelpers(state), 'no_helpers', 'The Healer and the Weaponsmith come to the camp once you free them from a cleared room’s cage.');
+  const offer = CAMP_SERVICES[who];
+  need(state.gold >= offer.gold, 'no_gold', `${offer.name} asks ${offer.gold} gold at the camp.`);
+  state.gold -= offer.gold;
+  if (who === 'healer') {
+    for (const m of state.party) Object.assign(m, { hp: m.maxHp, shield: m.maxShield, fallen: false, poison: 0 });
+    say(state, `By the campfire the Healer tends ${controlled(state).name} (${offer.gold} gold): health and shield are whole again.`);
+  } else {
+    for (const m of state.party) if (m.sword) Object.assign(m.sword, { sharpness: SWORD.sharpness, durability: SWORD.durability });
+    say(state, `By the campfire the Weaponsmith hones and mends the ${SWORD.name} (${offer.gold} gold).`);
+  }
 }
 
 function trade(state, { item }) {
@@ -969,6 +990,7 @@ export function step(prev, action, { mutate = false } = {}) {
     else if (action.type === 'trade') trade(state, action);
     else if (action.type === 'healer') healer(state);
     else if (action.type === 'smith') weaponsmith(state);
+    else if (action.type === 'camp_healer' || action.type === 'camp_smith') campService(state, action.type.slice(5));
     else {
       const isRoute = ['travel', 'rest', 'altar', 'forge'].includes(action.type);
       need(isRoute, 'bad_action', 'On the map you can travel, rest, use the altar or forge, trade with Pip, visit a cleared room’s Healer and Weaponsmith, or eat and drink.');
@@ -995,6 +1017,7 @@ export function publicState(state) {
     pip: pipOffers(state),
     throneOpen: throneOpen(state),
     cages: cagesOpen(state),
+    campHelpers: campHelpers(state),
     quests: questLog(state),
     room: room ? { id: room, ...ROOMS[room], waves: undefined } : null,
   };
