@@ -41,8 +41,8 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
 - **On entering:** painted eyes follow Kael; one portrait shows the King and Morvath laughing together.
   Quest: **The Unfinished Portraits**.
 - **Room:** a stone hall with glowing lava cracks, pedestals, braziers and a burning pentagram.
-- **Enemies:** 6 Skeletons, 15% stronger than in room 1 (round 2's are 5% weaker than that) (and 6% more for every room already
-  cleared).
+- **Enemies:** 6 Skeletons, 15% stronger than in room 1 (and 7% more for every room already
+  cleared), then 5% off: round 2 is a gentler step.
 - **Length:** about **20 rounds** (17–22). Roughly **60–120 s**. About 41% of Kael's health is lost;
   96% of attempts win.
 - **Reward:** fragment, 60 gold, 1 potion, 200 XP. Round 2's skeletons are 5% weaker than the curve, and Kael comes in at level 2. The cage at the hall's side swings open.
