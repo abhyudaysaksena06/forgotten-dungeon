@@ -3,6 +3,8 @@
 export const download = { got: 0, total: 0, done: false };
 
 export async function downloadAll(urls) {
+  // Each batch counts from zero (the game loads in batches: see Scene's loadBatches).
+  Object.assign(download, { got: 0, total: 0, done: false });
   const size = new Map(); // url -> bytes expected (0 while unknown)
   const got = new Map(); // url -> bytes received
   const sum = (m) => [...m.values()].reduce((a, b) => a + b, 0);

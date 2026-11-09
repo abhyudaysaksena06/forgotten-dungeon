@@ -2,327 +2,327 @@
  "bounds": [
   {
    "kind": "box",
-   "minX": -5.4,
-   "maxX": 5.4,
-   "minZ": -4.2,
-   "maxZ": 5.4
+   "minX": -10.8,
+   "maxX": 10.8,
+   "minZ": -8.4,
+   "maxZ": 10.8
   }
  ],
  "colliders": [
   {
    "kind": "box",
-   "minX": 5.8,
-   "maxX": 6.199,
-   "minZ": -2.0,
-   "maxZ": 2.0
+   "minX": 11.6,
+   "maxX": 12.398,
+   "minZ": -4,
+   "maxZ": 4
   },
   {
    "kind": "box",
-   "minX": -6.199,
-   "maxX": -5.8,
-   "minZ": -2.0,
-   "maxZ": 2.0
+   "minX": -12.398,
+   "maxX": -11.6,
+   "minZ": -4,
+   "maxZ": 4
   },
   {
    "kind": "box",
-   "minX": 5.75,
-   "maxX": 6.25,
-   "minZ": 5.75,
-   "maxZ": 6.25
+   "minX": 11.5,
+   "maxX": 12.5,
+   "minZ": 11.5,
+   "maxZ": 12.5
   },
   {
    "kind": "box",
-   "minX": -6.25,
-   "maxX": -5.75,
-   "minZ": 5.75,
-   "maxZ": 6.25
+   "minX": -12.5,
+   "maxX": -11.5,
+   "minZ": 11.5,
+   "maxZ": 12.5
   },
   {
    "kind": "box",
-   "minX": 5.8,
-   "maxX": 6.2,
-   "minZ": 2.0,
-   "maxZ": 6.0
+   "minX": 11.6,
+   "maxX": 12.4,
+   "minZ": 4,
+   "maxZ": 12
   },
   {
    "kind": "box",
-   "minX": 5.8,
-   "maxX": 6.2,
-   "minZ": -6.0,
-   "maxZ": -2.0
+   "minX": 11.6,
+   "maxX": 12.4,
+   "minZ": -12,
+   "maxZ": -4
   },
   {
    "kind": "box",
-   "minX": -2.0,
-   "maxX": 2.0,
-   "minZ": 5.8,
-   "maxZ": 6.2
+   "minX": -4,
+   "maxX": 4,
+   "minZ": 11.6,
+   "maxZ": 12.4
   },
   {
    "kind": "box",
-   "minX": 2.0,
-   "maxX": 6.0,
-   "minZ": 5.8,
-   "maxZ": 6.2
+   "minX": 4,
+   "maxX": 12,
+   "minZ": 11.6,
+   "maxZ": 12.4
   },
   {
    "kind": "box",
-   "minX": -6.2,
-   "maxX": -5.8,
-   "minZ": 2.0,
-   "maxZ": 6.0
+   "minX": -12.4,
+   "maxX": -11.6,
+   "minZ": 4,
+   "maxZ": 12
   },
   {
    "kind": "box",
-   "minX": -6.2,
-   "maxX": -5.8,
-   "minZ": -6.0,
-   "maxZ": -2.0
+   "minX": -12.4,
+   "maxX": -11.6,
+   "minZ": -12,
+   "maxZ": -4
   },
   {
    "kind": "box",
-   "minX": -6.0,
-   "maxX": -2.0,
-   "minZ": 5.504,
-   "maxZ": 6.199
+   "minX": -12,
+   "maxX": -4,
+   "minZ": 11.008,
+   "maxZ": 12.398
   },
   {
    "kind": "box",
-   "minX": -5.15,
-   "maxX": -3.85,
-   "minZ": 2.95,
-   "maxZ": 4.25
+   "minX": -10.3,
+   "maxX": -7.7,
+   "minZ": 5.9,
+   "maxZ": 8.5
   },
   {
    "kind": "box",
-   "minX": -3.92,
-   "maxX": -3.64,
-   "minZ": 3.46,
-   "maxZ": 3.74
+   "minX": -7.84,
+   "maxX": -7.28,
+   "minZ": 6.92,
+   "maxZ": 7.48
   },
   {
    "kind": "box",
-   "minX": -5.36,
-   "maxX": -5.08,
-   "minZ": 3.46,
-   "maxZ": 3.74
+   "minX": -10.72,
+   "maxX": -10.16,
+   "minZ": 6.92,
+   "maxZ": 7.48
   },
   {
    "kind": "box",
-   "minX": -4.64,
-   "maxX": -4.36,
-   "minZ": 2.74,
-   "maxZ": 3.02
+   "minX": -9.28,
+   "maxX": -8.72,
+   "minZ": 5.48,
+   "maxZ": 6.04
   },
   {
    "kind": "box",
-   "minX": -4.64,
-   "maxX": -4.36,
-   "minZ": 4.18,
-   "maxZ": 4.46
+   "minX": -9.28,
+   "maxX": -8.72,
+   "minZ": 8.36,
+   "maxZ": 8.92
   },
   {
    "kind": "box",
-   "minX": -5.15,
-   "maxX": -3.85,
-   "minZ": -0.65,
-   "maxZ": 0.65
+   "minX": -10.3,
+   "maxX": -7.7,
+   "minZ": -1.3,
+   "maxZ": 1.3
   },
   {
    "kind": "box",
-   "minX": -3.92,
-   "maxX": -3.64,
-   "minZ": -0.14,
-   "maxZ": 0.14
+   "minX": -7.84,
+   "maxX": -7.28,
+   "minZ": -0.28,
+   "maxZ": 0.28
   },
   {
    "kind": "box",
-   "minX": -5.36,
-   "maxX": -5.08,
-   "minZ": -0.14,
-   "maxZ": 0.14
+   "minX": -10.72,
+   "maxX": -10.16,
+   "minZ": -0.28,
+   "maxZ": 0.28
   },
   {
    "kind": "box",
-   "minX": -4.64,
-   "maxX": -4.36,
-   "minZ": -0.86,
-   "maxZ": -0.58
+   "minX": -9.28,
+   "maxX": -8.72,
+   "minZ": -1.72,
+   "maxZ": -1.16
   },
   {
    "kind": "box",
-   "minX": -4.64,
-   "maxX": -4.36,
-   "minZ": 0.58,
-   "maxZ": 0.86
+   "minX": -9.28,
+   "maxX": -8.72,
+   "minZ": 1.16,
+   "maxZ": 1.72
   },
   {
    "kind": "box",
-   "minX": -5.15,
-   "maxX": -3.85,
-   "minZ": -4.25,
-   "maxZ": -2.95
+   "minX": -10.3,
+   "maxX": -7.7,
+   "minZ": -8.5,
+   "maxZ": -5.9
   },
   {
    "kind": "box",
-   "minX": -3.92,
-   "maxX": -3.64,
-   "minZ": -3.74,
-   "maxZ": -3.46
+   "minX": -7.84,
+   "maxX": -7.28,
+   "minZ": -7.48,
+   "maxZ": -6.92
   },
   {
    "kind": "box",
-   "minX": -5.36,
-   "maxX": -5.08,
-   "minZ": -3.74,
-   "maxZ": -3.46
+   "minX": -10.72,
+   "maxX": -10.16,
+   "minZ": -7.48,
+   "maxZ": -6.92
   },
   {
    "kind": "box",
-   "minX": -4.64,
-   "maxX": -4.36,
-   "minZ": -4.46,
-   "maxZ": -4.18
+   "minX": -9.28,
+   "maxX": -8.72,
+   "minZ": -8.92,
+   "maxZ": -8.36
   },
   {
    "kind": "box",
-   "minX": -4.64,
-   "maxX": -4.36,
-   "minZ": -3.02,
-   "maxZ": -2.74
+   "minX": -9.28,
+   "maxX": -8.72,
+   "minZ": -6.04,
+   "maxZ": -5.48
   },
   {
    "kind": "box",
-   "minX": 3.85,
-   "maxX": 5.15,
-   "minZ": 2.95,
-   "maxZ": 4.25
+   "minX": 7.7,
+   "maxX": 10.3,
+   "minZ": 5.9,
+   "maxZ": 8.5
   },
   {
    "kind": "box",
-   "minX": 5.08,
-   "maxX": 5.36,
-   "minZ": 3.46,
-   "maxZ": 3.74
+   "minX": 10.16,
+   "maxX": 10.72,
+   "minZ": 6.92,
+   "maxZ": 7.48
   },
   {
    "kind": "box",
-   "minX": 3.64,
-   "maxX": 3.92,
-   "minZ": 3.46,
-   "maxZ": 3.74
+   "minX": 7.28,
+   "maxX": 7.84,
+   "minZ": 6.92,
+   "maxZ": 7.48
   },
   {
    "kind": "box",
-   "minX": 4.36,
-   "maxX": 4.64,
-   "minZ": 2.74,
-   "maxZ": 3.02
+   "minX": 8.72,
+   "maxX": 9.28,
+   "minZ": 5.48,
+   "maxZ": 6.04
   },
   {
    "kind": "box",
-   "minX": 4.36,
-   "maxX": 4.64,
-   "minZ": 4.18,
-   "maxZ": 4.46
+   "minX": 8.72,
+   "maxX": 9.28,
+   "minZ": 8.36,
+   "maxZ": 8.92
   },
   {
    "kind": "box",
-   "minX": 3.85,
-   "maxX": 5.15,
-   "minZ": -0.65,
-   "maxZ": 0.65
+   "minX": 7.7,
+   "maxX": 10.3,
+   "minZ": -1.3,
+   "maxZ": 1.3
   },
   {
    "kind": "box",
-   "minX": 5.08,
-   "maxX": 5.36,
-   "minZ": -0.14,
-   "maxZ": 0.14
+   "minX": 10.16,
+   "maxX": 10.72,
+   "minZ": -0.28,
+   "maxZ": 0.28
   },
   {
    "kind": "box",
-   "minX": 3.64,
-   "maxX": 3.92,
-   "minZ": -0.14,
-   "maxZ": 0.14
+   "minX": 7.28,
+   "maxX": 7.84,
+   "minZ": -0.28,
+   "maxZ": 0.28
   },
   {
    "kind": "box",
-   "minX": 4.36,
-   "maxX": 4.64,
-   "minZ": -0.86,
-   "maxZ": -0.58
+   "minX": 8.72,
+   "maxX": 9.28,
+   "minZ": -1.72,
+   "maxZ": -1.16
   },
   {
    "kind": "box",
-   "minX": 4.36,
-   "maxX": 4.64,
-   "minZ": 0.58,
-   "maxZ": 0.86
+   "minX": 8.72,
+   "maxX": 9.28,
+   "minZ": 1.16,
+   "maxZ": 1.72
   },
   {
    "kind": "box",
-   "minX": 3.85,
-   "maxX": 5.15,
-   "minZ": -4.25,
-   "maxZ": -2.95
+   "minX": 7.7,
+   "maxX": 10.3,
+   "minZ": -8.5,
+   "maxZ": -5.9
   },
   {
    "kind": "box",
-   "minX": 5.08,
-   "maxX": 5.36,
-   "minZ": -3.74,
-   "maxZ": -3.46
+   "minX": 10.16,
+   "maxX": 10.72,
+   "minZ": -7.48,
+   "maxZ": -6.92
   },
   {
    "kind": "box",
-   "minX": 3.64,
-   "maxX": 3.92,
-   "minZ": -3.74,
-   "maxZ": -3.46
+   "minX": 7.28,
+   "maxX": 7.84,
+   "minZ": -7.48,
+   "maxZ": -6.92
   },
   {
    "kind": "box",
-   "minX": 4.36,
-   "maxX": 4.64,
-   "minZ": -4.46,
-   "maxZ": -4.18
+   "minX": 8.72,
+   "maxX": 9.28,
+   "minZ": -8.92,
+   "maxZ": -8.36
   },
   {
    "kind": "box",
-   "minX": 4.36,
-   "maxX": 4.64,
-   "minZ": -3.02,
-   "maxZ": -2.74
+   "minX": 8.72,
+   "maxX": 9.28,
+   "minZ": -6.04,
+   "maxZ": -5.48
   },
   {
    "kind": "box",
-   "minX": -4.193,
-   "maxX": -2.607,
-   "minZ": 1.407,
-   "maxZ": 2.993
+   "minX": -8.386,
+   "maxX": -5.214,
+   "minZ": 2.814,
+   "maxZ": 5.986
   },
   {
    "kind": "box",
-   "minX": 2.607,
-   "maxX": 4.193,
-   "minZ": 1.407,
-   "maxZ": 2.993
+   "minX": 5.214,
+   "maxX": 8.386,
+   "minZ": 2.814,
+   "maxZ": 5.986
   },
   {
    "kind": "box",
-   "minX": -4.493,
-   "maxX": -2.907,
-   "minZ": -2.793,
-   "maxZ": -1.207
+   "minX": -8.986,
+   "maxX": -5.814,
+   "minZ": -5.586,
+   "maxZ": -2.414
   },
   {
    "kind": "box",
-   "minX": 2.907,
-   "maxX": 4.493,
-   "minZ": -2.793,
-   "maxZ": -1.207
+   "minX": 5.814,
+   "maxX": 8.986,
+   "minZ": -5.586,
+   "maxZ": -2.414
   }
  ],
  "steps": [],
@@ -330,52 +330,52 @@
   "party": [
    [
     0,
-    0.0,
-    3.3
+    0,
+    6.6
    ],
    [
-    -1.6,
-    0.0,
-    3.5
+    -3.2,
+    0,
+    7
    ],
    [
-    1.6,
-    0.0,
-    3.5
+    3.2,
+    0,
+    7
    ],
    [
     0,
-    0.0,
-    4.1
+    0,
+    8.2
    ]
   ],
   "enemies": [
    [
-    -2,
-    0.0,
-    -2
+    -4,
+    0,
+    -4
    ],
    [
-    2,
-    0.0,
-    -2
+    4,
+    0,
+    -4
    ],
    [
     0,
-    0.0,
-    -2.8
+    0,
+    -5.6
    ]
   ],
   "boss": [
    0,
-   0.0,
-   -2.4
+   0,
+   -4.8
   ],
   "npcs": [
    [
-    -2.8,
-    0.0,
-    -3.9
+    -5.6,
+    0,
+    -7.8
    ]
   ]
  }

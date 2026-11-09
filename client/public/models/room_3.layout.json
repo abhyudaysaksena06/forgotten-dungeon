@@ -2,966 +2,966 @@
  "bounds": [
   {
    "kind": "box",
-   "minX": -5.0,
-   "maxX": 5.0,
-   "minZ": -10.6,
-   "maxZ": -0.5
+   "minX": -10,
+   "maxX": 10,
+   "minZ": -21.2,
+   "maxZ": -1
   },
   {
    "kind": "circle",
-   "x": 0.0,
-   "z": -17.4,
-   "r": 8.3
+   "x": 0,
+   "z": -34.8,
+   "r": 16.6
   }
  ],
  "colliders": [
   {
    "kind": "box",
-   "minX": -5.25,
-   "maxX": -4.75,
-   "minZ": -3.25,
-   "maxZ": -1.25
+   "minX": -10.5,
+   "maxX": -9.5,
+   "minZ": -6.5,
+   "maxZ": -2.5
   },
   {
    "kind": "box",
-   "minX": 4.75,
-   "maxX": 5.25,
-   "minZ": -3.25,
-   "maxZ": -2.75
+   "minX": 9.5,
+   "maxX": 10.5,
+   "minZ": -6.5,
+   "maxZ": -5.5
   },
   {
    "kind": "box",
-   "minX": -5.25,
-   "maxX": -4.25,
-   "minZ": -3.75,
-   "maxZ": -3.25
+   "minX": -10.5,
+   "maxX": -8.5,
+   "minZ": -7.5,
+   "maxZ": -6.5
   },
   {
    "kind": "box",
-   "minX": 4.25,
-   "maxX": 5.25,
-   "minZ": -3.75,
-   "maxZ": -3.25
+   "minX": 8.5,
+   "maxX": 10.5,
+   "minZ": -7.5,
+   "maxZ": -6.5
   },
   {
    "kind": "box",
-   "minX": -5.25,
-   "maxX": -3.75,
-   "minZ": -5.25,
-   "maxZ": -3.75
+   "minX": -10.5,
+   "maxX": -7.5,
+   "minZ": -10.5,
+   "maxZ": -7.5
   },
   {
    "kind": "box",
-   "minX": 3.75,
-   "maxX": 5.25,
-   "minZ": -5.25,
-   "maxZ": -3.75
+   "minX": 7.5,
+   "maxX": 10.5,
+   "minZ": -10.5,
+   "maxZ": -7.5
   },
   {
    "kind": "box",
-   "minX": -5.25,
-   "maxX": -4.25,
-   "minZ": -5.75,
-   "maxZ": -5.25
+   "minX": -10.5,
+   "maxX": -8.5,
+   "minZ": -11.5,
+   "maxZ": -10.5
   },
   {
    "kind": "box",
-   "minX": 4.25,
-   "maxX": 5.25,
-   "minZ": -5.75,
-   "maxZ": -5.25
+   "minX": 8.5,
+   "maxX": 10.5,
+   "minZ": -11.5,
+   "maxZ": -10.5
   },
   {
    "kind": "box",
-   "minX": -5.25,
-   "maxX": -4.75,
-   "minZ": -6.25,
-   "maxZ": -5.75
+   "minX": -10.5,
+   "maxX": -9.5,
+   "minZ": -12.5,
+   "maxZ": -11.5
   },
   {
    "kind": "box",
-   "minX": 3.75,
-   "maxX": 4.25,
-   "minZ": -6.25,
-   "maxZ": -5.75
+   "minX": 7.5,
+   "maxX": 8.5,
+   "minZ": -12.5,
+   "maxZ": -11.5
   },
   {
    "kind": "box",
-   "minX": 4.75,
-   "maxX": 5.25,
-   "minZ": -6.25,
-   "maxZ": -5.75
+   "minX": 9.5,
+   "maxX": 10.5,
+   "minZ": -12.5,
+   "maxZ": -11.5
   },
   {
    "kind": "box",
-   "minX": 2.75,
-   "maxX": 4.25,
-   "minZ": -6.75,
-   "maxZ": -6.25
+   "minX": 5.5,
+   "maxX": 8.5,
+   "minZ": -13.5,
+   "maxZ": -12.5
   },
   {
    "kind": "box",
-   "minX": 1.75,
-   "maxX": 3.25,
-   "minZ": -7.25,
-   "maxZ": -6.75
+   "minX": 3.5,
+   "maxX": 6.5,
+   "minZ": -14.5,
+   "maxZ": -13.5
   },
   {
    "kind": "box",
-   "minX": -4.75,
-   "maxX": -3.75,
-   "minZ": -8.25,
-   "maxZ": -7.75
+   "minX": -9.5,
+   "maxX": -7.5,
+   "minZ": -16.5,
+   "maxZ": -15.5
   },
   {
    "kind": "box",
-   "minX": -3.75,
-   "maxX": -2.25,
-   "minZ": -8.75,
-   "maxZ": -8.25
+   "minX": -7.5,
+   "maxX": -4.5,
+   "minZ": -17.5,
+   "maxZ": -16.5
   },
   {
    "kind": "box",
-   "minX": 3.25,
-   "maxX": 3.75,
-   "minZ": -8.75,
-   "maxZ": -8.25
+   "minX": 6.5,
+   "maxX": 7.5,
+   "minZ": -17.5,
+   "maxZ": -16.5
   },
   {
    "kind": "box",
-   "minX": -3.75,
-   "maxX": -3.25,
-   "minZ": -12.25,
-   "maxZ": -11.75
+   "minX": -7.5,
+   "maxX": -6.5,
+   "minZ": -24.5,
+   "maxZ": -23.5
   },
   {
    "kind": "box",
-   "minX": -7.25,
-   "maxX": -6.75,
-   "minZ": -13.75,
-   "maxZ": -12.75
+   "minX": -14.5,
+   "maxX": -13.5,
+   "minZ": -27.5,
+   "maxZ": -25.5
   },
   {
    "kind": "box",
-   "minX": 1.75,
-   "maxX": 2.25,
-   "minZ": -13.75,
-   "maxZ": -13.25
+   "minX": 3.5,
+   "maxX": 4.5,
+   "minZ": -27.5,
+   "maxZ": -26.5
   },
   {
    "kind": "box",
-   "minX": 6.25,
-   "maxX": 7.25,
-   "minZ": -14.25,
-   "maxZ": -13.25
+   "minX": 12.5,
+   "maxX": 14.5,
+   "minZ": -28.5,
+   "maxZ": -26.5
   },
   {
    "kind": "box",
-   "minX": -0.25,
-   "maxX": 0.25,
-   "minZ": -14.25,
-   "maxZ": -13.75
+   "minX": -0.5,
+   "maxX": 0.5,
+   "minZ": -28.5,
+   "maxZ": -27.5
   },
   {
    "kind": "box",
-   "minX": -1.75,
-   "maxX": -1.25,
-   "minZ": -15.25,
-   "maxZ": -14.75
+   "minX": -3.5,
+   "maxX": -2.5,
+   "minZ": -30.5,
+   "maxZ": -29.5
   },
   {
    "kind": "box",
-   "minX": 7.25,
-   "maxX": 8.25,
-   "minZ": -15.75,
-   "maxZ": -15.25
+   "minX": 14.5,
+   "maxX": 16.5,
+   "minZ": -31.5,
+   "maxZ": -30.5
   },
   {
    "kind": "box",
-   "minX": 7.75,
-   "maxX": 8.25,
-   "minZ": -16.25,
-   "maxZ": -15.75
+   "minX": 15.5,
+   "maxX": 16.5,
+   "minZ": -32.5,
+   "maxZ": -31.5
   },
   {
    "kind": "box",
-   "minX": -7.25,
-   "maxX": -6.75,
-   "minZ": -18.25,
-   "maxZ": -17.25
+   "minX": -14.5,
+   "maxX": -13.5,
+   "minZ": -36.5,
+   "maxZ": -34.5
   },
   {
    "kind": "box",
-   "minX": -2.75,
-   "maxX": -2.25,
-   "minZ": -17.75,
-   "maxZ": -17.25
+   "minX": -5.5,
+   "maxX": -4.5,
+   "minZ": -35.5,
+   "maxZ": -34.5
   },
   {
    "kind": "box",
-   "minX": 6.75,
-   "maxX": 7.25,
-   "minZ": -18.25,
-   "maxZ": -17.25
+   "minX": 13.5,
+   "maxX": 14.5,
+   "minZ": -36.5,
+   "maxZ": -34.5
   },
   {
    "kind": "box",
-   "minX": 3.25,
-   "maxX": 3.75,
-   "minZ": -18.25,
-   "maxZ": -17.75
+   "minX": 6.5,
+   "maxX": 7.5,
+   "minZ": -36.5,
+   "maxZ": -35.5
   },
   {
    "kind": "box",
-   "minX": -7.25,
-   "maxX": -6.25,
-   "minZ": -18.75,
-   "maxZ": -18.25
+   "minX": -14.5,
+   "maxX": -12.5,
+   "minZ": -37.5,
+   "maxZ": -36.5
   },
   {
    "kind": "box",
-   "minX": 6.25,
-   "maxX": 7.25,
-   "minZ": -18.75,
-   "maxZ": -18.25
+   "minX": 12.5,
+   "maxX": 14.5,
+   "minZ": -37.5,
+   "maxZ": -36.5
   },
   {
    "kind": "box",
-   "minX": -6.75,
-   "maxX": -6.25,
-   "minZ": -19.25,
-   "maxZ": -18.75
+   "minX": -13.5,
+   "maxX": -12.5,
+   "minZ": -38.5,
+   "maxZ": -37.5
   },
   {
    "kind": "box",
-   "minX": 6.25,
-   "maxX": 6.75,
-   "minZ": -19.25,
-   "maxZ": -18.75
+   "minX": 12.5,
+   "maxX": 13.5,
+   "minZ": -38.5,
+   "maxZ": -37.5
   },
   {
    "kind": "box",
-   "minX": -6.75,
-   "maxX": -5.75,
-   "minZ": -19.75,
-   "maxZ": -19.25
+   "minX": -13.5,
+   "maxX": -11.5,
+   "minZ": -39.5,
+   "maxZ": -38.5
   },
   {
    "kind": "box",
-   "minX": 5.75,
-   "maxX": 6.75,
-   "minZ": -19.75,
-   "maxZ": -19.25
+   "minX": 11.5,
+   "maxX": 13.5,
+   "minZ": -39.5,
+   "maxZ": -38.5
   },
   {
    "kind": "box",
-   "minX": -6.25,
-   "maxX": -5.75,
-   "minZ": -20.75,
-   "maxZ": -19.75
+   "minX": -12.5,
+   "maxX": -11.5,
+   "minZ": -41.5,
+   "maxZ": -39.5
   },
   {
    "kind": "box",
-   "minX": 5.75,
-   "maxX": 6.25,
-   "minZ": -20.75,
-   "maxZ": -19.75
+   "minX": 11.5,
+   "maxX": 12.5,
+   "minZ": -41.5,
+   "maxZ": -39.5
   },
   {
    "kind": "box",
-   "minX": -4.75,
-   "maxX": -4.25,
-   "minZ": -21.75,
-   "maxZ": -21.25
+   "minX": -9.5,
+   "maxX": -8.5,
+   "minZ": -43.5,
+   "maxZ": -42.5
   },
   {
    "kind": "box",
-   "minX": 4.25,
-   "maxX": 4.75,
-   "minZ": -21.75,
-   "maxZ": -21.25
+   "minX": 8.5,
+   "maxX": 9.5,
+   "minZ": -43.5,
+   "maxZ": -42.5
   },
   {
    "kind": "box",
-   "minX": -4.75,
-   "maxX": -3.25,
-   "minZ": -22.25,
-   "maxZ": -21.75
+   "minX": -9.5,
+   "maxX": -6.5,
+   "minZ": -44.5,
+   "maxZ": -43.5
   },
   {
    "kind": "box",
-   "minX": 3.25,
-   "maxX": 4.75,
-   "minZ": -22.25,
-   "maxZ": -21.75
+   "minX": 6.5,
+   "maxX": 9.5,
+   "minZ": -44.5,
+   "maxZ": -43.5
   },
   {
    "kind": "box",
-   "minX": -3.75,
-   "maxX": -2.25,
-   "minZ": -22.75,
-   "maxZ": -22.25
+   "minX": -7.5,
+   "maxX": -4.5,
+   "minZ": -45.5,
+   "maxZ": -44.5
   },
   {
    "kind": "box",
-   "minX": 2.25,
-   "maxX": 3.75,
-   "minZ": -22.75,
-   "maxZ": -22.25
+   "minX": 4.5,
+   "maxX": 7.5,
+   "minZ": -45.5,
+   "maxZ": -44.5
   },
   {
    "kind": "box",
-   "minX": -2.75,
-   "maxX": -1.75,
-   "minZ": -23.25,
-   "maxZ": -22.75
+   "minX": -5.5,
+   "maxX": -3.5,
+   "minZ": -46.5,
+   "maxZ": -45.5
   },
   {
    "kind": "box",
-   "minX": 1.75,
-   "maxX": 2.75,
-   "minZ": -23.25,
-   "maxZ": -22.75
+   "minX": 3.5,
+   "maxX": 5.5,
+   "minZ": -46.5,
+   "maxZ": -45.5
   },
   {
    "kind": "box",
-   "minX": -4.25,
-   "maxX": -3.75,
-   "minZ": -24.75,
-   "maxZ": -24.25
+   "minX": -8.5,
+   "maxX": -7.5,
+   "minZ": -49.5,
+   "maxZ": -48.5
   },
   {
    "kind": "box",
-   "minX": 3.75,
-   "maxX": 4.25,
-   "minZ": -24.75,
-   "maxZ": -24.25
+   "minX": 7.5,
+   "maxX": 8.5,
+   "minZ": -49.5,
+   "maxZ": -48.5
   },
   {
    "kind": "box",
-   "minX": -0.25,
-   "maxX": 0.25,
-   "minZ": -25.75,
-   "maxZ": -25.25
+   "minX": -0.5,
+   "maxX": 0.5,
+   "minZ": -51.5,
+   "maxZ": -50.5
   }
  ],
  "steps": [
   {
    "kind": "box",
-   "minX": -1.25,
-   "maxX": 1.25,
-   "minZ": -12.25,
-   "maxZ": -11.75,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -2.25,
-   "maxX": -0.75,
-   "minZ": -12.75,
-   "maxZ": -12.25,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -0.75,
-   "maxX": 0.75,
-   "minZ": -12.75,
-   "maxZ": -12.25,
+   "minX": -2.5,
+   "maxX": 2.5,
+   "minZ": -24.5,
+   "maxZ": -23.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": 0.75,
-   "maxX": 1.25,
-   "minZ": -12.75,
-   "maxZ": -12.25,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": 1.25,
-   "maxX": 1.75,
-   "minZ": -12.75,
-   "maxZ": -12.25,
-   "top": 0.4
-  },
-  {
-   "kind": "box",
-   "minX": 1.75,
-   "maxX": 2.25,
-   "minZ": -12.75,
-   "maxZ": -12.25,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -2.75,
-   "maxX": -2.25,
-   "minZ": -13.25,
-   "maxZ": -12.75,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -2.25,
-   "maxX": -1.75,
-   "minZ": -13.25,
-   "maxZ": -12.75,
-   "top": 0.4
-  },
-  {
-   "kind": "box",
-   "minX": -1.75,
-   "maxX": -1.25,
-   "minZ": -13.25,
-   "maxZ": -12.75,
-   "top": 0.8
-  },
-  {
-   "kind": "box",
-   "minX": -1.25,
-   "maxX": -0.25,
-   "minZ": -13.25,
-   "maxZ": -12.75,
+   "minX": -4.5,
+   "maxX": -1.5,
+   "minZ": -25.5,
+   "maxZ": -24.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": -0.25,
-   "maxX": 0.25,
-   "minZ": -13.25,
-   "maxZ": -12.75,
-   "top": 0.9
-  },
-  {
-   "kind": "box",
-   "minX": 0.25,
-   "maxX": 1.75,
-   "minZ": -13.25,
-   "maxZ": -12.75,
-   "top": 0.6
-  },
-  {
-   "kind": "box",
-   "minX": 1.75,
-   "maxX": 2.25,
-   "minZ": -13.25,
-   "maxZ": -12.75,
-   "top": 0.4
-  },
-  {
-   "kind": "box",
-   "minX": 2.25,
-   "maxX": 2.75,
-   "minZ": -13.25,
-   "maxZ": -12.75,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -3.25,
-   "maxX": -2.75,
-   "minZ": -13.75,
-   "maxZ": -13.25,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -2.75,
-   "maxX": -1.75,
-   "minZ": -13.75,
-   "maxZ": -13.25,
-   "top": 0.6
-  },
-  {
-   "kind": "box",
-   "minX": -1.75,
-   "maxX": 1.75,
-   "minZ": -13.75,
-   "maxZ": -13.25,
-   "top": 0.9
-  },
-  {
-   "kind": "box",
-   "minX": 2.25,
-   "maxX": 2.75,
-   "minZ": -13.75,
-   "maxZ": -13.25,
-   "top": 0.6
-  },
-  {
-   "kind": "box",
-   "minX": 2.75,
-   "maxX": 3.25,
-   "minZ": -13.75,
-   "maxZ": -13.25,
-   "top": 0.4
-  },
-  {
-   "kind": "box",
-   "minX": -3.75,
-   "maxX": -3.25,
-   "minZ": -14.75,
-   "maxZ": -13.75,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -3.25,
-   "maxX": -2.75,
-   "minZ": -14.25,
-   "maxZ": -13.75,
-   "top": 0.4
-  },
-  {
-   "kind": "box",
-   "minX": -2.75,
-   "maxX": -2.25,
-   "minZ": -14.25,
-   "maxZ": -13.75,
-   "top": 0.6
-  },
-  {
-   "kind": "box",
-   "minX": -2.25,
-   "maxX": -0.25,
-   "minZ": -14.25,
-   "maxZ": -13.75,
-   "top": 0.9
-  },
-  {
-   "kind": "box",
-   "minX": 0.25,
-   "maxX": 2.25,
-   "minZ": -14.25,
-   "maxZ": -13.75,
-   "top": 0.9
-  },
-  {
-   "kind": "box",
-   "minX": 2.25,
-   "maxX": 3.25,
-   "minZ": -14.25,
-   "maxZ": -13.75,
-   "top": 0.6
-  },
-  {
-   "kind": "box",
-   "minX": 3.25,
-   "maxX": 3.75,
-   "minZ": -14.75,
-   "maxZ": -13.75,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -3.25,
-   "maxX": -2.75,
-   "minZ": -15.25,
-   "maxZ": -14.25,
-   "top": 0.6
-  },
-  {
-   "kind": "box",
-   "minX": -2.75,
-   "maxX": 2.75,
-   "minZ": -14.75,
-   "maxZ": -14.25,
-   "top": 0.9
-  },
-  {
-   "kind": "box",
-   "minX": 2.75,
-   "maxX": 3.25,
-   "minZ": -15.25,
-   "maxZ": -14.25,
-   "top": 0.6
-  },
-  {
-   "kind": "box",
-   "minX": -4.25,
-   "maxX": -3.25,
-   "minZ": -15.25,
-   "maxZ": -14.75,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -2.75,
-   "maxX": -2.25,
-   "minZ": -15.25,
-   "maxZ": -14.75,
+   "minX": -1.5,
+   "maxX": 1.5,
+   "minZ": -25.5,
+   "maxZ": -24.5,
    "top": 1.2
   },
   {
    "kind": "box",
-   "minX": -2.25,
-   "maxX": -1.75,
-   "minZ": -15.25,
-   "maxZ": -14.75,
-   "top": 0.9
-  },
-  {
-   "kind": "box",
-   "minX": -1.25,
-   "maxX": 2.75,
-   "minZ": -15.25,
-   "maxZ": -14.75,
-   "top": 0.9
-  },
-  {
-   "kind": "box",
-   "minX": 3.25,
-   "maxX": 4.25,
-   "minZ": -15.25,
-   "maxZ": -14.75,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -4.25,
-   "maxX": -3.75,
-   "minZ": -16.75,
-   "maxZ": -15.25,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -3.75,
-   "maxX": -2.75,
-   "minZ": -15.75,
-   "maxZ": -15.25,
+   "minX": 1.5,
+   "maxX": 2.5,
+   "minZ": -25.5,
+   "maxZ": -24.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": -2.75,
-   "maxX": 2.75,
-   "minZ": -15.75,
-   "maxZ": -15.25,
-   "top": 0.9
-  },
-  {
-   "kind": "box",
-   "minX": 2.75,
-   "maxX": 3.75,
-   "minZ": -15.75,
-   "maxZ": -15.25,
-   "top": 0.6
-  },
-  {
-   "kind": "box",
-   "minX": 3.75,
-   "maxX": 4.25,
-   "minZ": -16.75,
-   "maxZ": -15.25,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -3.75,
-   "maxX": -3.25,
-   "minZ": -16.25,
-   "maxZ": -15.75,
-   "top": 0.6
-  },
-  {
-   "kind": "box",
-   "minX": -3.25,
-   "maxX": 2.75,
-   "minZ": -16.25,
-   "maxZ": -15.75,
-   "top": 0.9
-  },
-  {
-   "kind": "box",
-   "minX": 2.75,
-   "maxX": 3.25,
-   "minZ": -16.25,
-   "maxZ": -15.75,
+   "minX": 2.5,
+   "maxX": 3.5,
+   "minZ": -25.5,
+   "maxZ": -24.5,
    "top": 0.8
   },
   {
    "kind": "box",
-   "minX": 3.25,
-   "maxX": 3.75,
-   "minZ": -16.25,
-   "maxZ": -15.75,
+   "minX": 3.5,
+   "maxX": 4.5,
+   "minZ": -25.5,
+   "maxZ": -24.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": -3.75,
-   "maxX": -2.75,
-   "minZ": -16.75,
-   "maxZ": -16.25,
+   "minX": -5.5,
+   "maxX": -4.5,
+   "minZ": -26.5,
+   "maxZ": -25.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": -2.75,
-   "maxX": 2.75,
-   "minZ": -17.25,
-   "maxZ": -16.25,
-   "top": 0.9
+   "minX": -4.5,
+   "maxX": -3.5,
+   "minZ": -26.5,
+   "maxZ": -25.5,
+   "top": 0.8
   },
   {
    "kind": "box",
-   "minX": 2.75,
-   "maxX": 3.75,
-   "minZ": -16.75,
-   "maxZ": -16.25,
+   "minX": -3.5,
+   "maxX": -2.5,
+   "minZ": -26.5,
+   "maxZ": -25.5,
+   "top": 1.6
+  },
+  {
+   "kind": "box",
+   "minX": -2.5,
+   "maxX": -0.5,
+   "minZ": -26.5,
+   "maxZ": -25.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": -0.5,
+   "maxX": 0.5,
+   "minZ": -26.5,
+   "maxZ": -25.5,
+   "top": 1.8
+  },
+  {
+   "kind": "box",
+   "minX": 0.5,
+   "maxX": 3.5,
+   "minZ": -26.5,
+   "maxZ": -25.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": 3.5,
+   "maxX": 4.5,
+   "minZ": -26.5,
+   "maxZ": -25.5,
+   "top": 0.8
+  },
+  {
+   "kind": "box",
+   "minX": 4.5,
+   "maxX": 5.5,
+   "minZ": -26.5,
+   "maxZ": -25.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": -4.25,
-   "maxX": -3.25,
-   "minZ": -17.25,
-   "maxZ": -16.75,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -3.25,
-   "maxX": -2.75,
-   "minZ": -17.75,
-   "maxZ": -16.75,
+   "minX": -6.5,
+   "maxX": -5.5,
+   "minZ": -27.5,
+   "maxZ": -26.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": 2.75,
-   "maxX": 3.25,
-   "minZ": -17.75,
-   "maxZ": -16.75,
+   "minX": -5.5,
+   "maxX": -3.5,
+   "minZ": -27.5,
+   "maxZ": -26.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": -3.5,
+   "maxX": 3.5,
+   "minZ": -27.5,
+   "maxZ": -26.5,
+   "top": 1.8
+  },
+  {
+   "kind": "box",
+   "minX": 4.5,
+   "maxX": 5.5,
+   "minZ": -27.5,
+   "maxZ": -26.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": 5.5,
+   "maxX": 6.5,
+   "minZ": -27.5,
+   "maxZ": -26.5,
+   "top": 0.8
+  },
+  {
+   "kind": "box",
+   "minX": -7.5,
+   "maxX": -6.5,
+   "minZ": -29.5,
+   "maxZ": -27.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": 3.25,
-   "maxX": 3.75,
-   "minZ": -17.75,
-   "maxZ": -16.75,
-   "top": 0.3
+   "minX": -6.5,
+   "maxX": -5.5,
+   "minZ": -28.5,
+   "maxZ": -27.5,
+   "top": 0.8
   },
   {
    "kind": "box",
-   "minX": 3.75,
-   "maxX": 4.25,
-   "minZ": -17.25,
-   "maxZ": -16.75,
+   "minX": -5.5,
+   "maxX": -4.5,
+   "minZ": -28.5,
+   "maxZ": -27.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": -4.5,
+   "maxX": -0.5,
+   "minZ": -28.5,
+   "maxZ": -27.5,
+   "top": 1.8
+  },
+  {
+   "kind": "box",
+   "minX": 0.5,
+   "maxX": 4.5,
+   "minZ": -28.5,
+   "maxZ": -27.5,
+   "top": 1.8
+  },
+  {
+   "kind": "box",
+   "minX": 4.5,
+   "maxX": 6.5,
+   "minZ": -28.5,
+   "maxZ": -27.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": 6.5,
+   "maxX": 7.5,
+   "minZ": -29.5,
+   "maxZ": -27.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": -3.75,
-   "maxX": -3.25,
-   "minZ": -17.75,
-   "maxZ": -17.25,
-   "top": 0.3
+   "minX": -6.5,
+   "maxX": -5.5,
+   "minZ": -30.5,
+   "maxZ": -28.5,
+   "top": 1.2
   },
   {
    "kind": "box",
-   "minX": -2.25,
-   "maxX": 2.75,
-   "minZ": -17.75,
-   "maxZ": -17.25,
-   "top": 0.9
+   "minX": -5.5,
+   "maxX": 5.5,
+   "minZ": -29.5,
+   "maxZ": -28.5,
+   "top": 1.8
   },
   {
    "kind": "box",
-   "minX": -3.75,
-   "maxX": -2.75,
-   "minZ": -18.25,
-   "maxZ": -17.75,
-   "top": 0.3
+   "minX": 5.5,
+   "maxX": 6.5,
+   "minZ": -30.5,
+   "maxZ": -28.5,
+   "top": 1.2
   },
   {
    "kind": "box",
-   "minX": -2.75,
-   "maxX": -2.25,
-   "minZ": -18.25,
-   "maxZ": -17.75,
+   "minX": -8.5,
+   "maxX": -6.5,
+   "minZ": -30.5,
+   "maxZ": -29.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": -2.25,
-   "maxX": 2.25,
-   "minZ": -18.25,
-   "maxZ": -17.75,
-   "top": 0.9
+   "minX": -5.5,
+   "maxX": -4.5,
+   "minZ": -30.5,
+   "maxZ": -29.5,
+   "top": 2.4
   },
   {
    "kind": "box",
-   "minX": 2.25,
-   "maxX": 2.75,
-   "minZ": -18.25,
-   "maxZ": -17.75,
+   "minX": -4.5,
+   "maxX": -3.5,
+   "minZ": -30.5,
+   "maxZ": -29.5,
+   "top": 1.8
+  },
+  {
+   "kind": "box",
+   "minX": -2.5,
+   "maxX": 5.5,
+   "minZ": -30.5,
+   "maxZ": -29.5,
+   "top": 1.8
+  },
+  {
+   "kind": "box",
+   "minX": 6.5,
+   "maxX": 8.5,
+   "minZ": -30.5,
+   "maxZ": -29.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": 2.75,
-   "maxX": 3.25,
-   "minZ": -18.75,
-   "maxZ": -17.75,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -3.25,
-   "maxX": -2.75,
-   "minZ": -18.75,
-   "maxZ": -18.25,
-   "top": 0.3
-  },
-  {
-   "kind": "box",
-   "minX": -2.75,
-   "maxX": -1.75,
-   "minZ": -18.75,
-   "maxZ": -18.25,
+   "minX": -8.5,
+   "maxX": -7.5,
+   "minZ": -33.5,
+   "maxZ": -30.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": -1.75,
-   "maxX": 1.75,
-   "minZ": -18.75,
-   "maxZ": -18.25,
-   "top": 0.9
+   "minX": -7.5,
+   "maxX": -5.5,
+   "minZ": -31.5,
+   "maxZ": -30.5,
+   "top": 1.2
   },
   {
    "kind": "box",
-   "minX": 1.75,
-   "maxX": 2.75,
-   "minZ": -18.75,
-   "maxZ": -18.25,
+   "minX": -5.5,
+   "maxX": 5.5,
+   "minZ": -31.5,
+   "maxZ": -30.5,
+   "top": 1.8
+  },
+  {
+   "kind": "box",
+   "minX": 5.5,
+   "maxX": 7.5,
+   "minZ": -31.5,
+   "maxZ": -30.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": 7.5,
+   "maxX": 8.5,
+   "minZ": -33.5,
+   "maxZ": -30.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": -2.75,
-   "maxX": -2.25,
-   "minZ": -19.25,
-   "maxZ": -18.75,
-   "top": 0.3
+   "minX": -7.5,
+   "maxX": -6.5,
+   "minZ": -32.5,
+   "maxZ": -31.5,
+   "top": 1.2
   },
   {
    "kind": "box",
-   "minX": -2.25,
-   "maxX": -1.75,
-   "minZ": -19.25,
-   "maxZ": -18.75,
-   "top": 0.5
+   "minX": -6.5,
+   "maxX": 5.5,
+   "minZ": -32.5,
+   "maxZ": -31.5,
+   "top": 1.8
   },
   {
    "kind": "box",
-   "minX": -1.75,
-   "maxX": 2.25,
-   "minZ": -19.25,
-   "maxZ": -18.75,
+   "minX": 5.5,
+   "maxX": 6.5,
+   "minZ": -32.5,
+   "maxZ": -31.5,
+   "top": 1.6
+  },
+  {
+   "kind": "box",
+   "minX": 6.5,
+   "maxX": 7.5,
+   "minZ": -32.5,
+   "maxZ": -31.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": -7.5,
+   "maxX": -5.5,
+   "minZ": -33.5,
+   "maxZ": -32.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": -5.5,
+   "maxX": 5.5,
+   "minZ": -34.5,
+   "maxZ": -32.5,
+   "top": 1.8
+  },
+  {
+   "kind": "box",
+   "minX": 5.5,
+   "maxX": 7.5,
+   "minZ": -33.5,
+   "maxZ": -32.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": -8.5,
+   "maxX": -6.5,
+   "minZ": -34.5,
+   "maxZ": -33.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": 2.25,
-   "maxX": 2.75,
-   "minZ": -19.25,
-   "maxZ": -18.75,
-   "top": 0.3
+   "minX": -6.5,
+   "maxX": -5.5,
+   "minZ": -35.5,
+   "maxZ": -33.5,
+   "top": 1.2
   },
   {
    "kind": "box",
-   "minX": -2.25,
-   "maxX": -0.75,
-   "minZ": -19.75,
-   "maxZ": -19.25,
-   "top": 0.3
+   "minX": 5.5,
+   "maxX": 6.5,
+   "minZ": -35.5,
+   "maxZ": -33.5,
+   "top": 1.2
   },
   {
    "kind": "box",
-   "minX": -0.75,
-   "maxX": 0.75,
-   "minZ": -19.75,
-   "maxZ": -19.25,
+   "minX": 6.5,
+   "maxX": 7.5,
+   "minZ": -35.5,
+   "maxZ": -33.5,
    "top": 0.6
   },
   {
    "kind": "box",
-   "minX": 0.75,
-   "maxX": 2.25,
-   "minZ": -19.75,
-   "maxZ": -19.25,
-   "top": 0.3
+   "minX": 7.5,
+   "maxX": 8.5,
+   "minZ": -34.5,
+   "maxZ": -33.5,
+   "top": 1.2
   },
   {
    "kind": "box",
-   "minX": -1.25,
-   "maxX": 1.25,
-   "minZ": -20.25,
-   "maxZ": -19.75,
-   "top": 0.3
+   "minX": -7.5,
+   "maxX": -6.5,
+   "minZ": -35.5,
+   "maxZ": -34.5,
+   "top": 0.6
+  },
+  {
+   "kind": "box",
+   "minX": -4.5,
+   "maxX": 5.5,
+   "minZ": -35.5,
+   "maxZ": -34.5,
+   "top": 1.8
+  },
+  {
+   "kind": "box",
+   "minX": -7.5,
+   "maxX": -5.5,
+   "minZ": -36.5,
+   "maxZ": -35.5,
+   "top": 0.6
+  },
+  {
+   "kind": "box",
+   "minX": -5.5,
+   "maxX": -4.5,
+   "minZ": -36.5,
+   "maxZ": -35.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": -4.5,
+   "maxX": 4.5,
+   "minZ": -36.5,
+   "maxZ": -35.5,
+   "top": 1.8
+  },
+  {
+   "kind": "box",
+   "minX": 4.5,
+   "maxX": 5.5,
+   "minZ": -36.5,
+   "maxZ": -35.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": 5.5,
+   "maxX": 6.5,
+   "minZ": -37.5,
+   "maxZ": -35.5,
+   "top": 0.6
+  },
+  {
+   "kind": "box",
+   "minX": -6.5,
+   "maxX": -5.5,
+   "minZ": -37.5,
+   "maxZ": -36.5,
+   "top": 0.6
+  },
+  {
+   "kind": "box",
+   "minX": -5.5,
+   "maxX": -3.5,
+   "minZ": -37.5,
+   "maxZ": -36.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": -3.5,
+   "maxX": 3.5,
+   "minZ": -37.5,
+   "maxZ": -36.5,
+   "top": 1.8
+  },
+  {
+   "kind": "box",
+   "minX": 3.5,
+   "maxX": 5.5,
+   "minZ": -37.5,
+   "maxZ": -36.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": -5.5,
+   "maxX": -4.5,
+   "minZ": -38.5,
+   "maxZ": -37.5,
+   "top": 0.6
+  },
+  {
+   "kind": "box",
+   "minX": -4.5,
+   "maxX": -3.5,
+   "minZ": -38.5,
+   "maxZ": -37.5,
+   "top": 1
+  },
+  {
+   "kind": "box",
+   "minX": -3.5,
+   "maxX": 4.5,
+   "minZ": -38.5,
+   "maxZ": -37.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": 4.5,
+   "maxX": 5.5,
+   "minZ": -38.5,
+   "maxZ": -37.5,
+   "top": 0.6
+  },
+  {
+   "kind": "box",
+   "minX": -4.5,
+   "maxX": -1.5,
+   "minZ": -39.5,
+   "maxZ": -38.5,
+   "top": 0.6
+  },
+  {
+   "kind": "box",
+   "minX": -1.5,
+   "maxX": 1.5,
+   "minZ": -39.5,
+   "maxZ": -38.5,
+   "top": 1.2
+  },
+  {
+   "kind": "box",
+   "minX": 1.5,
+   "maxX": 4.5,
+   "minZ": -39.5,
+   "maxZ": -38.5,
+   "top": 0.6
+  },
+  {
+   "kind": "box",
+   "minX": -2.5,
+   "maxX": 2.5,
+   "minZ": -40.5,
+   "maxZ": -39.5,
+   "top": 0.6
   }
  ],
  "spawns": {
   "party": [
    [
     0,
-    0.0,
-    -6.2
+    0,
+    -12.4
    ],
    [
-    -1.6,
-    0.0,
-    -6.0
+    -3.2,
+    0,
+    -12
    ],
    [
-    1.6,
-    0.0,
-    -6.0
+    3.2,
+    0,
+    -12
    ],
    [
     0,
-    0.0,
-    -5.2
+    0,
+    -10.4
    ]
   ],
   "enemies": [
    [
-    -3.2,
-    0.022,
-    -11.4
+    -6.4,
+    0.044,
+    -22.8
    ],
    [
-    3.2,
-    0.022,
-    -11.4
+    6.4,
+    0.044,
+    -22.8
    ],
    [
     0,
-    0.0,
-    -10.9
+    0,
+    -21.8
    ]
   ],
   "boss": [
    0,
-   0.497,
-   -12.4
+   0.994,
+   -24.8
   ],
   "npcs": [
    [
-    -6.4,
-    0.0,
-    -14.0
+    -12.8,
+    0,
+    -28
    ],
    [
-    6.15,
-    0.0,
-    -14.43
+    12.3,
+    0,
+    -28.86
    ]
   ]
  }

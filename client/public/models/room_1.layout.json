@@ -2,327 +2,327 @@
  "bounds": [
   {
    "kind": "box",
-   "minX": -5.2,
-   "maxX": 5.2,
-   "minZ": -4.8,
-   "maxZ": 5.2
+   "minX": -10.4,
+   "maxX": 10.4,
+   "minZ": -9.6,
+   "maxZ": 10.4
   }
  ],
  "colliders": [
   {
    "kind": "box",
-   "minX": 2.85,
-   "maxX": 4.15,
-   "minZ": 5.7,
-   "maxZ": 5.72
-  },
-  {
-   "kind": "box",
-   "minX": -4.15,
-   "maxX": -2.85,
-   "minZ": 5.7,
-   "maxZ": 5.72
-  },
-  {
-   "kind": "box",
-   "minX": -5.72,
-   "maxX": -5.7,
-   "minZ": 1.95,
-   "maxZ": 3.25
-  },
-  {
-   "kind": "box",
-   "minX": -5.72,
-   "maxX": -5.7,
-   "minZ": -3.25,
-   "maxZ": -1.95
-  },
-  {
-   "kind": "box",
    "minX": 5.7,
-   "maxX": 5.72,
-   "minZ": -4.25,
-   "maxZ": -2.95
+   "maxX": 8.3,
+   "minZ": 11.4,
+   "maxZ": 11.44
   },
   {
    "kind": "box",
-   "minX": 5.7,
-   "maxX": 5.72,
-   "minZ": 2.95,
-   "maxZ": 4.25
+   "minX": -8.3,
+   "maxX": -5.7,
+   "minZ": 11.4,
+   "maxZ": 11.44
   },
   {
    "kind": "box",
-   "minX": 2.73,
-   "maxX": 4.27,
-   "minZ": 5.72,
-   "maxZ": 5.8
+   "minX": -11.44,
+   "maxX": -11.4,
+   "minZ": 3.9,
+   "maxZ": 6.5
   },
   {
    "kind": "box",
-   "minX": -4.27,
-   "maxX": -2.73,
-   "minZ": 5.72,
-   "maxZ": 5.8
+   "minX": -11.44,
+   "maxX": -11.4,
+   "minZ": -6.5,
+   "maxZ": -3.9
   },
   {
    "kind": "box",
-   "minX": -5.8,
-   "maxX": -5.72,
-   "minZ": 1.83,
-   "maxZ": 3.37
+   "minX": 11.4,
+   "maxX": 11.44,
+   "minZ": -8.5,
+   "maxZ": -5.9
   },
   {
    "kind": "box",
-   "minX": -5.8,
-   "maxX": -5.72,
-   "minZ": -3.37,
-   "maxZ": -1.83
+   "minX": 11.4,
+   "maxX": 11.44,
+   "minZ": 5.9,
+   "maxZ": 8.5
   },
   {
    "kind": "box",
-   "minX": 5.72,
-   "maxX": 5.8,
-   "minZ": -4.37,
-   "maxZ": -2.83
+   "minX": 5.46,
+   "maxX": 8.54,
+   "minZ": 11.44,
+   "maxZ": 11.6
   },
   {
    "kind": "box",
-   "minX": 5.72,
-   "maxX": 5.8,
-   "minZ": 2.83,
-   "maxZ": 4.37
+   "minX": -8.54,
+   "maxX": -5.46,
+   "minZ": 11.44,
+   "maxZ": 11.6
   },
   {
    "kind": "box",
-   "minX": -3.9,
-   "maxX": -2.9,
-   "minZ": -3.5,
-   "maxZ": -2.5
+   "minX": -11.6,
+   "maxX": -11.44,
+   "minZ": 3.66,
+   "maxZ": 6.74
   },
   {
    "kind": "box",
-   "minX": 2.9,
-   "maxX": 3.9,
-   "minZ": -3.5,
-   "maxZ": -2.5
+   "minX": -11.6,
+   "maxX": -11.44,
+   "minZ": -6.74,
+   "maxZ": -3.66
   },
   {
    "kind": "box",
-   "minX": 5.65,
-   "maxX": 6.35,
-   "minZ": -1.18,
-   "maxZ": 1.18
+   "minX": 11.44,
+   "maxX": 11.6,
+   "minZ": -8.74,
+   "maxZ": -5.66
   },
   {
    "kind": "box",
-   "minX": -0.4,
-   "maxX": 0.4,
-   "minZ": -4.5,
-   "maxZ": -3.7
+   "minX": 11.44,
+   "maxX": 11.6,
+   "minZ": 5.66,
+   "maxZ": 8.74
   },
   {
    "kind": "box",
-   "minX": -2.62,
-   "maxX": 2.62,
-   "minZ": -5.37,
-   "maxZ": -5.23
+   "minX": -7.8,
+   "maxX": -5.8,
+   "minZ": -7,
+   "maxZ": -5
   },
   {
    "kind": "box",
-   "minX": 4.2,
-   "maxX": 5.0,
-   "minZ": -4.72,
-   "maxZ": -3.88
+   "minX": 5.8,
+   "maxX": 7.8,
+   "minZ": -7,
+   "maxZ": -5
   },
   {
    "kind": "box",
-   "minX": 3.49,
-   "maxX": 4.31,
-   "minZ": -5.12,
-   "maxZ": -4.28
+   "minX": 11.3,
+   "maxX": 12.7,
+   "minZ": -2.36,
+   "maxZ": 2.36
   },
   {
    "kind": "box",
-   "minX": -5.19,
-   "maxX": -4.21,
-   "minZ": -4.89,
-   "maxZ": -3.91
+   "minX": -0.8,
+   "maxX": 0.8,
+   "minZ": -9,
+   "maxZ": -7.4
   },
   {
    "kind": "box",
-   "minX": 5.17,
-   "maxX": 6.21,
-   "minZ": 5.74,
+   "minX": -5.24,
+   "maxX": 5.24,
+   "minZ": -10.74,
+   "maxZ": -10.46
+  },
+  {
+   "kind": "box",
+   "minX": 8.4,
+   "maxX": 10,
+   "minZ": -9.44,
+   "maxZ": -7.76
+  },
+  {
+   "kind": "box",
+   "minX": 6.98,
+   "maxX": 8.62,
+   "minZ": -10.24,
+   "maxZ": -8.56
+  },
+  {
+   "kind": "box",
+   "minX": -10.38,
+   "maxX": -8.42,
+   "minZ": -9.78,
+   "maxZ": -7.82
+  },
+  {
+   "kind": "box",
+   "minX": 10.34,
+   "maxX": 12.42,
+   "minZ": 11.48,
+   "maxZ": 12.52
+  },
+  {
+   "kind": "box",
+   "minX": 8.3,
+   "maxX": 10.38,
+   "minZ": 11.52,
+   "maxZ": 12.48
+  },
+  {
+   "kind": "box",
+   "minX": -8.44,
+   "maxX": -6.28,
+   "minZ": 11.54,
+   "maxZ": 12.46
+  },
+  {
+   "kind": "box",
+   "minX": -10.76,
+   "maxX": -8.4,
+   "minZ": 11.56,
+   "maxZ": 12.44
+  },
+  {
+   "kind": "box",
+   "minX": -12.42,
+   "maxX": -10.72,
+   "minZ": 11.5,
+   "maxZ": 12.5
+  },
+  {
+   "kind": "box",
+   "minX": 6.64,
+   "maxX": 8.34,
+   "minZ": 11.52,
+   "maxZ": 12.48
+  },
+  {
+   "kind": "box",
+   "minX": 4.12,
+   "maxX": 6.68,
+   "minZ": 11.56,
+   "maxZ": 12.44
+  },
+  {
+   "kind": "box",
+   "minX": 2.6,
+   "maxX": 4.16,
+   "minZ": 11.52,
+   "maxZ": 12.48
+  },
+  {
+   "kind": "box",
+   "minX": 1.14,
+   "maxX": 2.64,
+   "minZ": 11.48,
+   "maxZ": 12.52
+  },
+  {
+   "kind": "box",
+   "minX": -1.18,
+   "maxX": 1.18,
+   "minZ": 11.58,
+   "maxZ": 12.42
+  },
+  {
+   "kind": "box",
+   "minX": -2.6,
+   "maxX": -1.14,
+   "minZ": 11.6,
+   "maxZ": 12.4
+  },
+  {
+   "kind": "box",
+   "minX": -4.26,
+   "maxX": -2.56,
+   "minZ": 11.6,
+   "maxZ": 12.4
+  },
+  {
+   "kind": "box",
+   "minX": -6.32,
+   "maxX": -4.22,
+   "minZ": 11.5,
+   "maxZ": 12.5
+  },
+  {
+   "kind": "box",
+   "minX": -12.42,
+   "maxX": -11.58,
+   "minZ": 9.98,
+   "maxZ": 12.42
+  },
+  {
+   "kind": "box",
+   "minX": -12.5,
+   "maxX": -11.5,
+   "minZ": 8.18,
+   "maxZ": 10.02
+  },
+  {
+   "kind": "box",
+   "minX": -12.46,
+   "maxX": -11.54,
+   "minZ": -10.44,
+   "maxZ": -8.74
+  },
+  {
+   "kind": "box",
+   "minX": -12.42,
+   "maxX": -11.58,
+   "minZ": -12.1,
+   "maxZ": -10.4
+  },
+  {
+   "kind": "box",
+   "minX": -12.44,
+   "maxX": -11.56,
+   "minZ": 6.22,
+   "maxZ": 8.22
+  },
+  {
+   "kind": "box",
+   "minX": -12.4,
+   "maxX": -11.6,
+   "minZ": 3.48,
    "maxZ": 6.26
   },
   {
    "kind": "box",
-   "minX": 4.15,
-   "maxX": 5.19,
-   "minZ": 5.76,
-   "maxZ": 6.24
+   "minX": -12.46,
+   "maxX": -11.54,
+   "minZ": 1.78,
+   "maxZ": 3.52
   },
   {
    "kind": "box",
-   "minX": -4.22,
-   "maxX": -3.14,
-   "minZ": 5.77,
-   "maxZ": 6.23
+   "minX": -12.4,
+   "maxX": -11.6,
+   "minZ": -0.98,
+   "maxZ": 1.82
   },
   {
    "kind": "box",
-   "minX": -5.38,
-   "maxX": -4.2,
-   "minZ": 5.78,
-   "maxZ": 6.22
+   "minX": -12.44,
+   "maxX": -11.56,
+   "minZ": -3.26,
+   "maxZ": -0.94
   },
   {
    "kind": "box",
-   "minX": -6.21,
-   "maxX": -5.36,
-   "minZ": 5.75,
-   "maxZ": 6.25
+   "minX": -12.52,
+   "maxX": -11.48,
+   "minZ": -4.78,
+   "maxZ": -3.22
   },
   {
    "kind": "box",
-   "minX": 3.32,
-   "maxX": 4.17,
-   "minZ": 5.76,
-   "maxZ": 6.24
+   "minX": -12.42,
+   "maxX": -11.58,
+   "minZ": -7.24,
+   "maxZ": -4.74
   },
   {
    "kind": "box",
-   "minX": 2.06,
-   "maxX": 3.34,
-   "minZ": 5.78,
-   "maxZ": 6.22
-  },
-  {
-   "kind": "box",
-   "minX": 1.3,
-   "maxX": 2.08,
-   "minZ": 5.76,
-   "maxZ": 6.24
-  },
-  {
-   "kind": "box",
-   "minX": 0.57,
-   "maxX": 1.32,
-   "minZ": 5.74,
-   "maxZ": 6.26
-  },
-  {
-   "kind": "box",
-   "minX": -0.59,
-   "maxX": 0.59,
-   "minZ": 5.79,
-   "maxZ": 6.21
-  },
-  {
-   "kind": "box",
-   "minX": -1.3,
-   "maxX": -0.57,
-   "minZ": 5.8,
-   "maxZ": 6.2
-  },
-  {
-   "kind": "box",
-   "minX": -2.13,
-   "maxX": -1.28,
-   "minZ": 5.8,
-   "maxZ": 6.2
-  },
-  {
-   "kind": "box",
-   "minX": -3.16,
-   "maxX": -2.11,
-   "minZ": 5.75,
-   "maxZ": 6.25
-  },
-  {
-   "kind": "box",
-   "minX": -6.21,
-   "maxX": -5.79,
-   "minZ": 4.99,
-   "maxZ": 6.21
-  },
-  {
-   "kind": "box",
-   "minX": -6.25,
-   "maxX": -5.75,
-   "minZ": 4.09,
-   "maxZ": 5.01
-  },
-  {
-   "kind": "box",
-   "minX": -6.23,
-   "maxX": -5.77,
-   "minZ": -5.22,
-   "maxZ": -4.37
-  },
-  {
-   "kind": "box",
-   "minX": -6.21,
-   "maxX": -5.79,
-   "minZ": -6.05,
-   "maxZ": -5.2
-  },
-  {
-   "kind": "box",
-   "minX": -6.22,
-   "maxX": -5.78,
-   "minZ": 3.11,
-   "maxZ": 4.11
-  },
-  {
-   "kind": "box",
-   "minX": -6.2,
-   "maxX": -5.8,
-   "minZ": 1.74,
-   "maxZ": 3.13
-  },
-  {
-   "kind": "box",
-   "minX": -6.23,
-   "maxX": -5.77,
-   "minZ": 0.89,
-   "maxZ": 1.76
-  },
-  {
-   "kind": "box",
-   "minX": -6.2,
-   "maxX": -5.8,
-   "minZ": -0.49,
-   "maxZ": 0.91
-  },
-  {
-   "kind": "box",
-   "minX": -6.22,
-   "maxX": -5.78,
-   "minZ": -1.63,
-   "maxZ": -0.47
-  },
-  {
-   "kind": "box",
-   "minX": -6.26,
-   "maxX": -5.74,
-   "minZ": -2.39,
-   "maxZ": -1.61
-  },
-  {
-   "kind": "box",
-   "minX": -6.21,
-   "maxX": -5.79,
-   "minZ": -3.62,
-   "maxZ": -2.37
-  },
-  {
-   "kind": "box",
-   "minX": -6.25,
-   "maxX": -5.75,
-   "minZ": -4.39,
-   "maxZ": -3.6
+   "minX": -12.5,
+   "maxX": -11.5,
+   "minZ": -8.78,
+   "maxZ": -7.2
   }
  ],
  "steps": [],
@@ -330,78 +330,78 @@
   "party": [
    [
     0,
-    0.0,
-    2.0
+    0,
+    4
    ],
    [
-    -1.5,
-    0.0,
-    2.2
+    -3,
+    0,
+    4.4
    ],
    [
-    1.5,
-    0.0,
-    2.2
+    3,
+    0,
+    4.4
    ],
    [
     0,
-    0.0,
-    2.8
+    0,
+    5.6
    ]
   ],
   "enemies": [
    [
-    -1.5,
-    0.0,
-    -3.5
+    -3,
+    0,
+    -7
    ],
    [
-    1.5,
-    0.0,
-    -3.5
+    3,
+    0,
+    -7
    ],
    [
     0,
-    0.0,
-    -2.3
+    0,
+    -4.6
    ],
    [
-    -2.6,
-    0.0,
-    -1.6
+    -5.2,
+    0,
+    -3.2
    ],
    [
-    2.6,
-    0.0,
-    -1.6
+    5.2,
+    0,
+    -3.2
    ],
    [
     0,
-    0.0,
-    -1.0
+    0,
+    -2
    ]
   ],
   "boss": [
    0,
-   0.0,
-   -2.4
+   0,
+   -4.8
   ],
   "npcs": [
    [
-    -4.4,
-    0.0,
-    -0.8
+    -8.8,
+    0,
+    -1.6
    ]
   ]
  },
  "view": [
   {
    "kind": "box",
-   "minX": -5.6,
-   "maxX": 5.6,
-   "minZ": -5.4,
-   "maxZ": 5.6
+   "minX": -11.2,
+   "maxX": 11.2,
+   "minZ": -10.8,
+   "maxZ": 11.2
   }
  ],
- "ceiling": 3.9
+ "ceiling": 7.8
 }

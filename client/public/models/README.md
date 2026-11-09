@@ -93,3 +93,16 @@ It bakes the materials to textures, adds pivots for the body, head, jaw, throat 
 the clips `idle`, `boss_strike`, `boss_sweep`, `skill`, `transform`, `armour_break`, `hit` and `death`, and
 exports the .glb. The manifest shows it at 4.8 m with its own materials (`toon: false`), turned 180° (it
 faces -X in Blender).
+
+## Rooms are played at twice their modelled size
+
+After exporting a room (and its layout), scale it: the characters are life-size, the rooms were modelled
+small. `tools/models/scale-room.mjs` scales the model, its lamps (intensity × factor², so each lights its
+part of the bigger room as before) and its layout file together:
+
+```bash
+cd tools/models && node scale-room.mjs room_1 2
+```
+
+All five rooms are at 2×. The game loads them in batches (rooms 1–2 with the characters open the game;
+rooms 3–4 with the Nemesis, then the Throne with Morvath, follow in the background).
