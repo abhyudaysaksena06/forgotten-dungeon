@@ -46,7 +46,7 @@ full room until `mini` is run again.
 | `room_1` | The Gate Courtyard | The artist's Blender 5.3 scene (`assets/blender/room_1.blend`), converted without Blender by `tools/blender/blend2room.py` (below) |
 | `room_2` … `room_5` | The other rooms | `tools/blender/prepare_room.py` (and `build_room_3.py`) |
 | `enemy_skeleton` | The skeletons | A rigged skeleton (2 clips) |
-| `boss_nemesis` | The Hell Nemesis, room 3's boss | A 78 MB, 1.9-million-triangle sculpt: `optimize.mjs full boss_nemesis --simplify 0.2 --ground` keeps 20% (372k triangles; at 2–10% the chest's highlights go faceted), its own PBR materials (`toon: false`) |
+| `boss_nemesis` | The Hell Nemesis, room 3's boss | A 78 MB, 1.9-million-triangle sculpt with no rig: `optimize.mjs full boss_nemesis --simplify 0.2 --ground` keeps 20% (372k triangles; at 2–10% the chest's highlights go faceted), its own PBR materials (`toon: false`); then `node rig-nemesis.mjs` (on the unrigged file) fits an 18-bone skeleton and keys 14 clips: idle, run, walk, a sword slash, an overhead two-handed strike, a horizontal sweep, the Hellfire Charge, the leaping Infernal Slam, the enraged roar, hit, stagger, guard, victory and death |
 | `boss_morvath_knight` | Morvath, the Shadow Knight (phase 1) | The Nemesis sculpt in Morvath's violet shadow-fire: `node variant.mjs boss_nemesis boss_morvath_knight --hue 292 --saturation 1.1 --brightness 0.92 --height 3.6` (the story calls the Nemesis his herald, wearing his likeness) |
 | `boss_morvath_dragon` | Morvath after the Change | The artist's dragon (below): `--simplify 0.5 --max 4096` keeps its 4K body textures and all 8 clips |
 | `char_kael`, `npc_healer`, `npc_smith`, `npc_king_ghost`, `npc_pip` | Kael, the cage's keepers, the camp | KayKit Adventurers (Kay Lousberg, **CC0**): Knight, Mage, Barbarian, Knight as a ghost, Barbarian with his mug, built by `tools/models/character.mjs` |
@@ -93,3 +93,16 @@ It bakes the materials to textures, adds pivots for the body, head, jaw, throat 
 the clips `idle`, `boss_strike`, `boss_sweep`, `skill`, `transform`, `armour_break`, `hit` and `death`, and
 exports the .glb. The manifest shows it at 4.8 m with its own materials (`toon: false`), turned 180° (it
 faces -X in Blender).
+
+## Rooms are played at twice their modelled size
+
+After exporting a room (and its layout), scale it: the characters are life-size, the rooms were modelled
+small. `tools/models/scale-room.mjs` scales the model, its lamps (intensity × factor², so each lights its
+part of the bigger room as before) and its layout file together:
+
+```bash
+cd tools/models && node scale-room.mjs room_1 2
+```
+
+All five rooms are at 2×. The game loads them in batches (rooms 1–2 with the characters open the game;
+rooms 3–4 with the Nemesis, then the Throne with Morvath, follow in the background).

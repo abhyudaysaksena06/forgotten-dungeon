@@ -6,7 +6,7 @@ import { AbilityBar, BossBar, EnemyList, HelpPanel, PartyPanel, Subtitle, TopBar
 import { BANNER_MS, bannersFor, cutInFor } from './banners.js';
 import { cuesFor } from './events.js';
 import { download, downloadAll } from './preload.js';
-import Scene, { modelUrls } from './scene/Scene.jsx';
+import Scene, { loadBatches } from './scene/Scene.jsx';
 import { morvathStrength } from './scene/MapView.jsx';
 import { CAGE, REACH, createWorld, gap, laneOf, nearestEnemy, yawTo } from './scene/world.js';
 
@@ -19,7 +19,7 @@ const PRELOAD_LIMIT_MS = 120000;
 // Covers the game until the preloader is done: the same words as the first loading line and how much
 // of the models has arrived; then, while each room's shaders compile, a second line.
 const mb = (bytes) => (bytes / 1e6).toFixed(1);
-function LoadingScreen() {
+function LoadingScreen({ room }) {
   const [d, setD] = useState({ ...download });
   useEffect(() => {
     const t = setInterval(() => setD({ ...download }), 150);
@@ -28,7 +28,7 @@ function LoadingScreen() {
   const share = d.done ? 1 : d.total ? Math.min(0.99, d.got / d.total) : 0;
   return (
     <div className="loading-screen" role="status" aria-live="polite">
-      <p className="font-mono text-sm text-ash">{d.done ? 'Raising the skeletons…' : 'Lighting the torches…'}</p>
+      <p className="font-mono text-sm text-ash">{room ? `Preparing ${room}…` : d.done ? 'Raising the skeletons…' : 'Lighting the torches…'}</p>
       <span className="load-bar" aria-hidden="true">
         <span style={{ width: `${Math.round(share * 100)}%` }} />
       </span>
@@ -110,15 +110,28 @@ export default function QuestGame({ session, onLeave }) {
   const [logOpen, setLogOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // The game shows once every model is loaded and every room's shaders are compiled (see Scene's
-  // preloader). A slow or broken connection never keeps a team out for more than PRELOAD_LIMIT_MS.
-  const [downloaded, setDownloaded] = useState(false);
-  const [preloaded, setPreloaded] = useState(false);
-  const markPreloaded = useCallback(() => setPreloaded(true), []);
+  // Models load in batches (Scene's loadBatches): the first (rooms 1 and 2, the characters, the map)
+  // opens the game once it is downloaded and its shaders compiled; rooms 3–4 and then the Throne
+  // follow in the background. A slow or broken connection never keeps a team out for more than
+  // PRELOAD_LIMIT_MS.
+  const [batches, setBatches] = useState(null);
+  const [loaded, setLoaded] = useState(0); // batches downloaded
+  const [warmed, setWarmed] = useState(0); // batches compiled
+  const [forced, setForced] = useState(false);
+  const preloaded = warmed >= 1 || forced;
+  const onWarmed = useCallback((n) => setWarmed((w) => Math.max(w, n)), []);
   useEffect(() => {
-    const t = setTimeout(markPreloaded, PRELOAD_LIMIT_MS);
+    const t = setTimeout(() => setForced(true), PRELOAD_LIMIT_MS);
     return () => clearTimeout(t);
-  }, [markPreloaded]);
+  }, []);
+  // The next batch starts downloading once the game is open and the one before has arrived.
+  const fetching = useRef(0);
+  useEffect(() => {
+    if (!batches || !preloaded || loaded >= batches.length || fetching.current > loaded) return;
+    fetching.current = loaded + 1;
+    const n = loaded;
+    downloadAll(batches[n].urls).then(() => setLoaded((l) => Math.max(l, n + 1)));
+  }, [batches, preloaded, loaded]);
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'F1') {
@@ -168,7 +181,10 @@ export default function QuestGame({ session, onLeave }) {
         setModels(manifest);
         // Download every model now (rooms, their map miniatures, the skeletons), counting bytes for
         // the loading screen; then Scene's preloader parses them and compiles the rooms.
-        downloadAll(modelUrls(manifest)).then(() => alive && setDownloaded(true));
+        const b = loadBatches(manifest, v.state);
+        setBatches(b);
+        fetching.current = 1;
+        downloadAll(b[0].urls).then(() => alive && setLoaded((l) => Math.max(l, 1)));
         apply(v);
       })
       .catch((err) => alive && onLeave(err.message));
@@ -448,10 +464,11 @@ export default function QuestGame({ session, onLeave }) {
     document.addEventListener('pointerlockchange', change);
     return () => document.removeEventListener('pointerlockchange', change);
   }, []);
-  // Menus need the cursor: give it back when a picker or the quest log opens, or the fight ends.
+  // Menus need the cursor: give it back when a picker or the quest log opens, or the fight ends
+  // (a won room keeps Kael walking to its cage, but the Journey list and the cage need the mouse).
   useEffect(() => {
-    if ((picker || logOpen || helpOpen || settingsOpen || !walking) && document.pointerLockElement) document.exitPointerLock?.();
-  }, [picker, logOpen, helpOpen, settingsOpen, walking]);
+    if ((picker || logOpen || helpOpen || settingsOpen || !walking || phase !== 'combat') && document.pointerLockElement) document.exitPointerLock?.();
+  }, [picker, logOpen, helpOpen, settingsOpen, walking, phase]);
   useEffect(() => {
     if (phase !== 'combat') return;
     const onKey = (e) => {
@@ -475,11 +492,17 @@ export default function QuestGame({ session, onLeave }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [phase]);
 
+  // A room whose batch is still loading in the background: a veil covers it (and the clock waits)
+  // until its models are in and its shaders compiled, so it never stutters on first sight.
+  const shownRoom = state?.combat?.roomId ?? (state?.cages ? state.location : null);
+  const roomBatch = shownRoom && batches ? batches.findIndex((b) => b.models.has(`room_${shownRoom.slice(1)}`)) : -1;
+  const roomWaiting = roomBatch >= warmed && !forced ? shownRoom : null;
+
   // The round clock. Restarts after every round; holds while a request is in flight, a picker or
   // the quest log is open, a banner is showing, the game window isn't in front, the loading screen
   // is still up, or the first-fight coach is teaching how to move and attack.
   const holdClock = useRef(false);
-  holdClock.current = busy || Boolean(picker) || logOpen || helpOpen || settingsOpen || banners.length > 0 || !preloaded || coach < 2;
+  holdClock.current = busy || Boolean(picker) || logOpen || helpOpen || settingsOpen || banners.length > 0 || !preloaded || Boolean(roomWaiting) || coach < 2;
   const turn = state?.turn;
   useEffect(() => {
     if (phase !== 'combat' || !autoRounds) {
@@ -548,12 +571,14 @@ export default function QuestGame({ session, onLeave }) {
           world={world}
           reach={reach}
           firstPerson={firstPerson}
-          preloaded={preloaded}
-          downloaded={downloaded}
-          onPreloaded={markPreloaded}
+          batches={batches}
+          loaded={loaded}
+          warmed={warmed}
+          onWarmed={onWarmed}
         />
       </div>
       {!preloaded && <LoadingScreen />}
+      {preloaded && roomWaiting && <LoadingScreen room={meta?.rooms?.[roomWaiting]?.name} />}
 
       <TopBar view={view} meta={meta} lowSpec={lowSpec} onLowSpec={toggleLowSpec} onLeave={() => onLeave()} sensitivity={sensitivity} onSensitivity={changeSensitivity} audio={audio} onAudio={changeAudio} firstPerson={firstPerson} onToggleView={toggleView} onHelp={() => setHelpOpen(true)} onMenu={setSettingsOpen} />
       {view.note && <div className="hud-note">{view.note}</div>}

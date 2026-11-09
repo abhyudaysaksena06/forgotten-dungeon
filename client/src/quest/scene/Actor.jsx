@@ -31,8 +31,8 @@ const GLB_CLIP = {
   block: ['block', 'hit'],
   interact: ['interact', 'skill'],
   victory: ['victory'],
-  charge: ['boss_strike', 'attack'],
-  slam: ['boss_sweep', 'skill', 'attack'],
+  charge: ['charge', 'boss_strike', 'attack'],
+  slam: ['slam', 'boss_sweep', 'skill', 'attack'],
 };
 const clipFor = (actions, kind) => (GLB_CLIP[kind] ?? []).map((k) => actions[k]).find(Boolean);
 
@@ -211,8 +211,8 @@ export function Actor({
         x = Math.sin(Math.PI * Math.min(1, p * 1.25)) * 2.6;
         lean = -Math.sin(Math.PI * p) * 0.3;
       }
-      // Infernal Slam: up, then down hard, then the shockwave rolls out.
-      if (cue.kind === 'slam') {
+      // Infernal Slam: up, then down hard, then the shockwave rolls out (a rigged model leaps itself).
+      if (cue.kind === 'slam' && !(useGlb && clips?.slam)) {
         y += p < 0.45 ? Math.sin((p / 0.45) * (Math.PI / 2)) * 0.9 : Math.max(0, 0.9 * (1 - (p - 0.45) / 0.12));
         lean = p < 0.45 ? 0.15 * (p / 0.45) : -0.25 * Math.max(0, 1 - (p - 0.45) / 0.3);
       }
@@ -228,12 +228,14 @@ export function Actor({
       if (shockMat.current) shockMat.current.opacity = on ? 0.85 * (1 - q) : 0;
     }
     if (aura.current) aura.current.opacity = 0.11 + Math.sin(t * 2.6 + seed) * 0.05;
-    if (rage.current) rage.current.intensity = enraged && !fallen ? 5 + Math.sin(t * 6 + seed) * 1.6 + Math.sin(t * 15.3) * 0.7 : 0;
+    if (rage.current) rage.current.opacity = 0.14 + Math.sin(t * 6 + seed) * 0.05 + Math.sin(t * 15.3) * 0.025;
     // Fallen: topple once the death cue has played (or straight away if there was none).
     const down = fallen && (!death || now >= death.at);
-    const targetRot = down ? -Math.PI / 2 : running && !strides ? -0.14 : lean; // lean into the run
+    // A model with its own death clip falls by itself; the stand-ins topple over.
+    const ownFall = Boolean(useGlb && clips?.death);
+    const targetRot = down && !ownFall ? -Math.PI / 2 : running && !strides ? -0.14 : lean; // lean into the run
     g.rotation.z += (targetRot - g.rotation.z) * 0.12;
-    g.position.set(x, down ? (flyer ? -0.9 : -0.05) : y, z);
+    g.position.set(x, down && !ownFall ? (flyer ? -0.9 : -0.05) : y, z);
     g.scale.setScalar(s);
 
     if (flash.current) {
@@ -299,8 +301,20 @@ export function Actor({
         <ringGeometry args={[0.8, 1.05, 48]} />
         <meshBasicMaterial ref={shockMat} color="#ff5a1f" transparent opacity={0} depthWrite={false} />
       </mesh>
-      {/* Enraged: hellfire glows inside it. Only then: every light in the scene costs every pixel. */}
-      {enraged && !fallen && <pointLight ref={rage} position={[0, 1.6, 0.3]} color="#ff3a12" intensity={5} distance={6} decay={1.8} />}
+      {/* Enraged: hellfire burns inside it. A glowing shell and a halo on the floor, not a light: a new
+          light mid-fight would make every material in the scene recompile, a freeze of a second or more. */}
+      {enraged && !fallen && (
+        <>
+          <mesh position={[0, height * 0.5, 0]} scale={[height * 0.32, height * 0.58, height * 0.32]}>
+            <sphereGeometry args={[1, 24, 16]} />
+            <meshBasicMaterial ref={rage} color="#ff3a12" transparent opacity={0.16} blending={AdditiveBlending} depthWrite={false} side={BackSide} />
+          </mesh>
+          <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[height * 0.45, 32]} />
+            <meshBasicMaterial color="#ff4a1a" transparent opacity={0.22} blending={AdditiveBlending} depthWrite={false} />
+          </mesh>
+        </>
+      )}
 
       {(selected || telegraphed) && (
         <mesh ref={ring} position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>

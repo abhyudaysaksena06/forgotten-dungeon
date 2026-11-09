@@ -4,7 +4,7 @@ import { Component, Suspense, useEffect, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
-import { ACESFilmicToneMapping, AgXToneMapping, AmbientLight, DirectionalLight, HemisphereLight, Scene as ThreeScene, Vector3 } from 'three';
+import { ACESFilmicToneMapping, AgXToneMapping, AmbientLight, DirectionalLight, HemisphereLight, PointLight, Scene as ThreeScene, Vector3 } from 'three';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { Arena, loadRoomLayout, prepareRoom } from './Arena.jsx';
 import { MapView } from './MapView.jsx';
@@ -70,7 +70,10 @@ function CameraRig({ view, world }) {
         Math.min(ceiling, Math.max(leader.y + 0.6, leader.y + CAMERA.height * Math.max(0.8, d / CAMERA.distance) + rise + tilt)),
         leader.z - fz * d + rz * shoulder,
       );
-      wantLook.current.set(leader.x + fx * ahead + rx * shoulder, leader.y + CAMERA.lookHeight, leader.z + fz * ahead + rz * shoulder);
+      // Mouse up and down aims the crosshair up and down: the point looked at rises and falls too
+      // (the camera alone rising barely moves the aim, and a low ceiling stops it).
+      const aimY = -Math.tan((world.camPitch ?? 0) * 0.9) * ahead;
+      wantLook.current.set(leader.x + fx * ahead + rx * shoulder, leader.y + CAMERA.lookHeight + aimY, leader.z + fz * ahead + rz * shoulder);
       const k = 1 - Math.pow(0.0004, dt); // close follow, still smooth
       camera.position.lerp(want.current, k);
       look.current.lerp(wantLook.current, k);
@@ -162,7 +165,7 @@ function CameraControls({ world, active }) {
       const s = LOOK_SENSITIVITY * (world.sensitivity ?? 1);
       world.camYaw -= e.movementX * s;
       if (world.firstPerson) world.fpPitch = Math.max(-1.3, Math.min(1.3, (world.fpPitch ?? 0) - e.movementY * s));
-      else world.camPitch = Math.max(-0.45, Math.min(0.8, (world.camPitch ?? 0) + e.movementY * s));
+      else world.camPitch = Math.max(-0.7, Math.min(0.8, (world.camPitch ?? 0) + e.movementY * s));
     };
     const move = (e) => {
       if (locked() || lastX === null || !e.buttons) return;
@@ -199,46 +202,84 @@ function CameraControls({ world, active }) {
 // game's light rig (one ambient, one hemisphere, two directional, no shadow), a skeleton, and
 // Blender's tone mapping. Entering a room then waits for neither a download nor a shader compile.
 const roomKeys = (models) => [...models.keys()].filter((k) => k.startsWith('room_'));
+const modelsMeta = { current: new Map() }; // the whole manifest, for the actors' options
+
+// The batches the game loads in: the first opens the game (the map's miniatures, the characters, the
+// skeletons, rooms 1 and 2); rooms 3 and 4 with the Nemesis follow, then the Throne with Morvath.
+// A run resumed inside a later room brings that room's batch forward into the first.
+const LATER = [
+  ['room_3', 'room_4', 'boss_nemesis'],
+  ['room_5', 'boss_morvath_knight', 'boss_morvath_dragon'],
+];
+export function loadBatches(models, state) {
+  modelsMeta.current = models;
+  const here = state?.combat?.roomId ?? (state?.location && state.location !== 'camp' ? state.location : null);
+  const hereKey = here ? `room_${here.slice(1)}` : null;
+  const later = LATER.map((keys) => keys.filter((k) => models.has(k)));
+  const forward = later.findIndex((keys) => keys.includes(hereKey));
+  const pick = (keys) => new Map(keys.map((k) => [k, models.get(k)]));
+  const laterKeys = new Set(later.flat());
+  const first = [...models.keys()].filter((k) => !laterKeys.has(k) || (forward >= 0 && later[forward].includes(k)));
+  const rest = later.map((keys, i) => (i === forward ? [] : keys)).filter((keys) => keys.length);
+  const batches = [first, ...rest].map(pick);
+  // Every map miniature comes with the first batch: the map shows all five rooms at once.
+  const minis = [...models.keys()].filter((k) => models.get(k)?.mini && !first.includes(k)).map((k) => `/models/${k}.mini.glb`);
+  return batches.map((b, i) => ({ models: b, urls: [...modelUrls(b), ...(i === 0 ? minis : [])] }));
+}
+// The characters any room may show (everything that isn't a room), among the given batches.
+export const actorKeys = (batches) => batches.flatMap((b) => [...b.models.keys()]).filter((k) => !k.startsWith('room_'));
 export function modelUrls(models) {
   return [...models.keys()].flatMap((k) => [`/models/${k}.glb`, ...(models.get(k)?.mini ? [`/models/${k}.mini.glb`] : [])]);
 }
 
-function Warmup({ models, lowSpec, onDone }) {
+// The game loads in batches (see loadBatches): the first one opens the game; the others download
+// and compile in the background while it is played. A batch's rooms are compiled with every
+// character that can stand in them (`actors`: the ones loaded so far plus the batch's own).
+function Warmup({ models, actors, lowSpec, onDone, background = false }) {
   const urls = modelUrls(models);
-  const loaded = useGLTF(urls); // suspends until every model is in
+  const actorUrls = actors.map((k) => `/models/${k}.glb`);
+  const loaded = useGLTF([...urls, ...actorUrls]); // suspends until every model is in
   const gl = useThree((s) => s.gl);
   const camera = useThree((s) => s.camera);
   const live = useThree((s) => s.scene);
   useEffect(() => {
     let alive = true;
     (async () => {
-      const byUrl = new Map(urls.map((u, i) => [u, loaded[i]]));
+      const all = [...urls, ...actorUrls];
+      const byUrl = new Map(all.map((u, i) => [u, loaded[i]]));
       await Promise.all(roomKeys(models).map(loadRoomLayout));
-      const villains = [...models.keys()]
-        .filter((k) => !k.startsWith('room_'))
-        .map((k) => {
-          const copy = cloneSkinned(byUrl.get(`/models/${k}.glb`).scene);
-          return models.get(k)?.toon === false ? copy : toonify(copy, { ramp: TOON_RAMP, outline: !lowSpec });
-        });
-      const tone = gl.toneMapping;
+      const villains = actors.map((k) => {
+        const copy = cloneSkinned(byUrl.get(`/models/${k}.glb`).scene);
+        return modelsMeta.current.get(k)?.toon === false ? copy : toonify(copy, { ramp: TOON_RAMP, outline: !lowSpec });
+      });
       for (const key of roomKeys(models)) {
         if (!alive) break;
         const room = byUrl.get(`/models/${key}.glb`).scene;
         prepareRoom(room, models.get(key)?.toon);
+        if (background && room.parent) continue; // on screen already: drawing it compiled it
         const home = room.parent; // a fight already showing this room gets it back afterwards
         const rig = new ThreeScene();
         rig.fog = live.fog;
-        rig.add(new AmbientLight(), new HemisphereLight(), new DirectionalLight(), new DirectionalLight(), room, ...villains);
+        // The fight's lights: the game's rig and Kael's torch (light counts are part of every shader).
+        rig.add(new AmbientLight(), new HemisphereLight(), new DirectionalLight(), new DirectionalLight(), new PointLight(), room, ...villains);
+        const tone = gl.toneMapping;
         gl.toneMapping = AgXToneMapping;
+        let done;
         try {
-          await gl.compileAsync(rig, camera);
+          done = gl.compileAsync(rig, camera); // builds every program now; only the wait is async
         } catch {
-          // a shader that fails here fails the same way in the fight; nothing to gain by stopping
+          done = null; // a shader that fails here fails the same way in the fight
+        }
+        gl.toneMapping = tone; // before any frame is drawn, so the live view never changes look
+        try {
+          await done;
+        } catch {
+          // as above
         }
         rig.remove(room, ...villains);
         home?.add(room);
+        if (background) await new Promise((r) => setTimeout(r, 50)); // let the game breathe between rooms
       }
-      gl.toneMapping = tone;
       if (alive) onDone();
     })();
     return () => {
@@ -265,7 +306,7 @@ class PreloadGuard extends Component {
   }
 }
 
-export default function Scene({ state, meta, models, cues, targetId, onTarget, onTravel, lowSpec, world, reach, firstPerson, preloaded, downloaded, onPreloaded }) {
+export default function Scene({ state, meta, models, cues, targetId, onTarget, onTravel, lowSpec, world, reach, firstPerson, batches, loaded, warmed, onWarmed }) {
   // A fight, or a cleared room whose cage is open, shows the room; anywhere else, the map.
   const view = state.phase === 'combat' || state.cages ? 'arena' : 'map';
   // In a Blender room its own lamps set the mood, so the generic fill lights step back.
@@ -279,11 +320,12 @@ export default function Scene({ state, meta, models, cues, targetId, onTarget, o
     <Canvas
       shadows={!lowSpec}
       dpr={lowSpec ? 1 : [1, 1.5]}
-      camera={{ fov: 50, position: MAP_VIEW.pos.toArray(), near: 0.1, far: 90 }}
+      camera={{ fov: 50, position: MAP_VIEW.pos.toArray(), near: 0.1, far: 140 }}
       onPointerMissed={() => (document.body.style.cursor = 'default')}
     >
       <color attach="background" args={[PALETTE.crypt]} />
-      <fog attach="fog" args={[PALETTE.crypt, 18, 40]} />
+      {/* The artist's rooms are played at twice their modelled size: the fog starts further out there. */}
+      <fog attach="fog" args={[PALETTE.crypt, blenderRoom ? 36 : 18, blenderRoom ? 85 : 40]} />
       {/* Bright, anime-style light: flat colour bands read clearly and the ink outlines show. */}
       <ambientLight intensity={blenderRoom ? 0.12 : 0.75} color="#b4bad4" />
       <ToneMapping blender={blenderRoom} />
@@ -301,10 +343,16 @@ export default function Scene({ state, meta, models, cues, targetId, onTarget, o
       />
       {/* Cool rim light from behind separates the characters from the dark walls. */}
       <directionalLight position={[4, 6, -9]} intensity={0.9 * fill} color="#8fb3ff" />
-      {!preloaded && downloaded && (
-        <PreloadGuard onDone={onPreloaded}>
+      {batches && loaded > warmed && (
+        <PreloadGuard key={warmed} onDone={() => onWarmed(warmed + 1)}>
           <Suspense fallback={null}>
-            <Warmup models={models} lowSpec={lowSpec} onDone={onPreloaded} />
+            <Warmup
+              models={batches[warmed].models}
+              actors={actorKeys(batches.slice(0, warmed + 1))}
+              lowSpec={lowSpec}
+              background={warmed > 0}
+              onDone={() => onWarmed(warmed + 1)}
+            />
           </Suspense>
         </PreloadGuard>
       )}

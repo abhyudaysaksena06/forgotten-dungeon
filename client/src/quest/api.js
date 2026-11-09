@@ -58,12 +58,26 @@ export async function questApi(path, options = {}) {
   return data;
 }
 
+// A request that never answers (a stalled connection, a server waking up) must not freeze the game:
+// after this long it fails like any other error, the toast says so, and play goes on.
+const TIMEOUT_MS = 15000;
+
 async function request(path, { method = 'GET', body, code } = {}) {
-  const res = await fetch(`/api/quest${path}`, {
-    method,
-    headers: { 'content-type': 'application/json', ...(code ? { 'x-team-code': code } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), TIMEOUT_MS);
+  let res;
+  try {
+    res = await fetch(`/api/quest${path}`, {
+      method,
+      headers: { 'content-type': 'application/json', ...(code ? { 'x-team-code': code } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: abort.signal,
+    });
+  } catch (err) {
+    throw new Error(err?.name === 'AbortError' ? 'The dungeon did not answer in time. Try again.' : 'The dungeon could not be reached. Check the connection and try again.');
+  } finally {
+    clearTimeout(timer);
+  }
   const data = await res.json().catch(() => ({ ok: false, error: { message: `Server replied ${res.status}.` } }));
   if (data.ok === false) throw Object.assign(new Error(data.error?.message ?? 'Request failed.'), { code: data.error?.code });
   return data;

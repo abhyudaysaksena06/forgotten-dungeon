@@ -2,205 +2,205 @@
  "bounds": [
   {
    "kind": "box",
-   "minX": -5.4,
-   "maxX": 5.4,
-   "minZ": -5.4,
-   "maxZ": 5.4
+   "minX": -10.8,
+   "maxX": 10.8,
+   "minZ": -10.8,
+   "maxZ": 10.8
   }
  ],
  "colliders": [
   {
    "kind": "box",
-   "minX": 5.5,
-   "maxX": 6.5,
-   "minZ": -1.985,
-   "maxZ": 1.985
+   "minX": 11,
+   "maxX": 13,
+   "minZ": -3.969,
+   "maxZ": 3.971
   },
   {
    "kind": "box",
-   "minX": -6.5,
-   "maxX": -5.5,
-   "minZ": -1.985,
-   "maxZ": 1.985
+   "minX": -13,
+   "maxX": -11,
+   "minZ": -3.969,
+   "maxZ": 3.971
   },
   {
    "kind": "box",
-   "minX": 5.7,
-   "maxX": 6.3,
-   "minZ": 5.7,
-   "maxZ": 6.3
+   "minX": 11.4,
+   "maxX": 12.6,
+   "minZ": 11.4,
+   "maxZ": 12.6
   },
   {
    "kind": "box",
-   "minX": 5.7,
-   "maxX": 6.3,
-   "minZ": -6.3,
-   "maxZ": -5.7
+   "minX": 11.4,
+   "maxX": 12.6,
+   "minZ": -12.6,
+   "maxZ": -11.4
   },
   {
    "kind": "box",
-   "minX": -6.3,
-   "maxX": -5.7,
-   "minZ": 5.7,
-   "maxZ": 6.3
+   "minX": -12.6,
+   "maxX": -11.4,
+   "minZ": 11.4,
+   "maxZ": 12.6
   },
   {
    "kind": "box",
-   "minX": -6.3,
-   "maxX": -5.7,
-   "minZ": -6.3,
-   "maxZ": -5.7
+   "minX": -12.6,
+   "maxX": -11.4,
+   "minZ": -12.6,
+   "maxZ": -11.4
   },
   {
    "kind": "box",
-   "minX": 5.757,
-   "maxX": 6.234,
-   "minZ": 2.0,
-   "maxZ": 6.0
+   "minX": 11.515,
+   "maxX": 12.468,
+   "minZ": 4,
+   "maxZ": 12
   },
   {
    "kind": "box",
-   "minX": 5.757,
-   "maxX": 6.234,
-   "minZ": -6.0,
-   "maxZ": -2.0
+   "minX": 11.515,
+   "maxX": 12.468,
+   "minZ": -12,
+   "maxZ": -4
   },
   {
    "kind": "box",
-   "minX": -2.0,
-   "maxX": 2.0,
-   "minZ": -6.243,
-   "maxZ": -5.766
+   "minX": -4,
+   "maxX": 4,
+   "minZ": -12.485,
+   "maxZ": -11.532
   },
   {
    "kind": "box",
-   "minX": 2.0,
-   "maxX": 6.0,
-   "minZ": -6.243,
-   "maxZ": -5.766
+   "minX": 4,
+   "maxX": 12,
+   "minZ": -12.485,
+   "maxZ": -11.532
   },
   {
    "kind": "box",
-   "minX": -2.0,
-   "maxX": 2.0,
-   "minZ": 5.757,
-   "maxZ": 6.234
+   "minX": -4,
+   "maxX": 4,
+   "minZ": 11.515,
+   "maxZ": 12.468
   },
   {
    "kind": "box",
-   "minX": 2.0,
-   "maxX": 6.0,
-   "minZ": 5.757,
-   "maxZ": 6.234
+   "minX": 4,
+   "maxX": 12,
+   "minZ": 11.515,
+   "maxZ": 12.468
   },
   {
    "kind": "box",
-   "minX": -6.234,
-   "maxX": -5.757,
-   "minZ": 2.0,
-   "maxZ": 6.0
+   "minX": -12.468,
+   "maxX": -11.513,
+   "minZ": 4,
+   "maxZ": 12
   },
   {
    "kind": "box",
-   "minX": -6.234,
-   "maxX": -5.757,
-   "minZ": -6.0,
-   "maxZ": -2.0
+   "minX": -12.468,
+   "maxX": -11.513,
+   "minZ": -12,
+   "maxZ": -4
   },
   {
    "kind": "box",
-   "minX": -6.0,
-   "maxX": -2.0,
-   "minZ": -6.229,
-   "maxZ": -5.485
+   "minX": -12,
+   "maxX": -4,
+   "minZ": -12.457,
+   "maxZ": -10.971
   },
   {
    "kind": "box",
-   "minX": -6.0,
-   "maxX": -2.0,
-   "minZ": 5.485,
-   "maxZ": 6.229
+   "minX": -12,
+   "maxX": -4,
+   "minZ": 10.971,
+   "maxZ": 12.459
   },
   {
    "kind": "box",
-   "minX": -5.1,
-   "maxX": -4.5,
-   "minZ": 3.9,
-   "maxZ": 4.5
+   "minX": -10.2,
+   "maxX": -9,
+   "minZ": 7.8,
+   "maxZ": 9
   },
   {
    "kind": "box",
-   "minX": 4.5,
-   "maxX": 5.1,
-   "minZ": 3.9,
-   "maxZ": 4.5
+   "minX": 9,
+   "maxX": 10.2,
+   "minZ": 7.8,
+   "maxZ": 9
   },
   {
    "kind": "box",
-   "minX": 5.96,
-   "maxX": 6.04,
-   "minZ": -0.88,
-   "maxZ": 0.88
+   "minX": 11.92,
+   "maxX": 12.08,
+   "minZ": -1.76,
+   "maxZ": 1.76
   },
   {
    "kind": "box",
-   "minX": -6.04,
-   "maxX": -5.96,
-   "minZ": -0.88,
-   "maxZ": 0.88
+   "minX": -12.08,
+   "maxX": -11.92,
+   "minZ": -1.76,
+   "maxZ": 1.76
   }
  ],
  "steps": [],
  "spawns": {
   "party": [
    [
-    -2.25,
-    0.0,
-    4.0
+    -4.5,
+    0,
+    8
    ],
    [
-    -0.75,
-    0.0,
-    4.0
+    -1.5,
+    0,
+    8
    ],
    [
-    0.75,
-    0.0,
-    4.0
+    1.5,
+    0,
+    8
    ],
    [
-    2.25,
-    0.0,
-    4.0
+    4.5,
+    0,
+    8
    ]
   ],
   "enemies": [
    [
-    -1.5,
-    0.0,
-    -3.5
+    -3,
+    0,
+    -7
    ],
    [
-    1.5,
-    0.0,
-    -3.5
+    3,
+    0,
+    -7
    ],
    [
     0,
-    0.0,
-    -4
+    0,
+    -8
    ]
   ],
   "boss": [
    0,
-   0.0,
-   -3.6
+   0,
+   -7.2
   ],
   "npcs": [
    [
-    -4.6,
-    0.0,
-    -1.8
+    -9.2,
+    0,
+    -3.6
    ]
   ]
  }
