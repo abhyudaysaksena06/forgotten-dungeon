@@ -172,8 +172,8 @@ export const NEMESIS = { every: 3, enragedEvery: 2, enrageAt: 0.5, enragedAtk: 1
 export const HOLLOW_KING = { roarAt: 0.5, summon: 2 };
 
 // Difficulty rises with the room's tier and with how far the run has progressed.
-export const TIER_SCALE = 0.12;
-export const PROGRESS_SCALE = 0.06;
+export const TIER_SCALE = 0.15;
+export const PROGRESS_SCALE = 0.07;
 // Morvath grows by this share for every room cleared beyond the three that open the Throne, so
 // clearing everything first earns XP but also wakes him further.
 export const FINAL_GROWTH = 0.35;

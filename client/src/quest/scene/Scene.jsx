@@ -129,13 +129,16 @@ function CameraControls({ world, active }) {
       return;
     }
     let lastX = null;
+    let lastY = null;
     const locked = () => document.pointerLockElement === el;
     // Mouse buttons: right = attack (also left while the mouse is captured), middle = Rune Strike,
     // back / forward side buttons = skill / defend. See world.onMouse in QuestGame.
     const down = (e) => {
-      if (e.button === 2 || e.button === 1 || e.button === 3 || e.button === 4) {
+      // On a Mac trackpad, Ctrl+click is the right click: it attacks too.
+      const button = e.button === 0 && e.ctrlKey ? 2 : e.button;
+      if (button === 2 || button === 1 || button === 3 || button === 4) {
         e.preventDefault();
-        world.onMouse?.(e.button);
+        world.onMouse?.(button);
         return;
       }
       if (locked()) {
@@ -143,6 +146,7 @@ function CameraControls({ world, active }) {
         return;
       }
       lastX = e.clientX;
+      lastY = e.clientY;
     };
     const noMenu = (e) => e.preventDefault();
     // Capture the mouse with raw input (no OS acceleration, like a shooter); fall back to plain
@@ -163,16 +167,27 @@ function CameraControls({ world, active }) {
       if (Math.abs(e.movementX) > 300 || Math.abs(e.movementY) > 300) return;
       const s = LOOK_SENSITIVITY * (world.sensitivity ?? 1);
       world.camYaw -= e.movementX * s;
-      if (world.firstPerson) world.fpPitch = Math.max(-1.3, Math.min(1.3, (world.fpPitch ?? 0) - e.movementY * s));
-      else world.camPitch = Math.max(-0.7, Math.min(0.8, (world.camPitch ?? 0) + e.movementY * s));
+      if (world.firstPerson) world.fpPitch = Math.max(-1.5, Math.min(1.5, (world.fpPitch ?? 0) - e.movementY * s));
+      else world.camPitch = Math.max(-1.25, Math.min(1.3, (world.camPitch ?? 0) + e.movementY * s));
     };
     const move = (e) => {
       if (locked() || lastX === null || !e.buttons) return;
-      world.camYaw -= (e.clientX - lastX) * 0.006 * (world.sensitivity ?? 1);
+      // Dragging with a button held turns and tilts, like mouse look.
+      const s = 0.006 * (world.sensitivity ?? 1);
+      world.camYaw -= (e.clientX - lastX) * s;
+      if (lastY !== null) {
+        const dy = e.clientY - lastY;
+        if (world.firstPerson) world.fpPitch = Math.max(-1.5, Math.min(1.5, (world.fpPitch ?? 0) - dy * s));
+        else world.camPitch = Math.max(-1.25, Math.min(1.3, (world.camPitch ?? 0) + dy * s));
+      }
       lastX = e.clientX;
+      lastY = e.clientY;
     };
     document.addEventListener('mousemove', look);
-    const up = () => (lastX = null);
+    const up = () => {
+      lastX = null;
+      lastY = null;
+    };
     el.addEventListener('click', click);
     el.addEventListener('contextmenu', noMenu);
     const wheel = (e) => {
