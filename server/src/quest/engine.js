@@ -163,7 +163,7 @@ export function finalScale(state) {
 }
 
 export function enemyScale(state, roomId) {
-  return 1 + TIER_SCALE * (ROOMS[roomId].tier - 1) + PROGRESS_SCALE * state.stats.roomsCleared;
+  return (1 + TIER_SCALE * (ROOMS[roomId].tier - 1) + PROGRESS_SCALE * state.stats.roomsCleared) * (ROOMS[roomId].ease ?? 1);
 }
 
 export function throneOpen(state) {

@@ -43,6 +43,10 @@ const MOVE_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowlef
 // out anyway (a plain "wait" input, saved and replayed like any other), so the
 // enemies keep fighting. It pauses whenever the player is busy elsewhere.
 const ROUND_SECONDS = 6;
+// A boss doesn't wait for you: in a fight with a boss the clock always runs, faster, and the first
+// blow comes moments after the fight is ready.
+const BOSS_ROUND_SECONDS = 3.5;
+const BOSS_FIRST_SECONDS = 1.5;
 const AUTO_KEY = 'forgotten-dungeon.autorounds';
 const COACH_KEY = 'forgotten-dungeon.coach';
 const readCoach = () => {
@@ -403,7 +407,7 @@ export default function QuestGame({ session, onLeave }) {
     if (phase !== 'combat') return;
     const tick = () => {
       // With the mouse captured, aim with the crosshair: the enemy under it on screen becomes the target.
-      const aimedId = document.pointerLockElement || world.firstPerson ? world.aimedId : null;
+      const aimedId = world.aimedId; // the crosshair aims, mouse captured or not
       const sighted = aimedId ? living.find((e) => e.id === aimedId && canReach(e)) : null;
       if (sighted && sighted.id !== targetId) setTargetId(sighted.id);
       const near = nearestEnemy(world, living, canReach)?.id ?? null;
@@ -427,13 +431,27 @@ export default function QuestGame({ session, onLeave }) {
   // Rune Strike goes at Morvath when he is in the room, else at the current target.
   const runeTarget = living.find((e) => e.ultimate) ?? target;
 
+  const lastAir = useRef(0);
+  const swingAir = (type) => {
+    const now = performance.now();
+    if (!me || me.fallen || !EARLY_KIND[type] || now - lastAir.current < 450) return;
+    lastAir.current = now;
+    const cue = { id: me.id, kind: EARLY_KIND[type], at: now };
+    playCues([cue]);
+    setCues((old) => [...old.filter((c) => c.at > now - 6000), cue]);
+  };
   // Anything that hits an enemy needs the leader close enough; the leader turns to face it.
   const strikeAt = (enemy, action) => {
-    if (!enemy) return setToast('No enemy in sight.');
+    if (!enemy) {
+      swingAir(action.type);
+      return setToast('No enemy in sight.');
+    }
     if (!canReach(enemy)) return setToast(`${me.name} can’t reach a flying enemy.`);
     if (gap(world, enemy.id) > reach) {
+      // Out of reach: the blade still swings (it cuts only air: no damage, and no turn spent).
       setTargetId(enemy.id);
-      return setToast(`Too far from ${enemy.name}: move closer (WASD).`);
+      swingAir(action.type);
+      return setToast(`Out of reach of ${enemy.name}: get closer to land a hit (WASD).`);
     }
     const l = world.actors.get(world.leaderId);
     const a = world.actors.get(enemy.id);
@@ -551,12 +569,18 @@ export default function QuestGame({ session, onLeave }) {
   const holdClock = useRef(false);
   holdClock.current = busy || Boolean(picker) || logOpen || helpOpen || settingsOpen || banners.length > 0 || !preloaded || Boolean(roomWaiting) || coach < 2;
   const turn = state?.turn;
+  const bossFight = Boolean(state?.combat?.enemies.some((e) => e.boss && e.hp > 0));
+  const bossWave = bossFight ? `${state.combat.roomId}:${state.combat.waveIndex}` : null;
+  const bossStarted = useRef(null);
   useEffect(() => {
-    if (phase !== 'combat' || !autoRounds) {
+    if (phase !== 'combat' || (!autoRounds && !bossFight)) {
       setClock(null);
       return;
     }
-    let left = ROUND_SECONDS;
+    const period = bossFight ? BOSS_ROUND_SECONDS : ROUND_SECONDS;
+    const first = bossFight && bossStarted.current !== bossWave;
+    bossStarted.current = bossWave;
+    let left = first ? BOSS_FIRST_SECONDS : period;
     let last = performance.now();
     const t = setInterval(() => {
       const now = performance.now();
@@ -565,13 +589,13 @@ export default function QuestGame({ session, onLeave }) {
       if (holdClock.current || document.hidden || !document.hasFocus()) return setClock({ left, paused: true });
       left -= dt;
       if (left <= 0) {
-        left = ROUND_SECONDS;
+        left = period;
         handlers.current.act({ type: 'wait' });
       }
       setClock({ left: Math.max(0, left), paused: false });
     }, 200);
     return () => clearInterval(t);
-  }, [phase, autoRounds, turn]);
+  }, [phase, autoRounds, turn, bossFight, bossWave]);
 
   const toggleAuto = () =>
     setAutoRounds((v) => {
@@ -655,8 +679,9 @@ export default function QuestGame({ session, onLeave }) {
           </div>
         </div>
       )}
-      {phase === 'combat' && firstPerson && !mouseLook && <div className={`crosshair ${aim.onTarget ? 'on-target' : ''}`} aria-hidden="true" />}
-      {phase === 'combat' && (mouseLook ? <div className={`crosshair ${aim.onTarget ? 'on-target' : ''}`} aria-hidden="true" /> : <p className="look-hint">Click the view to look around with the mouse · Esc frees the cursor</p>)}
+      {/* The crosshair is always up in a fight: what's under it is the target. */}
+      {phase === 'combat' && <div className={`crosshair ${aim.onTarget ? 'on-target' : ''}`} aria-hidden="true" />}
+      {phase === 'combat' && !mouseLook && <p className="look-hint">Click the view to look around with the mouse · Esc frees the cursor</p>}
       {banners[0] && <Banner key={`${banners[0].title}-${banners.length}-${state.turn}`} banner={banners[0]} />}
 
       {state.phase === 'combat' && (

@@ -103,12 +103,14 @@ export const ENEMIES = {
   morvath: { name: 'Morvath, the Shadow Knight', model: 'boss_morvath_knight', hp: 350, atk: 34, def: 8, boss: true, ultimate: true },
 };
 
+// `ease`: the room's enemies at this share of their usual strength (round 2's skeletons are a step
+// down, so the climb from round 1 is gentler).
 // The rulebook's five rounds, one room each. Rooms 1–4: six skeletons (room 3: then the Hell
 // Nemesis; room 4: then the Hollow King). Room 5: six skeleton guards, then Morvath.
 const SKELETONS = Array(6).fill('skeleton');
 export const ROOMS = {
   r1: { round: 1, roundName: 'The Entrance', name: 'The Gate Courtyard', tier: 1, model: 'room_1', npc: 'grum', waves: [SKELETONS], loot: { gold: 40, potions: 1 } },
-  r2: { round: 2, roundName: 'The Forgotten Hall', name: 'The Hall of Portraits', tier: 2, model: 'room_2', npc: 'ilsa', waves: [SKELETONS], loot: { gold: 60, potions: 1 } },
+  r2: { round: 2, roundName: 'The Forgotten Hall', name: 'The Hall of Portraits', tier: 2, model: 'room_2', npc: 'ilsa', ease: 0.95, waves: [SKELETONS], loot: { gold: 60, potions: 1 } },
   r3: { round: 3, roundName: 'The Trial Chambers', name: 'The Hall of Trials', tier: 3, model: 'room_3', npc: 'seraphine', waves: [SKELETONS, ['nemesis']], loot: { gold: 80, potions: 2 } },
   r4: { round: 4, roundName: 'The Shadow Depths', name: 'The Hollow Barracks', tier: 4, model: 'room_4', npc: 'corin', waves: [SKELETONS, ['hollow_king']], loot: { gold: 100, potions: 2 } },
   r5: { round: 5, roundName: 'The Boss Round', name: 'The Throne of Eternity', tier: 6, model: 'room_5', npc: 'king', waves: [Array(6).fill('skeleton_guard'), ['morvath']], loot: { gold: 0, potions: 0 }, final: true },
@@ -176,7 +178,8 @@ export const PROGRESS_SCALE = 0.06;
 // clearing everything first earns XP but also wakes him further.
 export const FINAL_GROWTH = 0.35;
 
-export const XP_PER_TIER = 70;
+// (100: clearing round 1 brings Kael to level 2 before round 2.)
+export const XP_PER_TIER = 100;
 export const LEVEL_GROWTH = 0.08;
 
 // Camp preparations. Each is a readiness choice the random forest judges.
