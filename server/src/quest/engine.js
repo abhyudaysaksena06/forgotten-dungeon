@@ -994,6 +994,8 @@ export function step(prev, action, { mutate = false } = {}) {
     else {
       const isRoute = ['travel', 'rest', 'altar', 'forge'].includes(action.type);
       need(isRoute, 'bad_action', 'On the map you can travel, rest, use the altar or forge, trade with Pip, visit a cleared room’s Healer and Weaponsmith, or eat and drink.');
+      // A journey to nowhere is refused before it is recorded (the record reads the destination).
+      if (action.type === 'travel') need(typeof action.to === 'string' && (action.to === CAMP || Object.hasOwn(ROOMS, action.to)), 'bad_place', 'No such place.');
       recordDecision(state, action);
       if (action.type === 'travel') travel(state, action);
       else powerUp(state, action);
