@@ -14,7 +14,7 @@ cleared (+12% per tier above 1, +6% per room cleared).
 | 0 s | **BATTLE START!** banner (1.5 s). The narrator sets the scene in the dialogue box. The quest tracker shows the room's quest. Kael stands at the south spawn, the skeletons to the north, and the room's **cage** (Healer and Weaponsmith behind locked bars) at the side. |
 | From 0 s | The skeletons start walking toward Kael at once. His shield takes their blows before his health does. |
 | Each round | The player acts (F, right-click, E, Q, R, H, G) or, after **6 s** of doing nothing, the round plays out anyway. Kael acts, then the skeletons; the animations take about 2–2.5 s (0.3 s per fighter). Every blow that lands dulls and wears the Iron Sword. |
-| Six skeletons | Rooms 1–4 hold six skeletons; only room 3 has a boss, the **Hell Nemesis**, who steps out after all six are down. Three stand at the room's enemy spawns, the rest in a row behind them. |
+| Six skeletons | Rooms 1–4 hold six skeletons; rooms 3 and 4 have a boss who steps out after all six are down: the **Hell Nemesis** and the **Hollow King**. Three stand at the room's enemy spawns, the rest in a row behind them. |
 | Last skeleton down | **VICTORY!** (1.7 s) with "The cage is open" (or "The cage stays shut: n broken runes left in this round" while the round's bugs are still in the code), then **QUEST CLEAR!** (2.2 s), then **LEVEL UP!** (1.5 s) if Kael levelled. A Heart fragment, gold, potions and XP. The room stays on screen: the cage doors swing open once the round has no broken runes. |
 | The open cage | Opens only when the room is cleared **and** the round's glitches (bugs) are fixed in the code. Walk up to the Healer's door and press **E** (health and shield back to full), then to the Weaponsmith's (sharpness and durability back to full). Free, and open again whenever Kael comes back. Then choose the next room from the Journey list. |
 | Kael falls | **DEFEATED…** (1.9 s). He wakes at the camp at 30% health and shield, minus 2 torches and half the gold. The room resets. |
@@ -76,9 +76,17 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
 - **Getting there:** 2 torches from the camp (through the Hall of Portraits).
 - **On entering:** chains sway overhead; six skeletons stand to attention. Quest: **The Last Loyal Knight**.
 - **Room:** a high barracks hall with two rows of piers, a ringed floor and chains overhead.
-- **Enemies:** 6 Skeletons, 36% stronger than in room 1 (plus progress).
-- **Length:** not measured: the careful planner goes from three rooms to the Throne, so it never
-  came here in 200 runs (a fourth room also makes Morvath 35% stronger).
+- **Enemies:** 6 Skeletons, 36% stronger than in room 1 (plus progress). Only when all six are down
+  does the **Hollow King** rise (**BOSS BATTLE!** banner): the barracks' dead king, crowned by Morvath
+  in hollow iron, 3.4 m tall. 110 HP, ATK 16, DEF 4 before scaling. Kael catches his breath first
+  (full shield, +25% health). His moves:
+  - **Shadow Tide**, every third round: he raises a tide over **two of the three lanes** (they glow
+    venom green, "Move out!"), and the next round plunges his blade into the floor and floods them
+    for 0.8× his attack **plus poison** (4 a round for 3 rounds). Stand in the dry lane.
+  - **The roar**, below half health, once: two Skeletons claw out of the floor. The room is not won
+    while they stand.
+- **Length:** about **42 rounds** (40–45), 18 of them against the King. Kael ends about half down
+  on health; 19% of first attempts win (going r1 → r2 → r4).
 - **Reward:** fragment, 100 gold, 2 potions, 280 XP. *"Their line is broken. The Fortress Gate is open."*
 
 ## Level 5 — The Throne of Eternity (Round 5, "The Boss Round")

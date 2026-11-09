@@ -34,6 +34,8 @@ const GLB_CLIP = {
   charge: ['charge', 'boss_strike', 'attack'],
   slam: ['slam', 'boss_sweep', 'skill', 'attack'],
 };
+// Bosses whose 'skill' is the Shadow Tide: a poisoned ring rolls out across the floor.
+const TIDE_CASTERS = new Set(['boss_hollow_king']);
 const clipFor = (actions, kind) => (GLB_CLIP[kind] ?? []).map((k) => actions[k]).find(Boolean);
 
 function activeCue(cues, now) {
@@ -200,7 +202,8 @@ export function Actor({
         if (!strides) lean = -arc * 0.18; // a sculpt leans into the blow
       }
       if (cue.kind === 'victory') y += arc * 0.3;
-      if (cue.kind === 'skill' || cue.kind === 'transform') {
+      // (A rigged model with its own clip for the move does it itself: the Hollow King's Shadow Tide.)
+      if ((cue.kind === 'skill' || cue.kind === 'transform') && !(useGlb && clips?.[cue.kind])) {
         x = arc * 0.4;
         y += arc * 0.35;
       }
@@ -221,11 +224,16 @@ export function Actor({
       if (cue.kind === 'defend') s = 1 + arc * 0.05;
     }
     if (shock.current) {
-      const on = cue?.kind === 'slam' && p > 0.5;
+      // The Infernal Slam's hellfire ring, or the Shadow Tide spreading from where the blade went in.
+      const tide = cue?.kind === 'skill' && TIDE_CASTERS.has(modelKey);
+      const on = (cue?.kind === 'slam' || tide) && p > 0.5;
       const q = on ? (p - 0.5) / 0.5 : 0;
       shock.current.visible = on;
-      shock.current.scale.setScalar(0.5 + q * 5.5);
-      if (shockMat.current) shockMat.current.opacity = on ? 0.85 * (1 - q) : 0;
+      shock.current.scale.setScalar(0.5 + q * (tide ? 8 : 5.5));
+      if (shockMat.current) {
+        shockMat.current.opacity = on ? 0.85 * (1 - q) : 0;
+        shockMat.current.color.set(tide ? PALETTE.venom : '#ff5a1f');
+      }
     }
     if (aura.current) aura.current.opacity = 0.11 + Math.sin(t * 2.6 + seed) * 0.05;
     if (rage.current) rage.current.opacity = 0.14 + Math.sin(t * 6 + seed) * 0.05 + Math.sin(t * 15.3) * 0.025;

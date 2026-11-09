@@ -53,8 +53,10 @@ function CameraRig({ view, world }) {
         const shapes = Array.isArray(area) ? area : [area];
         while (d > 0.8 && !shapes.some((s) => insideShape(s, leader.x - fx * d, leader.z - fz * d, 0.3))) d -= 0.25;
       }
-      // Pulled in by a wall, it rises instead, looking down more steeply, so the fight stays in view.
-      const rise = Math.max(0, world.camDist - d) * 0.9;
+      // Pulled in by a wall, it rises instead, so the fight stays in view: a little, not so far that it
+      // stares down at the floor (in the Hollow Barracks Kael starts with a wall at his back, and a
+      // tall rise hid the Hollow King above the top of the screen).
+      const rise = Math.min(1, Math.max(0, world.camDist - d) * 0.3);
       // Mouse-look tilt (world.camPitch) orbits the camera up and down around the leader.
       const tilt = (world.camPitch ?? 0) * d;
       // Over the shoulder: the camera sits a little to the leader's right and looks well past them,
@@ -62,12 +64,12 @@ function CameraRig({ view, world }) {
       // The look-ahead shrinks when a wall pulls the camera in, so the hero stays on screen.
       const [rx, rz] = rightOf(world.camYaw);
       const shoulder = Math.min(0.9, 0.3 + d * 0.1);
-      const ahead = 1.2 + d * 0.6; // far enough to see the fight, near enough to keep Kael in frame
+      const ahead = 1.2 + Math.max(d, 4) * 0.6; // far enough to see the fight, near enough to keep Kael in frame
       // ...but never up into a low ceiling.
       const ceiling = (world.room.ceiling ?? Infinity) - 0.25;
       want.current.set(
         leader.x - fx * d + rx * shoulder,
-        Math.min(ceiling, Math.max(leader.y + 0.6, leader.y + CAMERA.height * Math.max(0.8, d / CAMERA.distance) + rise + tilt)),
+        Math.min(ceiling, Math.max(leader.y + 0.6, leader.y + CAMERA.height * Math.max(d < world.camDist ? 0.35 : 0.8, d / CAMERA.distance) + rise + tilt)),
         leader.z - fz * d + rz * shoulder,
       );
       // Mouse up and down aims the crosshair up and down: the point looked at rises and falls too
@@ -205,10 +207,11 @@ const roomKeys = (models) => [...models.keys()].filter((k) => k.startsWith('room
 const modelsMeta = { current: new Map() }; // the whole manifest, for the actors' options
 
 // The batches the game loads in: the first opens the game (the map's miniatures, the characters, the
-// skeletons, rooms 1 and 2); rooms 3 and 4 with the Nemesis follow, then the Throne with Morvath.
+// skeletons, rooms 1 and 2); rooms 3 and 4 with the Nemesis and the Hollow King follow, then the
+// Throne with Morvath.
 // A run resumed inside a later room brings that room's batch forward into the first.
 const LATER = [
-  ['room_3', 'room_4', 'boss_nemesis'],
+  ['room_3', 'room_4', 'boss_nemesis', 'boss_hollow_king'],
   ['room_5', 'boss_morvath_knight', 'boss_morvath_dragon'],
 ];
 export function loadBatches(models, state) {

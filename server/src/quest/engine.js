@@ -19,6 +19,7 @@ import {
   MEAL_HEAL,
   MORVATH,
   NEMESIS,
+  HOLLOW_KING,
   NPCS,
   PARTY_ORDER,
   PIP,
@@ -215,6 +216,7 @@ function startWave(state) {
     say(state, `${controlled(state).name} catches his breath (+${Math.round(BREATHER_HEAL * 100)}% health) and raises his shield again.`);
   }
   if (state.combat.enemies.some((e) => e.kind === 'nemesis')) say(state, NEMESIS_LINE);
+  if (state.combat.enemies.some((e) => e.kind === 'hollow_king')) say(state, HOLLOW_KING_LINE);
   const morvath = state.combat.enemies.find((e) => e.ultimate);
   if (morvath) telegraphMorvath(state, createRng(state), morvath);
 }
@@ -702,6 +704,7 @@ function endOfRound(state, rng) {
   }
   state.combat.bulwark = false;
   for (const e of liveEnemies(state)) if (e.kind === 'nemesis') nemesisEnrage(state, e);
+  for (const e of liveEnemies(state)) if (e.kind === 'hollow_king') hollowKingRoar(state, e);
   bossMechanics(state, rng);
   const boss = state.combat.enemies.find((e) => e.ultimate && e.hp > 0);
   if (boss) {
@@ -770,6 +773,20 @@ function nemesisTurn(state, rng, e) {
   const hit = alive(state).filter((h) => d.lanes.includes(h.lane));
   if (!hit.length) say(state, 'It hits nothing but stone.');
   for (const h of hit) hurt(state, h, d.damage, e.name);
+}
+
+// ---------- the Hollow King ----------
+
+const HOLLOW_KING_LINE = 'The dead king of the barracks rises in his hollow crown. Morvath left him here to keep the Depths.';
+
+// Below half health, once: he roars, and the barracks' dead answer.
+function hollowKingRoar(state, e) {
+  if (e.roared || e.hp >= e.maxHp * HOLLOW_KING.roarAt) return;
+  e.roared = true;
+  const summoned = Array.from({ length: HOLLOW_KING.summon }, (_, i) => spawn(state, 'skeleton_risen', i, `summon${state.combat.round}`));
+  state.combat.enemies.push(...summoned);
+  nameDuplicates(state.combat.enemies.filter((x) => x.kind === 'skeleton_risen'));
+  say(state, `${e.name} roars, and the barracks answer: two Skeletons claw out of the floor!`);
 }
 
 // The room bosses' tells, decided at the end of a round for the next one.
