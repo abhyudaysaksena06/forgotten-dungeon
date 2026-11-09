@@ -227,7 +227,7 @@ export function PartyPanel({ party, meta, inFight }) {
 // ---------- enemies (minions; the boss has its bar) ----------
 
 export function EnemyList({ state, targetId, onTarget }) {
-  const list = state.combat.enemies.filter((e) => !e.boss);
+  const list = state.combat.enemies.filter((e) => !e.boss && e.hp > 0); // the beaten are gone from the list too
   if (!list.length) return null;
   return (
     <section className="hud-foes" aria-label="Enemies">

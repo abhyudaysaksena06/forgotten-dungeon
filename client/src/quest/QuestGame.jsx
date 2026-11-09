@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useGLTF } from '@react-three/drei';
 import { loadModelManifest, loadQuestMeta, questApi } from './api.js';
 import { applySettings, play, playCues, readAudioSettings, setMusic, unlock } from './audio.js';
+import { TouchControls, useCoarsePointer } from './TouchControls.jsx';
 import { AbilityBar, BossBar, EnemyList, HelpPanel, PartyPanel, Subtitle, TopBar } from './hud.jsx';
 import { BANNER_MS, bannersFor, cutInFor } from './banners.js';
 import { cuesFor } from './events.js';
@@ -329,6 +330,7 @@ export default function QuestGame({ session, onLeave }) {
   const canReach = useCallback((e) => Boolean(e) && (!e.flying || reachKind !== 'melee'), [reachKind]);
   // Kael walks in a fight, and in a cleared room (with its cage, open or still locked).
   const walking = phase === 'combat' || Boolean(state?.cages);
+  const touch = useCoarsePointer();
 
   // Which cell door of the open cage Kael stands at: 'healer', 'smith' or null.
   const [atCell, setAtCell] = useState(null);
@@ -679,6 +681,7 @@ export default function QuestGame({ session, onLeave }) {
           </div>
         </div>
       )}
+      {walking && touch && <TouchControls world={world} />}
       {/* The crosshair is always up in a fight: what's under it is the target. */}
       {phase === 'combat' && <div className={`crosshair ${aim.onTarget ? 'on-target' : ''}`} aria-hidden="true" />}
       {phase === 'combat' && !mouseLook && <p className="look-hint">Click the view to look around with the mouse · Esc frees the cursor</p>}

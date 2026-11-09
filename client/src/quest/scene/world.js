@@ -58,6 +58,16 @@ export function inputDirection(keys, camYaw) {
   return [x / n, z / n];
 }
 
+// The touch stick: x right, y forward, each -1..1; a light push walks slower.
+export function stickDirection({ x, y }, camYaw) {
+  const n = Math.hypot(x, y);
+  if (n < 0.15) return [0, 0];
+  const [fx, fz] = forwardOf(camYaw);
+  const [rx, rz] = rightOf(camYaw);
+  const k = Math.min(1, n) / n;
+  return [(y * fx + x * rx) * k, (y * fz + x * rz) * k];
+}
+
 export function insideShape(s, x, z, r = 0) {
   if (s.kind === 'circle') return Math.hypot(x - s.x, z - s.z) <= s.r - r + 1e-9;
   return x >= s.minX + r - 1e-9 && x <= s.maxX - r + 1e-9 && z >= s.minZ + r - 1e-9 && z <= s.maxZ - r + 1e-9;
@@ -255,7 +265,7 @@ export function stepLeader(world, dt) {
     a.motion = 'down';
     return a;
   }
-  const [dx, dz] = inputDirection(world.keys, world.camYaw);
+  const [dx, dz] = world.stick ? stickDirection(world.stick, world.camYaw) : inputDirection(world.keys, world.camYaw);
   const k = 1 - Math.exp(-MOVE.response * dt);
   a.vx += (dx * MOVE.speed - a.vx) * k;
   a.vz += (dz * MOVE.speed - a.vz) * k;
