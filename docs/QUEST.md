@@ -56,6 +56,16 @@ knows their moves, but no room places them.
 NPCs speak when you enter and clear their room (`state.speech`; the client shows it as a speech
 bubble). King Aldric's ghost and Pip wait at the camp.
 
+### The camp's helpers, saving, and playing a round again
+
+Once a cleared room's cage has freed them, the Healer and the Weaponsmith also work at the camp, for
+20 gold each (`CAMP_SERVICES`; actions `camp_healer` and `camp_smith`). The cages stay free, and
+their rune locks are untouched. The run saves itself after every move (the local server writes
+`server/saves/<team>.json`; the hosted site keeps the inputs in the browser). Settings → Progress
+can play any round entered so far again (`POST /:team/rewind` with the input index from
+`checkpoints`: the run goes back to just before Kael first travelled into that room), or reset the
+whole game. Tests: `server/test/camp-and-rewind.test.js`.
+
 ### The Hell Nemesis (room 3)
 
 Steps out once the Hall of Trials' six skeletons are down (the room's second wave). Kael catches his

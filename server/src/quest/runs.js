@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { join } from 'node:path';
 import { QuestError, publicState, step } from './engine.js';
 import { cageRunes } from './locks.js';
+import { checkpoints } from './checkpoints.js';
 import { replay } from './replay.js';
 import { codeMatches, profileHash } from './teams.js';
 
@@ -27,6 +28,8 @@ export const INPUT_TYPES = {
   trade: 'trade',
   healer: 'healer',
   smith: 'smith',
+  camp_healer: 'camp_healer',
+  camp_smith: 'camp_smith',
 };
 
 // Inputs only: a short type plus ids. Anything else (hp, damage, …) is dropped.
@@ -113,6 +116,23 @@ export class QuestRuns {
     renameSync(`${path}.tmp`, path);
   }
 
+  // Goes back to the moment before input `to` (a round's checkpoint): the inputs after it are undone
+  // and the run is rebuilt from the rest. The old save is archived first, like a reset.
+  rewind(teamId, to) {
+    const run = this.run(teamId);
+    const keep = Math.max(0, Math.min(run.actions.length, Math.floor(Number(to))));
+    if (!Number.isFinite(keep)) throw new QuestError('bad_rewind', 'Rewind to where?');
+    const path = this.savePath(teamId);
+    if (existsSync(path)) {
+      mkdirSync(join(this.saveDir, 'archive'), { recursive: true });
+      writeFileSync(join(this.saveDir, 'archive', `${teamId}-${Date.now()}.json`), readFileSync(path));
+    }
+    const result = replay(this.profile(teamId), run.actions.slice(0, keep));
+    this.runs.set(teamId, { state: result.state, actions: run.actions.slice(0, result.applied), note: null });
+    this.persist(teamId);
+    return this.runs.get(teamId);
+  }
+
   // Starts over (the old save is kept as an archive so organisers can see every attempt).
   reset(teamId) {
     const path = this.savePath(teamId);
@@ -127,7 +147,13 @@ export class QuestRuns {
   view(teamId) {
     const run = this.run(teamId);
     const p = this.profile(teamId);
-    return { team: { id: p.teamId, name: p.teamName, tier: p.tier }, note: run.note, state: { ...publicState(run.state), cageRunes: cageRunes(run.state) } };
+    return {
+      team: { id: p.teamId, name: p.teamName, tier: p.tier },
+      note: run.note,
+      state: { ...publicState(run.state), cageRunes: cageRunes(run.state) },
+      checkpoints: checkpoints(run.actions),
+      saved: { turn: run.state.turn, at: new Date().toISOString() },
+    };
   }
 
   saveFile(teamId) {

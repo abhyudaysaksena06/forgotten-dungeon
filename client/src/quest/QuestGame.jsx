@@ -93,6 +93,9 @@ const readLowSpec = () => {
   }
 };
 
+// The leader's moves that start the moment they are chosen (the cue each one plays).
+const EARLY_KIND = { attack: 'attack', skill: 'skill', rune: 'rune', defend: 'defend' };
+
 export default function QuestGame({ session, onLeave }) {
   const [meta, setMeta] = useState(null);
   const [models, setModels] = useState(() => new Map());
@@ -160,9 +163,15 @@ export default function QuestGame({ session, onLeave }) {
   const metaRef = useRef(null);
   const path = `/${encodeURIComponent(session.teamId)}`;
 
-  const apply = useCallback((v, lead = []) => {
+  // `early`: the leader's move, already started at the click (see act). The server's cues are timed
+  // from it, so the blow lands mid-swing however long the answer took, and the move isn't replayed.
+  const apply = useCallback((v, lead = [], early = null) => {
     const now = performance.now();
-    const fresh = cuesFor(prev.current, v.state, now);
+    let fresh = cuesFor(prev.current, v.state, early ? Math.max(early.at + 120, now - 160) : now);
+    if (early) {
+      const i = fresh.findIndex((c) => c.id === early.id && c.kind === early.kind);
+      if (i >= 0) fresh = fresh.filter((_, k) => k !== i);
+    }
     playCues(fresh);
     setCues((old) => [...old.filter((c) => c.at > now - 6000), ...fresh]);
     const news = [...lead, ...bannersFor(prev.current, v.state, metaRef.current)];
@@ -225,6 +234,36 @@ export default function QuestGame({ session, onLeave }) {
     return () => clearTimeout(t);
   }, [banners]);
 
+  // Progress: the run saves itself after every move. A round can be played again (the run goes back
+  // to just before Kael first entered it; what came after is undone), or the whole game reset.
+  const travelBack = useCallback(
+    async (verb, body) => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        const v = await questApi(`${path}/${verb}`, { method: 'POST', body, code: session.code });
+        prev.current = v.state; // a jump, not a move: nothing to animate
+        setCues([]);
+        apply(v);
+        setToast(verb === 'reset' ? 'A new game: everything is back to the start.' : 'Back to the start of that round.');
+      } catch (err) {
+        setToast(err.message);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [busy, path, session.code, apply],
+  );
+  const rewindTo = useCallback(
+    (cp) => {
+      if (window.confirm(`Play Round ${cp.round} (${cp.name}) again? You go back to just before you first entered it; everything after that is undone.`)) travelBack('rewind', { to: cp.at });
+    },
+    [travelBack],
+  );
+  const resetAll = useCallback(() => {
+    if (window.confirm('Reset the whole game? Every round, item and level goes back to zero.')) travelBack('reset');
+  }, [travelBack]);
+
   // J opens the quest log anywhere.
   useEffect(() => {
     const onKey = (e) => {
@@ -246,6 +285,14 @@ export default function QuestGame({ session, onLeave }) {
       if (busy) return;
       setBusy(true);
       setPicker(null);
+      // No waiting on the server to see your own move: the swing, guard or spell starts on the click,
+      // and the answer (a round trip of about 0.2 s on the hosted site) arrives while it winds up.
+      const me0 = prev.current?.party.find((m) => m.controlled);
+      const early = prev.current?.phase === 'combat' && me0 && !me0.fallen && EARLY_KIND[action.type] ? { id: me0.id, kind: EARLY_KIND[action.type], at: performance.now() } : null;
+      if (early) {
+        playCues([early]);
+        setCues((old) => [...old, early]);
+      }
       try {
         // In a fight the leader's lane is wherever they are standing.
         const leader = world.actors.get(world.leaderId);
@@ -258,7 +305,7 @@ export default function QuestGame({ session, onLeave }) {
         }
         const me = prev.current?.party.find((m) => m.controlled);
         const cut = cutInFor(action, me, metaRef.current);
-        apply(v, cut ? [cut] : []);
+        apply(v, cut ? [cut] : [], early);
       } catch (err) {
         setToast(err.message);
       } finally {
@@ -580,7 +627,7 @@ export default function QuestGame({ session, onLeave }) {
       {!preloaded && <LoadingScreen />}
       {preloaded && roomWaiting && <LoadingScreen room={meta?.rooms?.[roomWaiting]?.name} />}
 
-      <TopBar view={view} meta={meta} lowSpec={lowSpec} onLowSpec={toggleLowSpec} onLeave={() => onLeave()} sensitivity={sensitivity} onSensitivity={changeSensitivity} audio={audio} onAudio={changeAudio} firstPerson={firstPerson} onToggleView={toggleView} onHelp={() => setHelpOpen(true)} onMenu={setSettingsOpen} />
+      <TopBar view={view} meta={meta} lowSpec={lowSpec} onLowSpec={toggleLowSpec} onLeave={() => onLeave()} sensitivity={sensitivity} onSensitivity={changeSensitivity} audio={audio} onAudio={changeAudio} firstPerson={firstPerson} onToggleView={toggleView} onHelp={() => setHelpOpen(true)} onMenu={setSettingsOpen} onRewind={rewindTo} onReset={resetAll} busy={busy} />
       {view.note && <div className="hud-note">{view.note}</div>}
 
       {state.phase !== 'setup' && <PartyPanel party={state.party} meta={meta} inFight={state.phase === 'combat'} />}
@@ -712,6 +759,25 @@ function MapPanel({ state, meta, busy, act, setPicker, atCell }) {
           <button className="btn px-2 py-1.5 text-sm" disabled={busy || !has('forge')} onClick={() => setPicker({ kind: 'forge', title: 'Forge (+5 ATK): choose a hero' })} title={meta.powerUps.forge.text}>
             Forge <small className="block font-mono text-[10px] text-ash">{meta.powerUps.forge.gold}g</small>
           </button>
+        </div>
+      )}
+      {atCamp && (
+        <div className="mt-3 border-t border-crypt-3 pt-2">
+          <p className="eyebrow">Your helpers at the camp</p>
+          {state.campHelpers ? (
+            <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+              {[
+                ['camp_healer', 'Healer', meta.campServices?.healer],
+                ['camp_smith', 'Weaponsmith', meta.campServices?.smith],
+              ].map(([type, label, offer]) => (
+                <button key={type} className="btn px-2 py-1.5 text-sm" disabled={busy || !offer || state.gold < offer.gold} onClick={() => act({ type })} title={offer?.text}>
+                  {label} <small className="block font-mono text-[10px] text-ash">{offer?.gold ?? '?'}g</small>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-1 text-xs text-ash">Free the Healer and the Weaponsmith from a cleared room’s cage and they will work here too.</p>
+          )}
         </div>
       )}
       {atCamp && (

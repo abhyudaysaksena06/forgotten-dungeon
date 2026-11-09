@@ -1,7 +1,7 @@
 // HTTP API for the Quest. Single-player, so plain request/response is enough: every action
 // returns the new state, and the 3D client animates from the log of what changed.
 import express from 'express';
-import { FINAL_GROWTH, CAMP, CLASSES, EDGES, ENEMIES, FRAGMENTS_FOR_THRONE, MORVATH, NPCS, PARTY_ORDER, PIP, POWER_UPS, ROOMS, RUNE_STRIKE, SHIELD, SWORD } from './data.js';
+import { FINAL_GROWTH, CAMP, CAMP_SERVICES, CLASSES, EDGES, ENEMIES, FRAGMENTS_FOR_THRONE, MORVATH, NPCS, PARTY_ORDER, PIP, POWER_UPS, ROOMS, RUNE_STRIKE, SHIELD, SWORD } from './data.js';
 import { QuestError } from './engine.js';
 
 export function questRouter(runs) {
@@ -20,7 +20,7 @@ export function questRouter(runs) {
   const team = (req) => runs.checkCode(req.params.teamId, req.get('x-team-code') ?? req.body?.code).teamId;
 
   r.get('/meta', (req, res) =>
-    res.json({ classes: CLASSES, partyOrder: PARTY_ORDER, rooms: ROOMS, edges: EDGES, camp: CAMP, enemies: ENEMIES, npcs: NPCS, morvath: MORVATH, runeStrike: RUNE_STRIKE, powerUps: POWER_UPS, pip: PIP, fragmentsForThrone: FRAGMENTS_FOR_THRONE, finalGrowth: FINAL_GROWTH, sword: SWORD, shield: SHIELD }),
+    res.json({ classes: CLASSES, partyOrder: PARTY_ORDER, rooms: ROOMS, edges: EDGES, camp: CAMP, enemies: ENEMIES, npcs: NPCS, morvath: MORVATH, runeStrike: RUNE_STRIKE, powerUps: POWER_UPS, pip: PIP, campServices: CAMP_SERVICES, fragmentsForThrone: FRAGMENTS_FOR_THRONE, finalGrowth: FINAL_GROWTH, sword: SWORD, shield: SHIELD }),
   );
   r.get('/teams', (req, res) => res.json({ teams: [...runs.profiles.values()].map((p) => ({ id: p.teamId, name: p.teamName, needsCode: Boolean(p.accessCode) })) }));
   r.post('/:teamId/session', wrap((req) => runs.view(team(req))));
@@ -28,6 +28,11 @@ export function questRouter(runs) {
   r.post('/:teamId/act', wrap((req) => {
     const id = team(req);
     runs.act(id, req.body?.action);
+    return runs.view(id);
+  }));
+  r.post('/:teamId/rewind', wrap((req) => {
+    const id = team(req);
+    runs.rewind(id, req.body?.to);
     return runs.view(id);
   }));
   r.post('/:teamId/reset', wrap((req) => {

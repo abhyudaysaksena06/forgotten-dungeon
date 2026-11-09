@@ -5,17 +5,18 @@
 // rules and numbers still live on the server.
 //
 // vercel.json rewrites /api/quest/<path> to this function as ?path=<path>.
-import { CAMP, CLASSES, EDGES, ENEMIES, FINAL_GROWTH, FRAGMENTS_FOR_THRONE, MORVATH, NPCS, PARTY_ORDER, PIP, POWER_UPS, ROOMS, RUNE_STRIKE, SHIELD, SWORD } from '../server/src/quest/data.js';
+import { CAMP, CAMP_SERVICES, CLASSES, EDGES, ENEMIES, FINAL_GROWTH, FRAGMENTS_FOR_THRONE, MORVATH, NPCS, PARTY_ORDER, PIP, POWER_UPS, ROOMS, RUNE_STRIKE, SHIELD, SWORD } from '../server/src/quest/data.js';
 import { QuestError, publicState, step } from '../server/src/quest/engine.js';
 import { loadProfiles } from '../server/src/quest/profiles.js';
 import { replay } from '../server/src/quest/replay.js';
+import { checkpoints } from '../server/src/quest/checkpoints.js';
 import { cleanAction } from '../server/src/quest/runs.js';
 import { codeMatches, profileHash } from '../server/src/quest/teams.js';
 
 const MAX_ACTIONS = 5000; // far more than a full run; bounds the replay work per request
 const profiles = new Map(loadProfiles(process.env.QUEST_TEAMS).map((p) => [p.teamId, p]));
 
-const META = { classes: CLASSES, partyOrder: PARTY_ORDER, rooms: ROOMS, edges: EDGES, camp: CAMP, enemies: ENEMIES, npcs: NPCS, morvath: MORVATH, runeStrike: RUNE_STRIKE, powerUps: POWER_UPS, pip: PIP, fragmentsForThrone: FRAGMENTS_FOR_THRONE, finalGrowth: FINAL_GROWTH, sword: SWORD, shield: SHIELD };
+const META = { classes: CLASSES, partyOrder: PARTY_ORDER, rooms: ROOMS, edges: EDGES, camp: CAMP, enemies: ENEMIES, npcs: NPCS, morvath: MORVATH, runeStrike: RUNE_STRIKE, powerUps: POWER_UPS, pip: PIP, campServices: CAMP_SERVICES, fragmentsForThrone: FRAGMENTS_FOR_THRONE, finalGrowth: FINAL_GROWTH, sword: SWORD, shield: SHIELD };
 
 function teamFor(teamId, code) {
   const p = profiles.get(teamId);
@@ -37,7 +38,14 @@ function rebuild(profile, raw) {
   return { state: result.state, actions, note };
 }
 
-const view = (p, run) => ({ team: { id: p.teamId, name: p.teamName, tier: p.tier }, note: run.note, state: publicState(run.state), actions: run.actions });
+const view = (p, run) => ({
+  team: { id: p.teamId, name: p.teamName, tier: p.tier },
+  note: run.note,
+  state: publicState(run.state),
+  actions: run.actions,
+  checkpoints: checkpoints(run.actions),
+  saved: { turn: run.state.turn, at: new Date().toISOString() },
+});
 
 function readBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
@@ -61,6 +69,11 @@ function handle(req) {
   if (verb === 'reset') return view(profile, rebuild(profile, []));
   const run = rebuild(profile, body.actions);
   if (verb === 'session') return view(profile, run);
+  if (verb === 'rewind') {
+    const to = Math.floor(Number(body.to));
+    if (!Number.isFinite(to)) throw new QuestError('bad_rewind', 'Rewind to where?');
+    return view(profile, rebuild(profile, run.actions.slice(0, Math.max(0, to))));
+  }
   if (verb === 'act') {
     const action = cleanAction(body.action);
     run.state = step(run.state, action);

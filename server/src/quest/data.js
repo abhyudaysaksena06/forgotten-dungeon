@@ -186,6 +186,13 @@ export const POWER_UPS = {
   forge: { name: 'The Old Forge', torches: 0, gold: 50, text: '+5 ATK for one hero.' },
 };
 
+// Once Kael has freed the Healer and the Weaponsmith (any cleared room's cage), they also work at the
+// camp, for a fee. The cages themselves stay free.
+export const CAMP_SERVICES = {
+  healer: { name: 'The Healer', gold: 20, text: 'Health and shield whole again; the fallen stand, poison gone.' },
+  smith: { name: 'The Weaponsmith', gold: 20, text: 'The Iron Sword sharp and whole again.' },
+};
+
 // Pip's pot: trades at the camp. They cost no torches.
 export const PIP = {
   potion: { gold: 25, parts: 0, text: 'A Health Potion (restores 40 HP).' },
