@@ -31,8 +31,8 @@ const GLB_CLIP = {
   block: ['block', 'hit'],
   interact: ['interact', 'skill'],
   victory: ['victory'],
-  charge: ['boss_strike', 'attack'],
-  slam: ['boss_sweep', 'skill', 'attack'],
+  charge: ['charge', 'boss_strike', 'attack'],
+  slam: ['slam', 'boss_sweep', 'skill', 'attack'],
 };
 const clipFor = (actions, kind) => (GLB_CLIP[kind] ?? []).map((k) => actions[k]).find(Boolean);
 
@@ -211,8 +211,8 @@ export function Actor({
         x = Math.sin(Math.PI * Math.min(1, p * 1.25)) * 2.6;
         lean = -Math.sin(Math.PI * p) * 0.3;
       }
-      // Infernal Slam: up, then down hard, then the shockwave rolls out.
-      if (cue.kind === 'slam') {
+      // Infernal Slam: up, then down hard, then the shockwave rolls out (a rigged model leaps itself).
+      if (cue.kind === 'slam' && !(useGlb && clips?.slam)) {
         y += p < 0.45 ? Math.sin((p / 0.45) * (Math.PI / 2)) * 0.9 : Math.max(0, 0.9 * (1 - (p - 0.45) / 0.12));
         lean = p < 0.45 ? 0.15 * (p / 0.45) : -0.25 * Math.max(0, 1 - (p - 0.45) / 0.3);
       }
@@ -231,9 +231,11 @@ export function Actor({
     if (rage.current) rage.current.opacity = 0.14 + Math.sin(t * 6 + seed) * 0.05 + Math.sin(t * 15.3) * 0.025;
     // Fallen: topple once the death cue has played (or straight away if there was none).
     const down = fallen && (!death || now >= death.at);
-    const targetRot = down ? -Math.PI / 2 : running && !strides ? -0.14 : lean; // lean into the run
+    // A model with its own death clip falls by itself; the stand-ins topple over.
+    const ownFall = Boolean(useGlb && clips?.death);
+    const targetRot = down && !ownFall ? -Math.PI / 2 : running && !strides ? -0.14 : lean; // lean into the run
     g.rotation.z += (targetRot - g.rotation.z) * 0.12;
-    g.position.set(x, down ? (flyer ? -0.9 : -0.05) : y, z);
+    g.position.set(x, down && !ownFall ? (flyer ? -0.9 : -0.05) : y, z);
     g.scale.setScalar(s);
 
     if (flash.current) {
