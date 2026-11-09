@@ -56,6 +56,15 @@ knows their moves, but no room places them.
 NPCs speak when you enter and clear their room (`state.speech`; the client shows it as a speech
 bubble). King Aldric's ghost and Pip wait at the camp.
 
+### Pace and difficulty
+
+Rooms give 100 XP per tier (`XP_PER_TIER`), so clearing round 1 brings Kael to level 2 before round
+2, and round 2's skeletons are a step down (`ease: 0.95`): an average Kael loses about a quarter of
+his health there instead of nearly half. In a fight with a boss the round clock always runs, every
+3.5 s, and the first blow comes 1.5 s after the fight is ready: bosses don't wait for you, and they
+hunt Kael across the whole room. Out of reach, the sword still swings, but it cuts only air: no damage
+and no turn spent. The crosshair is always up in a fight; whatever is under it is the target.
+
 ### The camp's helpers, saving, and playing a round again
 
 Once a cleared room's cage has freed them, the Healer and the Weaponsmith also work at the camp, for
@@ -128,9 +137,9 @@ planner at boldness 1.2, 60 teams per tier. All numbers are for one hero with sw
 
 | Tier | Careful player | Careless player |
 | --- | --- | --- |
-| Weak | 13% | 0% |
-| Average | 30% | 0% |
-| Strong | 86% | 0% |
+| Weak | 48% | 0% |
+| Average | 69% | 0% |
+| Strong | 99% | 0% |
 
 (Under the four-hero rules the same measure gave 8%, 19% and 80%.) Rooms 1 and 2 are nearly always
 won; room 3 is where weaker heroes start to fall (about half of first attempts), now with the Hell
@@ -275,8 +284,8 @@ the target room's tier and threat, travel cost, power-to-threat ratio, who leads
    estimates its win chance from 40 simulated continuations with fresh dice. An option is "good" if it's
    within 10 points of the best option in that exact situation. About 4 minutes.
 2. `python ml/train_forest.py` trains a scikit-learn RandomForestClassifier (120 trees, depth 12),
-   split by team. Current result (retrained with the Hollow King in room 4): **85.4% accuracy on
-   unseen teams** (majority baseline 52.2%), ROC AUC 0.938, on 15,492 decisions. By tier: weak 87%,
+   split by team. Current result (retrained after the easier curve): **87.2% accuracy on
+   unseen teams** (majority baseline 51.8%), ROC AUC 0.954, on 15,385 decisions. By tier: weak 87%,
    average 84%, strong 85%. Top inputs: party power, party DEF, power-to-threat ratio, gold, target tier.
 3. The model ships as JSON (`server/src/quest/model/route-forest.json`); `forest.js` evaluates it in
    Node. `server/test/forest.test.js` proves Node and scikit-learn agree, and that the forest beats the

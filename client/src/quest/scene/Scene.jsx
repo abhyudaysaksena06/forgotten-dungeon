@@ -91,15 +91,11 @@ function CameraRig({ view, world }) {
 }
 
 // What's under the crosshair: the living enemy whose body is nearest the middle of the screen,
-// within a small circle. Written to world.aimedId every frame while the mouse is captured.
+// within a small circle. Written to world.aimedId every frame of a fight, mouse captured or not.
 const AIM_RADIUS = 0.18; // in screen units (the screen is 2 wide)
 function AimProbe({ world }) {
   const v = useRef(new Vector3());
   useFrame(({ camera, size }) => {
-    if (!document.pointerLockElement && !world.firstPerson) {
-      world.aimedId = null;
-      return;
-    }
     const aspect = size.width / size.height;
     let best = null;
     let bestD = AIM_RADIUS;

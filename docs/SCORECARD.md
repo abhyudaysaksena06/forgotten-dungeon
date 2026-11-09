@@ -6,7 +6,7 @@ Every aspect of the game, scored 1–10 before and after the overhaul of 9 Novem
 | Aspect | Before | After | Evidence |
 | --- | :-: | :-: | --- |
 | Core gameplay | 7 | 8 | Deterministic engine, lanes, telegraphs, the cage. Now: a three-move boss kit (Charge, Enraged, Infernal Slam) that asks for the lane system and Defend at the right time. |
-| Difficulty curve | 6 | 8 | Careful play per tier was 3% / 38% / 88% (weak / average / strong); now 13% / 30% / 86% (room 4 gained a boss), careless 0% everywhere. Room 3 wins 47% of first attempts, room 4 19%, and the route planner knows which is easier. |
+| Difficulty curve | 6 | 8 | Careful play per tier was 3% / 38% / 88% (weak / average / strong); now 48% / 69% / 99% (faster levelling, a gentler round 2, active bosses), careless 0% everywhere. Room 3 wins 86% of first attempts, room 4 58%, and the route planner knows which is easier. |
 | Bosses | 4 | 8 | The Nemesis was a static sculpt sliding about with one move; now a 3-move kit with its own motion (dash, leap, shockwave, hellfire glow). Morvath's knight form was boxes; now a real model with a visible armour shell. The dragon (8 clips) is in. Room 4 has its own boss, the Hollow King: reforged, rigged, with a poisoning Shadow Tide over two lanes and a roar that raises skeletons. |
 | Characters and NPCs | 2 | 7 | Kael, the Healer, the Weaponsmith, King Aldric's ghost and Pip were primitive stand-ins; now rigged, animated models (KayKit, CC0) that act: the Healer casts, the Weaponsmith hammers, Kael stabs, blocks, dodges, drinks, cheers. |
 | Arenas | 6 | 8 | Room 1 is the artist's new Blender 5.3 arena, converted faithfully (25 materials, packed textures, 15 lamps) without Blender. |

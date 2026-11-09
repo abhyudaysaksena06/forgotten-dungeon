@@ -643,16 +643,15 @@ function WorldDriver({ world, state }) {
       }
     }
 
-    // Enemies close in on the nearest hero (Morvath holds his ground), else drift home.
+    // Enemies close in on the nearest hero, else drift home. Bosses hunt Kael anywhere in the room
+    // (Morvath stalks, slower); skeletons come once he is within 11 m.
     const heroes = state.party.map((m) => world.actors.get(m.id)).filter((h) => h && h.alive);
     for (const [id, a] of enemies) {
       const prey = nearest(heroes, a);
       const d = prey ? Math.hypot(prey.x - a.x, prey.z - a.z) : Infinity;
-      if (a.ultimate) {
-        if (prey) faceTowards(a, prey.x, prey.z, dt);
-      } else if (d < 11) {
+      if (prey && (a.boss || d < 11)) {
         const stop = a.radius + RADIUS.hero + 0.6;
-        const moved = walkTowards(world, id, prey.x, prey.z, dt, a.boss ? 1.3 : a.flyer ? 2.2 : 1.8, stop);
+        const moved = walkTowards(world, id, prey.x, prey.z, dt, a.ultimate ? 1.2 : a.boss ? 2.6 : a.flyer ? 2.2 : 1.8, stop);
         if (!moved) faceTowards(a, prey.x, prey.z, dt);
       } else if (a.home) walkTowards(world, id, a.home[0], a.home[2], dt, 1.4, 0.2);
       if (frame.current % 4 === 0 && !a.flyer) a.y = floor(a);

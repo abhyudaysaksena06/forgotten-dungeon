@@ -32,7 +32,7 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
   for Pip: three a room, enough for one Monster Meal.
 - **Length:** about **16 rounds** (14–17). Roughly **50–95 s**. About 17% of Kael's health is lost
   (after his shield); every careful first attempt wins.
-- **Reward:** fragment 1, 40 gold, 1 potion, 70 XP. The gate's runes turn gold and the cage opens.
+- **Reward:** fragment 1, 40 gold, 1 potion, 100 XP. The gate's runes turn gold and the cage opens.
 - **Opens next:** The Three Trials and The Last Loyal Knight quests appear.
 
 ## Level 2 — The Hall of Portraits (Round 2, "The Forgotten Hall")
@@ -45,7 +45,7 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
   cleared).
 - **Length:** about **20 rounds** (17–22). Roughly **60–120 s**. About 41% of Kael's health is lost;
   96% of attempts win.
-- **Reward:** fragment, 60 gold, 1 potion, 140 XP. The cage at the hall's side swings open.
+- **Reward:** fragment, 60 gold, 1 potion, 200 XP. Round 2's skeletons are 5% weaker than the curve, and Kael comes in at level 2. The cage at the hall's side swings open.
 
 ## Level 3 — The Hall of Trials (Round 3, "The Trial Chambers")
 
@@ -65,10 +65,10 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
     and the next round slams it into the floor, a shockwave of hellfire across **all three lanes**
     (1.3× its attack). No lane is safe: **Defend (R)** or **Bulwark (E)** halves it.
 - **Length:** about **40 rounds** (37–43), 17 of them against the Nemesis. Roughly **2–4 minutes**.
-  Kael ends about 40% down on health (after the breather); 47% of first attempts win: the room where
-  a weaker Kael starts to fall. Still easier than room 4 (19% of first attempts), and the route
+  Kael ends about 40% down on health (after the breather); 86% of first attempts win: the room where
+  a weaker Kael starts to fall. Still easier than room 4 (58% of first attempts), and the route
   planner knows it.
-- **Reward:** fragment, 80 gold, 2 potions, 210 XP. *"The last skeleton falls apart, and the
+- **Reward:** fragment, 80 gold, 2 potions, 300 XP. *"The last skeleton falls apart, and the
   chamber goes quiet."*
 
 ## Level 4 — The Hollow Barracks (Round 4, "The Shadow Depths")
@@ -86,8 +86,8 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
   - **The roar**, below half health, once: two Skeletons claw out of the floor. The room is not won
     while they stand.
 - **Length:** about **42 rounds** (40–45), 18 of them against the King. Kael ends about half down
-  on health; 19% of first attempts win (going r1 → r2 → r4).
-- **Reward:** fragment, 100 gold, 2 potions, 280 XP. *"Their line is broken. The Fortress Gate is open."*
+  on health; 58% of first attempts win (going r1 → r2 → r4).
+- **Reward:** fragment, 100 gold, 2 potions, 400 XP. *"Their line is broken. The Fortress Gate is open."*
 
 ## Level 5 — The Throne of Eternity (Round 5, "The Boss Round")
 
