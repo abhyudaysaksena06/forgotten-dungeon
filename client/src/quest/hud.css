@@ -662,7 +662,7 @@
   left: 50%;
   bottom: 7.6rem;
   transform: translateX(-50%);
-  max-width: min(40rem, calc(100vw - 34rem));
+  max-width: min(40rem, max(18rem, calc(100vw - 34rem)));
   padding: 0.45rem 0.9rem;
   border-radius: 12px;
   text-align: center;
@@ -929,5 +929,36 @@
     left: auto;
     right: max(0.4rem, env(safe-area-inset-right));
     transform: none;
+  }
+}
+
+/* Phones on the map: the Journey panel is a scrollable sheet along the bottom (it sat on top of the
+   title bar and the hero card), and a speaking character's line spans the screen. */
+@media (max-width: 900px) {
+  .quest-root .hud-map {
+    position: absolute;
+    top: auto;
+    left: 0.4rem;
+    right: 0.4rem;
+    bottom: max(0.4rem, env(safe-area-inset-bottom));
+    width: auto;
+    max-width: none;
+    max-height: 48dvh;
+    margin: 0;
+    overflow-y: auto;
+    z-index: 15;
+    background: rgb(22 25 34 / 0.96);
+  }
+  .quest-root .hud-subtitle {
+    left: 0.5rem;
+    right: 0.5rem;
+    top: calc(max(0.35rem, env(safe-area-inset-top)) + 6.4rem);
+    bottom: auto;
+    max-width: none;
+    transform: none;
+    font-size: 13px;
+  }
+  .quest-root .hud-subtitle.is-gone {
+    transform: translateY(6px);
   }
 }

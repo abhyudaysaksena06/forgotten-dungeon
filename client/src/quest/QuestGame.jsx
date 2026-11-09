@@ -478,7 +478,19 @@ export default function QuestGame({ session, onLeave }) {
   // Ability keys: F attack · E skill · Q Rune Strike · R defend · H potion · G meal · X retreat ·
   // Tab next target · 1–6 pick a target. The handlers change every render, so read the latest.
   const handlers = useRef({});
-  handlers.current = { doAttack, doSkill, doRune, cycleTarget, act, me, living };
+  // Retreat leaves the room, so it asks twice: the first press (X sits right under S) only warns.
+  const retreatArmed = useRef(0);
+  const retreat = () => {
+    const now = performance.now();
+    if (now - retreatArmed.current < 2500) {
+      retreatArmed.current = 0;
+      act({ type: 'retreat' });
+    } else {
+      retreatArmed.current = now;
+      setToast('Retreat? Press X (or the button) again to leave the room.');
+    }
+  };
+  handlers.current = { doAttack, doSkill, doRune, cycleTarget, act, me, living, retreat, potions: state?.potions ?? 0, meals: state?.meals ?? 0, menuOpen: settingsOpen || helpOpen || logOpen };
   // Mouse buttons in a fight: left (mouse captured) or right = attack, middle = Rune Strike,
   // back side button = skill, forward side button = defend.
   world.onMouse = (button) => {
@@ -542,6 +554,8 @@ export default function QuestGame({ session, onLeave }) {
       if (e.target instanceof HTMLInputElement || e.repeat) return;
       const h = handlers.current;
       const k = e.key.toLowerCase();
+      // A menu over the fight takes the keys (Esc still closes a picker).
+      if (h.menuOpen && k !== 'escape') return;
       if (k === 'tab') {
         e.preventDefault();
         h.cycleTarget();
@@ -550,9 +564,9 @@ export default function QuestGame({ session, onLeave }) {
       else if (k === 'e') h.doSkill();
       else if (k === 'q') h.doRune();
       else if (k === 'r') h.act({ type: 'defend' });
-      else if (k === 'h') setPicker({ kind: 'potion', title: 'Potion: choose an ally' });
-      else if (k === 'g') setPicker({ kind: 'meal', title: 'Monster Meal: choose an ally' });
-      else if (k === 'x') h.act({ type: 'retreat' });
+      else if (k === 'h') h.potions > 0 ? setPicker({ kind: 'potion', title: 'Potion: choose an ally' }) : setToast('No potions left.');
+      else if (k === 'g') h.meals > 0 ? setPicker({ kind: 'meal', title: 'Monster Meal: choose an ally' }) : setToast('No meals left: Pip cooks them at the camp.');
+      else if (k === 'x') h.retreat();
       else if (k === 'escape') setPicker(null);
     };
     window.addEventListener('keydown', onKey);
@@ -715,7 +729,7 @@ export default function QuestGame({ session, onLeave }) {
             onPotion={() => setPicker({ kind: 'potion', title: 'Potion: choose an ally' })}
             onMeal={() => setPicker({ kind: 'meal', title: 'Monster Meal: choose an ally' })}
             onRune={doRune}
-            onRetreat={() => act({ type: 'retreat' })}
+            onRetreat={retreat}
             onWait={() => act({ type: 'wait' })}
           />
         </>

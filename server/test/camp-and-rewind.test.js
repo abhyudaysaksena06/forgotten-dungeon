@@ -41,3 +41,11 @@ test('a run rewinds to just before a round began, and keeps a checkpoint per rou
   assert.equal(back.state.turn, 0);
   assert.deepEqual(back.checkpoints, []);
 });
+
+test('travelling to a place that does not exist is refused cleanly, not a crash', async () => {
+  const { QuestError } = await import('../src/quest/engine.js');
+  const s = createRun(profile);
+  for (const to of ['nowhere', undefined, '__proto__', 'constructor']) {
+    assert.throws(() => step(s, { type: 'travel', to }), (e) => e instanceof QuestError && e.code === 'bad_place', String(to));
+  }
+});

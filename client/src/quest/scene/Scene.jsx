@@ -30,7 +30,7 @@ function CameraRig({ view, world }) {
   const want = useRef(new Vector3());
   const wantLook = useRef(new Vector3());
   const bob = useRef(0);
-  useFrame(({ camera }, dt) => {
+  useFrame(({ camera, size }, dt) => {
     const leader = view === 'arena' ? world.actors.get(world.leaderId) : null;
     // First person (like a shooter): the camera is the leader's eyes and follows the mouse exactly,
     // with no smoothing, so the crosshair is always where you look.
@@ -84,6 +84,17 @@ function CameraRig({ view, world }) {
       const k = 1 - Math.pow(0.02, dt);
       camera.position.lerp(MAP_VIEW.pos, k);
       look.current.lerp(MAP_VIEW.look, k);
+    }
+    // A narrow (portrait) screen sees less from side to side: on the map, widen the view so the
+    // whole map still fits (the fight keeps its usual lens).
+    const fov = view === 'map' && camera.aspect < 1.45 ? Math.min(95, (2 * Math.atan((Math.tan((25 * Math.PI) / 180) * 1.3) / camera.aspect) * 180) / Math.PI) : 50;
+    // ...and on a phone the Journey sheet covers the lower half, so the map is drawn higher up.
+    const lift = view === 'map' && camera.aspect < 1 ? Math.round(size.height * 0.11) : 0;
+    if (Math.abs(camera.fov - fov) > 0.1 || (camera.view?.offsetY ?? 0) !== lift) {
+      camera.fov = fov;
+      if (lift) camera.setViewOffset(size.width, size.height, 0, lift, size.width, size.height);
+      else camera.clearViewOffset();
+      camera.updateProjectionMatrix();
     }
     camera.lookAt(look.current);
   });
