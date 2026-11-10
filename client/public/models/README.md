@@ -1,5 +1,9 @@
 # Blender models
 
+`client/preview.html` (dev server only) renders any model here side by side, posed mid-clip:
+`http://localhost:5173/preview.html?p=boss_hollow_king:0.6:attack:0.32:1,boss_nemesis:0.6:attack:0.32:1`
+(key : yaw : clip : time : zoom, one panel per comma).
+
 The easy way: export straight from the `.blend` file. This writes the `.glb` here and switches it on:
 
 ```bash
@@ -46,9 +50,9 @@ full room until `mini` is run again.
 | `room_1` | The Gate Courtyard | The artist's Blender 5.3 scene (`assets/blender/room_1.blend`), converted without Blender by `tools/blender/blend2room.py` (below) |
 | `room_2` … `room_5` | The other rooms | `tools/blender/prepare_room.py` (and `build_room_3.py`) |
 | `enemy_skeleton` | The skeletons | A rigged skeleton (2 clips) |
-| `boss_nemesis` | The Hell Nemesis, room 3's boss | A 78 MB, 1.9-million-triangle sculpt with no rig: `optimize.mjs full boss_nemesis --simplify 0.2 --ground` keeps 20% (372k triangles; at 2–10% the chest's highlights go faceted), its own PBR materials (`toon: false`); then `node rig-nemesis.mjs` (on the unrigged file) fits an 18-bone skeleton and keys 14 clips: idle, run, walk, a sword slash, an overhead two-handed strike, a horizontal sweep, the Hellfire Charge, the leaping Infernal Slam, the enraged roar, hit, stagger, guard, victory and death |
+| `boss_nemesis` | The Hell Nemesis, room 3's boss | A 78 MB, 1.9-million-triangle sculpt with no rig: `optimize.mjs full boss_nemesis --simplify 0.2 --ground` keeps 20% (372k triangles; at 2–10% the chest's highlights go faceted), its own PBR materials (`toon: false`); then `node rig-nemesis.mjs` (on the unrigged file) fits an 18-bone skeleton and keys 14 clips: idle, run, walk, a sword slash, an overhead two-handed strike, a horizontal sweep, the Hellfire Charge, the leaping Infernal Slam, the enraged roar, hit, stagger, guard, victory and death, then `node lighten.mjs boss_nemesis` (weld + error-capped simplify, 0.05%: 372k → 149k triangles, 4.2 → 2.5 MB, no visible change) |
 | `boss_hollow_king` | The Hollow King, room 4's boss | The team's "dung king" (an AI-made single mesh with no normals and a 1K texture): `node reforge-king.mjs <dung_king.glb>` grounds it, smooths its normals across the texture seams, grades the texture at 2K (armour darker, cloth dried blood, gold tarnished), and makes its hot reds glow (sword, gems, eyes); then `node rig-king.mjs` fits the same 18-bone skeleton and move set as the Nemesis (`rig-lib.mjs`), the broad blade bound by its own texture charts, plus his Shadow Tide clip (`skill`). Manifest: 3.4 m, `turn: 180` |
-| `boss_morvath_knight` | Morvath, the Shadow Knight (phase 1) | The Nemesis sculpt in Morvath's violet shadow-fire: `node variant.mjs boss_nemesis boss_morvath_knight --hue 292 --saturation 1.1 --brightness 0.92 --height 3.6` (the story calls the Nemesis his herald, wearing his likeness) |
+| `boss_morvath_knight` | Morvath, the Shadow Knight (phase 1) | The Nemesis sculpt in Morvath's violet shadow-fire: `node variant.mjs boss_nemesis boss_morvath_knight --hue 292 --saturation 1.1 --brightness 0.92 --height 3.6` (the story calls the Nemesis his herald, wearing his likeness), then `node lighten.mjs boss_morvath_knight` (4.8 → 2.6 MB) |
 | `boss_morvath_dragon` | Morvath after the Change | The artist's dragon (below): `--simplify 0.5 --max 4096` keeps its 4K body textures and all 8 clips |
 | `char_kael`, `npc_healer`, `npc_smith`, `npc_king_ghost`, `npc_pip` | Kael, the cage's keepers, the camp | KayKit Adventurers (Kay Lousberg, **CC0**): Knight, Mage, Barbarian, Knight as a ghost, Barbarian with his mug, built by `tools/models/character.mjs` |
 

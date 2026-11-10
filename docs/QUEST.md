@@ -61,7 +61,9 @@ bubble). King Aldric's ghost and Pip wait at the camp.
 Rooms give 100 XP per tier (`XP_PER_TIER`), so clearing round 1 brings Kael to level 2 before round
 2, and round 2's skeletons are a step down (`ease: 0.95`): an average Kael loses about 28% of his
 health there instead of nearly half. Later rooms climb faster again (`TIER_SCALE` 0.15,
-`PROGRESS_SCALE` 0.07), so rounds 3 and 4 stay a real test. In a fight with a boss the round clock always runs, every
+`PROGRESS_SCALE` 0.07), so rounds 3 and 4 stay a real test. Room 4 has a small `ease` of its own
+(0.95): walking in straight from round 2 used to win 5% of first attempts — a wall; now 25%,
+still well under the route through round 3. In a fight with a boss the round clock always runs, every
 3.5 s, and the first blow comes 1.5 s after the fight is ready: bosses don't wait for you, and they
 hunt Kael across the whole room. Out of reach, the sword still swings, but it cuts only air: no damage
 and no turn spent. The crosshair (a small black square with a white outline) is always up in a fight; whatever is
@@ -70,6 +72,15 @@ under it is the target, and the view tilts almost straight up and down.
 On phones and tablets the game runs full screen with a compact HUD: a stick at the bottom left walks
 Kael, a drag anywhere else on the view looks around, and the action buttons are tapped. On a Mac
 trackpad, Ctrl+click attacks like a right click.
+
+### Loading and weight
+
+The title page is its own small file (75 KB compressed): the game and the whole 3D engine load as a
+second file, fetched quietly while the title is read, so the first paint never waits a megabyte.
+The heavy models went through `tools/models/lighten.mjs` (weld + error-capped simplify at 0.05% of
+the model's size — it stops before anything visible changes): the Nemesis and Morvath's knight
+dropped from 372k to 149k triangles each, and with the dragon and the Throne room the whole
+download fell from ~42 MB to ~35 MB.
 
 ### The camp's helpers, saving, and playing a round again
 
@@ -290,9 +301,9 @@ the target room's tier and threat, travel cost, power-to-threat ratio, who leads
    estimates its win chance from 40 simulated continuations with fresh dice. An option is "good" if it's
    within 10 points of the best option in that exact situation. About 4 minutes.
 2. `python ml/train_forest.py` trains a scikit-learn RandomForestClassifier (120 trees, depth 12),
-   split by team. Current result (retrained after the difficulty retune): **84.8% accuracy on
-   unseen teams** (majority baseline 58.7%), ROC AUC 0.938, on 15,379 decisions. By tier: weak 87%,
-   average 84%, strong 85%. Top inputs: party power, party DEF, power-to-threat ratio, gold, target tier.
+   split by team. Current result (retrained after room 4's ease): **85.2% accuracy on
+   unseen teams** (majority baseline 52.2%), ROC AUC 0.932, on 15,305 decisions. By tier: weak 83%,
+   average 85%, strong 89%. Top inputs: party power, party DEF, power-to-threat ratio, gold, target tier.
 3. The model ships as JSON (`server/src/quest/model/route-forest.json`); `forest.js` evaluates it in
    Node. `server/test/forest.test.js` proves Node and scikit-learn agree, and that the forest beats the
    baseline by at least 10 points.

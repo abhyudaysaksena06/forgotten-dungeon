@@ -602,13 +602,13 @@ export default function QuestGame({ session, onLeave }) {
       const now = performance.now();
       const dt = (now - last) / 1000;
       last = now;
-      if (holdClock.current || document.hidden || !document.hasFocus()) return setClock({ left, paused: true });
+      if (holdClock.current || document.hidden || !document.hasFocus()) return setClock({ left, max: period, paused: true });
       left -= dt;
       if (left <= 0) {
         left = period;
         handlers.current.act({ type: 'wait' });
       }
-      setClock({ left: Math.max(0, left), paused: false });
+      setClock({ left: Math.max(0, left), max: period, paused: false });
     }, 200);
     return () => clearInterval(t);
   }, [phase, autoRounds, turn, bossFight, bossWave]);

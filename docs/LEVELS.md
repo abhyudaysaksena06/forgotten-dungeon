@@ -66,7 +66,7 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
     (1.3× its attack). No lane is safe: **Defend (R)** or **Bulwark (E)** halves it.
 - **Length:** about **40 rounds** (37–43), 17 of them against the Nemesis. Roughly **2–4 minutes**.
   Kael ends about 40% down on health (after the breather); 53% of first attempts win: the room where
-  a weaker Kael starts to fall. Still easier than room 4 (5% of first attempts straight from round 2), and the route
+  a weaker Kael starts to fall. Still easier than room 4 (25% of first attempts straight from round 2), and the route
   planner knows it.
 - **Reward:** fragment, 80 gold, 2 potions, 300 XP. *"The last skeleton falls apart, and the
   chamber goes quiet."*
@@ -76,7 +76,7 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
 - **Getting there:** 2 torches from the camp (through the Hall of Portraits).
 - **On entering:** chains sway overhead; six skeletons stand to attention. Quest: **The Last Loyal Knight**.
 - **Room:** a high barracks hall with two rows of piers, a ringed floor and chains overhead.
-- **Enemies:** 6 Skeletons, 45% stronger than in room 1 (plus progress). Only when all six are down
+- **Enemies:** 6 Skeletons, 45% stronger than in room 1 (plus progress), then 5% off (`ease`). Only when all six are down
   does the **Hollow King** rise (**BOSS BATTLE!** banner): the barracks' dead king, crowned by Morvath
   in hollow iron, 3.4 m tall. 110 HP, ATK 16, DEF 4 before scaling. Kael catches his breath first
   (full shield, +25% health). His moves:
@@ -86,7 +86,7 @@ and at the camp. Each Blender room preloads while you're on the map, so a fight 
   - **The roar**, below half health, once: two Skeletons claw out of the floor. The room is not won
     while they stand.
 - **Length:** about **42 rounds** (40–45), 18 of them against the King. Kael ends about half down
-  on health; 5% of first attempts win straight from round 2 (r1 → r2 → r4): go through room 3 first.
+  on health; 25% of first attempts win straight from round 2 (r1 → r2 → r4); the route through room 3 is still the stronger play.
 - **Reward:** fragment, 100 gold, 2 potions, 400 XP. *"Their line is broken. The Fortress Gate is open."*
 
 ## Level 5 — The Throne of Eternity (Round 5, "The Boss Round")
