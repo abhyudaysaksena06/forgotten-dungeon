@@ -29,6 +29,8 @@ Every aspect of the game, scored 1–10 before and after the overhaul of 9 Novem
   triangles) has no rig yet.
 - **The Nemesis has no skeleton.** It moves as a whole (procedural motion), not limb by limb. A rig
   and clips (for example via Mixamo) would let it swing its sword.
-- **35 MB to load.** Everything loads before play so nothing stutters later; on a slow connection the
-  first wait is long. KTX2 textures would cut it, but need a texture encoder that isn't installed here.
+- **~35 MB of models to load** (was 42: the bosses and the Throne were welded and simplified under
+  an error cap with no visible change, and the title page no longer waits for the 3D engine).
+  Everything still loads before play so nothing stutters later; KTX2 textures would cut more, but
+  need a texture encoder that isn't installed here.
 - **NPCs talk only in the chronicle.** There are no speech bubbles or conversations at the camp.

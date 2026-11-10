@@ -1,6 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { clearQuestSession, loadQuestSession, questApi, saveQuestSession } from './api.js';
-import QuestGame from './QuestGame.jsx';
+
+// The game (and the whole 3D engine with it) loads as its own file, so the title page shows at
+// once instead of waiting a megabyte. It is fetched quietly while the title is read, and the
+// loading screen ("Lighting the torches…") covers the rest.
+const loadGame = () => import('./QuestGame.jsx');
+const QuestGame = lazy(loadGame);
 
 export default function QuestApp() {
   const [session, setSession] = useState(() => loadQuestSession());
@@ -12,7 +17,17 @@ export default function QuestApp() {
     setNotice(message ?? null);
   }, []);
 
-  if (session) return <QuestGame session={session} onLeave={leave} />;
+  useEffect(() => {
+    const idle = window.requestIdleCallback ?? ((f) => setTimeout(f, 300));
+    idle(() => loadGame());
+  }, []);
+
+  if (session)
+    return (
+      <Suspense fallback={<div aria-busy="true" style={{ position: 'fixed', inset: 0, background: '#161922' }} />}>
+        <QuestGame session={session} onLeave={leave} />
+      </Suspense>
+    );
   return (
     <TeamLogin
       notice={notice}

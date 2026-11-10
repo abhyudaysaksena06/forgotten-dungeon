@@ -962,3 +962,10 @@
     transform: translateY(6px);
   }
 }
+
+/* Touch screens: the key letters on the action buttons mean nothing without a keyboard. */
+@media (pointer: coarse) {
+  .quest-root .slot kbd {
+    display: none;
+  }
+}

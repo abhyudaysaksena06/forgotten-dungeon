@@ -265,7 +265,7 @@ function Slot({ icon, label, keyName, onClick, disabled, cooldown = 0, max = 1, 
 export function AbilityBar({ me, skill, target, canReach, potions, meals, rune, runeTarget, canRetreat, busy, aimGap, reach, lane, danger, clock, autoRounds, onToggleAuto, onAttack, onDefend, onSkill, onRune, onPotion, onMeal, onRetreat, onWait }) {
   const near = aimGap !== null && aimGap <= reach;
   const exposed = lane && danger?.has(lane);
-  const clockPct = clock ? Math.max(0, Math.min(100, (clock.left / 6) * 100)) : 0;
+  const clockPct = clock ? Math.max(0, Math.min(100, (clock.left / (clock.max ?? 6)) * 100)) : 0;
   return (
     <div className="hud-abilities">
       <div className="ability-info">
@@ -332,6 +332,15 @@ export function Subtitle({ speech, meta }) {
 
 // ---------- help ----------
 
+// On a touch screen the keyboard rows make no sense, so each device shows its own list.
+const TOUCH_CONTROLS = [
+  ['Move', 'The stick at the bottom left'],
+  ['Look / aim', 'Drag anywhere on the view · what the square sits on is the target'],
+  ['Attack, Skill, Rune, Defend…', 'Tap the buttons at the bottom right'],
+  ['Potion / Meal', 'The flask button'],
+  ['Enemies', 'Tap one in the list to target it'],
+  ['Quest log & progress', 'The gear in the top bar'],
+];
 const CONTROLS = [
   ['Move', 'W A S D'],
   ['Jump', 'Space'],
@@ -349,6 +358,8 @@ const CONTROLS = [
 ];
 
 export function HelpPanel({ onClose }) {
+  const touch = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
+  const rows = touch ? TOUCH_CONTROLS : CONTROLS;
   return (
     <div className="hud-help-backdrop" onClick={onClose}>
       <div className="hud-help glass" role="dialog" aria-label="Controls" onClick={(e) => e.stopPropagation()}>
@@ -359,7 +370,7 @@ export function HelpPanel({ onClose }) {
           </button>
         </div>
         <dl>
-          {CONTROLS.map(([what, keys]) => (
+          {rows.map(([what, keys]) => (
             <div key={what} className="help-row">
               <dt>{what}</dt>
               <dd>{keys}</dd>
