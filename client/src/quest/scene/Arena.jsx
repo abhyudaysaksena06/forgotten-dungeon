@@ -8,7 +8,7 @@ import { Box3, Raycaster, Vector3 } from 'three';
 import { Actor, VILLAINS_ONLY } from './Actor.jsx';
 import { toonify } from './toon.js';
 import { IS_FLYER, PALETTE, TOON_RAMP } from './placeholders.jsx';
-import { CAGE, COMPANION_SPEED, DEFAULT_ROOM, RADIUS, cageSpot, companionGoal, faceTowards, formationSpot, gap, radiusFor, resolve, roomSpot, stepLeader, walkTowards, yawTo, intoLane, LANE_WIDTH, LANE_NAMES, rightOf } from './world.js';
+import { CAGE, COMPANION_SPEED, DEFAULT_ROOM, RADIUS, cageSpot, companionGoal, faceTowards, formationSpot, gap, radiusFor, resolve, roomSpot, stepLeader, walkTowards, yawTo, intoLane, LANE_WIDTH, LANE_NAMES, rightOf, decodeGrid, gridFloor } from './world.js';
 
 // Each round's look, from the Story Bible: it gets darker the deeper the party goes.
 const THEMES = {
@@ -265,7 +265,10 @@ function tameLights(scene) {
 // tools/blender/prepare_room.py next to the model. The model itself is left exactly as exported.
 export function roomFromLayout(L) {
   const steps = L.steps ?? [];
-  const floorY = (x, z, fromY = 0) => {
+  // The walking map from the room's real geometry, when the layout has one: walls block exactly and
+  // the floor height comes from the model itself (a round dais, stairs).
+  const grid = decodeGrid(L.grid);
+  const floorY = grid?.floor ? (x, z) => gridFloor(grid, x, z) : (x, z, fromY = 0) => {
     let y = 0;
     for (const s of steps) if (x >= s.minX && x <= s.maxX && z >= s.minZ && z <= s.maxZ && s.top <= fromY + 1.2) y = Math.max(y, s.top);
     return y;
@@ -277,6 +280,7 @@ export function roomFromLayout(L) {
     enclosed: true,
     view: L.view ?? null, // where the camera may go (the inner walls), when wider than the floor
     ceiling: L.ceiling ?? Infinity, // the camera stays under it
+    grid,
     spawns: { party: L.spawns?.party ?? [], enemies: L.spawns?.enemies ?? [], boss: L.spawns?.boss ?? null, npcs: L.spawns?.npcs ?? [] },
   };
 }
@@ -622,7 +626,7 @@ function WorldDriver({ world, state }) {
         if (foe && Math.hypot(foe.x - a.x, foe.z - a.z) < 12) faceTowards(a, foe.x, foe.z, dt);
         else a.yaw = leader.yaw;
       }
-      if (frame.current % 4 === 0) a.y = floor(a);
+      a.y += (floor(a) - a.y) * Math.min(1, dt * 12);
     }
 
     // Heroes don't stand inside each other: companions step aside from the leader and each other.
@@ -654,7 +658,7 @@ function WorldDriver({ world, state }) {
         const moved = walkTowards(world, id, prey.x, prey.z, dt, a.ultimate ? 1.2 : a.boss ? 2.6 : a.flyer ? 2.2 : 1.8, stop);
         if (!moved) faceTowards(a, prey.x, prey.z, dt);
       } else if (a.home) walkTowards(world, id, a.home[0], a.home[2], dt, 1.4, 0.2);
-      if (frame.current % 4 === 0 && !a.flyer) a.y = floor(a);
+      if (!a.flyer) a.y += (floor(a) - a.y) * Math.min(1, dt * 12);
     }
   });
   return null;

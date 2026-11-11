@@ -320,6 +320,12 @@ export default function QuestGame({ session, onLeave }) {
     [busy, path, session.code, apply, coach, setCoach, world],
   );
 
+  // Stable for the 3D scene (memoized): the clock and the aim tick several times a second, and a new
+  // function each time would redraw the whole scene tree with them.
+  const actRef = useRef(act);
+  actRef.current = act;
+  const onTravel = useCallback((o) => actRef.current({ type: 'travel', to: o.to }), []);
+
   const state = view?.state;
   const phase = state?.phase;
   const me = state?.party.find((m) => m.controlled);
@@ -653,7 +659,7 @@ export default function QuestGame({ session, onLeave }) {
           cues={cues}
           targetId={target?.id}
           onTarget={setTargetId}
-          onTravel={(o) => act({ type: 'travel', to: o.to })}
+          onTravel={onTravel}
           lowSpec={lowSpec}
           world={world}
           reach={reach}

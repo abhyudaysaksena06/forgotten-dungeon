@@ -1,6 +1,6 @@
 // The 3D canvas: the map between fights, the room during a fight. In a fight the camera follows
 // the leader from behind; drag with the mouse (or use ← →) to look around, scroll to zoom.
-import { Component, Suspense, useEffect, useRef, useState } from 'react';
+import { Component, Suspense, memo, useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
 import { useGLTF } from '@react-three/drei';
@@ -374,7 +374,8 @@ function QualityWatch({ settleKey, onStep }) {
   );
 }
 
-export default function Scene({ state, meta, models, cues, targetId, onTarget, onTravel, lowSpec, world, reach, firstPerson, batches, loaded, warmed, onWarmed }) {
+export default memo(Scene);
+function Scene({ state, meta, models, cues, targetId, onTarget, onTravel, lowSpec, world, reach, firstPerson, batches, loaded, warmed, onWarmed }) {
   // A fight, or a cleared room whose cage is open, shows the room; anywhere else, the map.
   const view = state.phase === 'combat' || state.cages ? 'arena' : 'map';
   // In a Blender room its own lamps set the mood, so the generic fill lights step back.
