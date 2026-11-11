@@ -192,10 +192,109 @@ function clampToShape(s, x, z, r) {
   return [Math.max(s.minX + r, Math.min(x, s.maxX - r)), Math.max(s.minZ + r, Math.min(z, s.maxZ - r))];
 }
 
-// Push a circle at (x, z) out of the room's walls and everyone else's space.
+// ---------- the walking map (built from the room's geometry: tools/models/collision-grid.mjs) ----------
+export function decodeGrid(g) {
+  if (!g) return null;
+  const raw = typeof atob === 'function' ? atob(g.bits) : Buffer.from(g.bits, 'base64').toString('binary');
+  const n = g.w * g.h;
+  const blocked = new Uint8Array(n);
+  for (let i = 0; i < n; i++) blocked[i] = (raw.charCodeAt(i >> 3) >> (i & 7)) & 1;
+  let floor = null;
+  if (g.floor) {
+    const f = typeof atob === 'function' ? atob(g.floor) : Buffer.from(g.floor, 'base64').toString('binary');
+    floor = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const v = f.charCodeAt(2 * i) | (f.charCodeAt(2 * i + 1) << 8);
+      floor[i] = (v > 32767 ? v - 65536 : v) / 100;
+    }
+  }
+  return { cell: g.cell, x0: g.x0, z0: g.z0, w: g.w, h: g.h, blocked, floor, field: null };
+}
+const cellAt = (G, x, z) => {
+  const cx = Math.floor((x - G.x0) / G.cell);
+  const cz = Math.floor((z - G.z0) / G.cell);
+  return cx < 0 || cz < 0 || cx >= G.w || cz >= G.h ? -1 : cz * G.w + cx;
+};
+export const gridBlocked = (G, x, z) => {
+  const i = cellAt(G, x, z);
+  return i < 0 || G.blocked[i] === 1;
+};
+export const gridFloor = (G, x, z) => {
+  const i = cellAt(G, x, z);
+  return i < 0 || !G.floor || G.blocked[i] ? 0 : G.floor[i];
+};
+
+// Push a circle out of every blocked cell it overlaps (cells are squares).
+function resolveGrid(pos, radius, G) {
+  if (gridBlocked(G, pos.x, pos.z)) {
+    // Centre inside a wall (spawned or shoved there): to the nearest free cell centre.
+    const c = G.cell;
+    for (let ring = 1; ring < 12; ring++) {
+      let best = null;
+      for (let dz = -ring; dz <= ring; dz++) {
+        for (let dx = -ring; dx <= ring; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dz)) !== ring) continue;
+          const x = pos.x + dx * c;
+          const z = pos.z + dz * c;
+          if (gridBlocked(G, x, z)) continue;
+          const d = dx * dx + dz * dz;
+          if (!best || d < best.d) best = { x, z, d };
+        }
+      }
+      if (best) {
+        pos.x = G.x0 + (Math.floor((best.x - G.x0) / c) + 0.5) * c;
+        pos.z = G.z0 + (Math.floor((best.z - G.z0) / c) + 0.5) * c;
+        break;
+      }
+    }
+  }
+  const c = G.cell;
+  const minX = Math.floor((pos.x - radius - G.x0) / c);
+  const maxX = Math.floor((pos.x + radius - G.x0) / c);
+  const minZ = Math.floor((pos.z - radius - G.z0) / c);
+  const maxZ = Math.floor((pos.z + radius - G.z0) / c);
+  let px = 0;
+  let pz = 0;
+  for (let cz = minZ; cz <= maxZ; cz++) {
+    for (let cx = minX; cx <= maxX; cx++) {
+      const inside = cx >= 0 && cz >= 0 && cx < G.w && cz < G.h;
+      if (inside && !G.blocked[cz * G.w + cx]) continue;
+      const bx0 = G.x0 + cx * c;
+      const bz0 = G.z0 + cz * c;
+      const qx = Math.max(bx0, Math.min(pos.x, bx0 + c));
+      const qz = Math.max(bz0, Math.min(pos.z, bz0 + c));
+      const dx = pos.x - qx;
+      const dz = pos.z - qz;
+      const d = Math.hypot(dx, dz);
+      if (d < radius && d > 1e-6) {
+        // Deepest push per axis, so a flat wall made of many cells pushes once, not once per cell.
+        const ox = (dx / d) * (radius - d);
+        const oz = (dz / d) * (radius - d);
+        if (Math.abs(ox) > Math.abs(px)) px = ox;
+        if (Math.abs(oz) > Math.abs(pz)) pz = oz;
+      }
+    }
+  }
+  pos.x += px;
+  pos.z += pz;
+  return px !== 0 || pz !== 0;
+}
+
+// Push a circle at (x, z) out of the room's walls and everyone else's space. A few passes, so being
+// pushed out of one wall into a corner's other wall is caught too.
 export function resolve(pos, radius, world, ignoreId) {
+  const G = world.room.grid;
+  for (let pass = 0; pass < 3; pass++) {
+    resolveOnce(pos, radius, world, ignoreId);
+    if (!G || !resolveGrid(pos, radius, G)) break;
+  }
+  return pos;
+}
+
+function resolveOnce(pos, radius, world, ignoreId) {
   const { bounds, colliders } = world.room;
-  for (const c of [...colliders, ...world.extraColliders]) {
+  for (let k = 0, n = colliders.length + world.extraColliders.length; k < n; k++) {
+    const c = k < colliders.length ? colliders[k] : world.extraColliders[k - colliders.length];
     if (c.kind === 'circle') {
       const dx = pos.x - c.x;
       const dz = pos.z - c.z;
@@ -251,7 +350,6 @@ export function resolve(pos, radius, world, ignoreId) {
     }
     [pos.x, pos.z] = best.p;
   }
-  return pos;
 }
 
 const groundAt = (world, x, z, y = 0) => (world.room.floorY ? world.room.floorY(x, z, y) : 0);
@@ -275,38 +373,167 @@ export function stepLeader(world, dt) {
   world.jumpQueued = false;
   a.vy -= MOVE.gravity * dt;
   a.y += a.vy * dt;
-  a.x += a.vx * dt;
-  a.z += a.vz * dt;
-  resolve(a, a.radius, world, world.leaderId);
+  // In small steps (a fifth of a body), so no wall is ever thin enough to slip through.
+  const n = Math.max(1, Math.ceil((Math.hypot(a.vx, a.vz) * dt) / (a.radius * 0.5)));
+  const bx = a.x;
+  const bz = a.z;
+  for (let i = 0; i < n; i++) {
+    a.x += (a.vx * dt) / n;
+    a.z += (a.vz * dt) / n;
+    resolve(a, a.radius, world, world.leaderId);
+  }
+  // Blocked: the speed into the wall is lost, so letting go of the key doesn't slide back out.
+  if (dt > 0) {
+    const mx = (a.x - bx) / dt;
+    const mz = (a.z - bz) / dt;
+    if (Math.hypot(mx, mz) < Math.hypot(a.vx, a.vz) - 0.05) {
+      a.vx = mx;
+      a.vz = mz;
+    }
+  }
   const floor = groundAt(world, a.x, a.z, a.y);
   if (a.y <= floor) {
-    a.y = floor;
-    a.vy = 0;
+    // Up a stair: a quick rise, not a jump cut.
+    a.y = floor - a.y > 0.02 && a.vy <= 0 ? Math.min(floor, a.y + Math.max(0.02, 7 * dt)) : floor;
+    if (a.y >= floor) a.vy = 0;
   }
   const speed = Math.hypot(a.vx, a.vz);
   if (dx || dz) a.yaw = lerpAngle(a.yaw, yawTo(dx, dz), 1 - Math.exp(-MOVE.turn * dt));
-  a.motion = a.y > floor + 0.05 ? 'jump' : speed > 0.6 ? 'run' : 'idle';
+  a.motion = a.y > floor + 0.08 && a.vy !== 0 ? 'jump' : speed > 0.6 ? 'run' : 'idle';
   return a;
 }
 
-// Walk an actor towards (tx, tz) until it is `stop` away. Returns true while moving.
+// The way to a target around walls: a breadth-first map of steps to the target's cell (rebuilt when
+// the target moves to another cell, at most a few times a second), which an actor follows downhill
+// whenever a wall stands between it and the target.
+function fieldTo(G, tx, tz, now) {
+  const goal = cellAt(G, tx, tz);
+  const F = G.field;
+  if (F && F.goal === goal && now - F.at < 2000) return F;
+  if (F && now - F.at < 250) return F;
+  const N = G.w * G.h;
+  const dist = F?.dist ?? new Int32Array(N);
+  dist.fill(-1);
+  const queue = F?.queue ?? new Int32Array(N);
+  let head = 0;
+  let tail = 0;
+  if (goal >= 0) {
+    dist[goal] = 0;
+    queue[tail++] = goal;
+  }
+  while (head < tail) {
+    const i = queue[head++];
+    const cx = i % G.w;
+    const d = dist[i] + 1;
+    if (cx > 0 && dist[i - 1] < 0 && !G.blocked[i - 1]) (dist[i - 1] = d), (queue[tail++] = i - 1);
+    if (cx < G.w - 1 && dist[i + 1] < 0 && !G.blocked[i + 1]) (dist[i + 1] = d), (queue[tail++] = i + 1);
+    if (i >= G.w && dist[i - G.w] < 0 && !G.blocked[i - G.w]) (dist[i - G.w] = d), (queue[tail++] = i - G.w);
+    if (i + G.w < N && dist[i + G.w] < 0 && !G.blocked[i + G.w]) (dist[i + G.w] = d), (queue[tail++] = i + G.w);
+  }
+  G.field = { goal, dist, queue, at: now };
+  return G.field;
+}
+
+// Is the straight line from a to b clear of walls (for a body of radius r)?
+function clearLine(G, ax, az, bx, bz, r) {
+  const d = Math.hypot(bx - ax, bz - az);
+  const n = Math.ceil(d / (G.cell * 0.5));
+  const [px, pz] = [-(bz - az) / (d || 1), (bx - ax) / (d || 1)];
+  for (let i = 1; i < n; i++) {
+    const x = ax + ((bx - ax) * i) / n;
+    const z = az + ((bz - az) * i) / n;
+    if (gridBlocked(G, x, z) || gridBlocked(G, x + px * r * 0.8, z + pz * r * 0.8) || gridBlocked(G, x - px * r * 0.8, z - pz * r * 0.8)) return false;
+  }
+  return true;
+}
+
+// Which way to go from (x, z) towards (tx, tz): straight if the way is clear, else along the map.
+function headingTo(world, x, z, tx, tz, r) {
+  const G = world.room.grid;
+  if (!G || clearLine(G, x, z, tx, tz, r)) return [tx - x, tz - z];
+  const F = fieldTo(G, tx, tz, typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const here = cellAt(G, x, z);
+  if (here < 0 || F.dist[here] < 0) return [tx - x, tz - z];
+  // Look a few cells down the slope and head for the furthest one still in plain sight.
+  let best = here;
+  for (let k = 0; k < 6; k++) {
+    let next = best;
+    const cx = best % G.w;
+    for (const j of [best - 1, best + 1, best - G.w, best + G.w, best - G.w - 1, best - G.w + 1, best + G.w - 1, best + G.w + 1]) {
+      if (j < 0 || j >= G.w * G.h) continue;
+      const jx = j % G.w;
+      if (Math.abs(jx - cx) > 1 || F.dist[j] < 0 || G.blocked[j]) continue;
+      if (F.dist[j] < F.dist[next]) next = j;
+    }
+    if (next === best) break;
+    const nx = G.x0 + ((next % G.w) + 0.5) * G.cell;
+    const nz = G.z0 + (Math.floor(next / G.w) + 0.5) * G.cell;
+    if (k > 0 && !clearLine(G, x, z, nx, nz, r)) break;
+    best = next;
+  }
+  if (best === here) return [tx - x, tz - z];
+  return [G.x0 + ((best % G.w) + 0.5) * G.cell - x, G.z0 + (Math.floor(best / G.w) + 0.5) * G.cell - z];
+}
+
+// Walk an actor towards (tx, tz) until it is `stop` away. Returns true while moving. It finds its way
+// around walls, speeds up and slows down instead of starting and stopping dead, keeps a little space
+// from other walkers, and turns smoothly.
 export function walkTowards(world, id, tx, tz, dt, speed, stop) {
   const a = world.actors.get(id);
   const dx = tx - a.x;
   const dz = tz - a.z;
   const d = Math.hypot(dx, dz);
+  a.vx ??= 0;
+  a.vz ??= 0;
+  const ease = 1 - Math.exp(-8 * dt);
   if (d <= stop + 0.02) {
     // close enough (a hair of rounding must not leave them running on the spot)
-    a.motion = 'idle';
-    return false;
+    a.vx += (0 - a.vx) * ease;
+    a.vz += (0 - a.vz) * ease;
+    if (Math.hypot(a.vx, a.vz) < 0.3) {
+      a.vx = a.vz = 0;
+      a.motion = 'idle';
+      return false;
+    }
+  } else {
+    let [hx, hz] = headingTo(world, a.x, a.z, tx, tz, a.radius);
+    const hl = Math.hypot(hx, hz) || 1;
+    hx /= hl;
+    hz /= hl;
+    // Spacing: a gentle push away from other walkers close by, so a pack spreads round its prey.
+    let sx = 0;
+    let sz = 0;
+    for (const [oid, o] of world.actors) {
+      if (oid === id || !o.alive || o.kind !== a.kind) continue;
+      const ox = a.x - o.x;
+      const oz = a.z - o.z;
+      const od = Math.hypot(ox, oz);
+      const want = a.radius + o.radius + 0.35;
+      if (od < want && od > 1e-4) {
+        sx += (ox / od) * (1 - od / want);
+        sz += (oz / od) * (1 - od / want);
+      }
+    }
+    // Slow down on arrival rather than stop dead.
+    const v = Math.min(speed, Math.max(0.6, (d - stop) * 2.5));
+    a.vx += ((hx + sx * 1.2) * v - a.vx) * ease;
+    a.vz += ((hz + sz * 1.2) * v - a.vz) * ease;
   }
-  const step = Math.min(d - stop, speed * dt);
-  a.x += (dx / d) * step;
-  a.z += (dz / d) * step;
-  resolve(a, a.radius, world, id);
-  a.yaw = lerpAngle(a.yaw, yawTo(dx, dz), 1 - Math.exp(-MOVE.turn * dt));
-  a.motion = 'run';
-  return true;
+  const bx = a.x;
+  const bz = a.z;
+  const n = Math.max(1, Math.ceil((Math.hypot(a.vx, a.vz) * dt) / (a.radius * 0.5)));
+  for (let i = 0; i < n; i++) {
+    a.x += (a.vx * dt) / n;
+    a.z += (a.vz * dt) / n;
+    resolve(a, a.radius, world, id);
+  }
+  const moved = Math.hypot(a.x - bx, a.z - bz) / Math.max(dt, 1e-4);
+  // Face where it is going while it walks, the target once it arrives.
+  const fx = moved > 0.3 ? a.x - bx : dx;
+  const fz = moved > 0.3 ? a.z - bz : dz;
+  a.yaw = lerpAngle(a.yaw, yawTo(fx, fz), 1 - Math.exp(-MOVE.turn * 0.6 * dt));
+  a.motion = moved > 0.4 ? 'run' : 'idle';
+  return d > stop + 0.02;
 }
 
 export function faceTowards(a, tx, tz, dt) {
