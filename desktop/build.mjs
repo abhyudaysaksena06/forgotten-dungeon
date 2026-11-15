@@ -2,14 +2,17 @@
 // server's own dependencies, into desktop/stage. Then: npx electron-builder --projectDir stage
 import { cpSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 const run = (cmd, cwd) => execSync(cmd, { cwd, stdio: 'inherit' });
-const here = new URL('.', import.meta.url).pathname;
-const repo = new URL('..', import.meta.url).pathname;
+// Real file paths on every system (a URL's pathname is '/D:/...' on Windows).
+const here = join(fileURLToPath(new URL('.', import.meta.url)), '/');
+const repo = join(fileURLToPath(new URL('..', import.meta.url)), '/');
 run('npm run build -w client', repo);
 rmSync(`${here}stage`, { recursive: true, force: true });
 mkdirSync(`${here}stage/game/client`, { recursive: true });
 cpSync(`${repo}client/dist`, `${here}stage/game/client/dist`, { recursive: true });
-cpSync(`${repo}server`, `${here}stage/game/server`, { recursive: true, filter: (p) => !/node_modules|[/\\]saves|[/\\]test/.test(p.slice(repo.length + 6)) });
+cpSync(`${repo}server`, `${here}stage/game/server`, { recursive: true, filter: (p) => !/node_modules|[/\\]saves([/\\]|$)|[/\\]test([/\\]|$)/.test(p.slice(repo.length + 6)) });
 const server = JSON.parse(readFileSync(`${repo}server/package.json`, 'utf8'));
 const desk = JSON.parse(readFileSync(`${here}package.json`, 'utf8'));
 cpSync(`${here}main.cjs`, `${here}stage/main.cjs`);
