@@ -111,6 +111,12 @@ export default function QuestGame({ session, onLeave }) {
   const [cues, setCues] = useState([]);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
+  const [softwareGL, setSoftwareGL] = useState(false);
+  useEffect(() => {
+    const on = () => setSoftwareGL(true);
+    window.addEventListener('software-gl', on);
+    return () => window.removeEventListener('software-gl', on);
+  }, []);
   const [targetId, setTargetId] = useState(null);
   const [picker, setPicker] = useState(null); // { kind, title } for choosing an ally
   const [lowSpec, setLowSpec] = useState(readLowSpec);
@@ -679,11 +685,17 @@ export default function QuestGame({ session, onLeave }) {
           onWarmed={onWarmed}
         />
       </div>
+      <div className="scene-vignette" aria-hidden="true" />
       {!preloaded && <LoadingScreen />}
       {preloaded && roomWaiting && <LoadingScreen room={meta?.rooms?.[roomWaiting]?.name} />}
 
       <TopBar view={view} meta={meta} lowSpec={lowSpec} onLowSpec={toggleLowSpec} onLeave={() => onLeave()} sensitivity={sensitivity} onSensitivity={changeSensitivity} audio={audio} onAudio={changeAudio} firstPerson={firstPerson} onToggleView={toggleView} onHelp={() => setHelpOpen(true)} onMenu={setSettingsOpen} onRewind={rewindTo} onReset={resetAll} busy={busy} />
       {view.note && <div className="hud-note">{view.note}</div>}
+      {softwareGL && (
+        <div className="hud-note" role="alert">
+          This computer is drawing the game without its graphics card, so it will lag. Update the graphics driver (Intel, AMD or NVIDIA) and restart the game.
+        </div>
+      )}
 
       {state.phase !== 'setup' && <PartyPanel party={state.party} meta={meta} inFight={state.phase === 'combat'} />}
       {state.phase !== 'setup' && <Chronicle log={state.log} rolls={state.lastRolls} />}

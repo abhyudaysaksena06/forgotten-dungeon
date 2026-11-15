@@ -36,6 +36,7 @@ const GLB_CLIP = {
 };
 // Bosses whose 'skill' is the Shadow Tide: a poisoned ring rolls out across the floor.
 const TIDE_CASTERS = new Set(['boss_hollow_king']);
+const NO_RAYCAST = () => {};
 const clipFor = (actions, kind) => (GLB_CLIP[kind] ?? []).map((k) => actions[k]).find(Boolean);
 
 function activeCue(cues, now) {
@@ -146,7 +147,11 @@ function GlbModel({ modelKey, cues, fallen, motion, opts = {}, clipsRef }) {
     loco.current?.reset().fadeIn(0.2).play();
   }, [fallen, actions]);
   model.traverse((o) => {
-    if (o.isMesh) o.castShadow = true;
+    if (!o.isMesh) return;
+    o.castShadow = true;
+    // Clicks use the actor's simple hit capsule: testing the pointer against every triangle of an
+    // animated model (a boss has 150,000) on each mouse move recomputed its pose on the CPU.
+    o.raycast = NO_RAYCAST;
   });
   return <primitive object={model} scale={fit.scale} rotation={[0, fit.turn, 0]} />;
 }
@@ -301,11 +306,18 @@ export function Actor({
           ) : (
             <Placeholder modelKey={modelKey} armoured={armoured} />
           )}
-          <mesh position={[0, flyer ? 1.3 : 0.9, 0]}>
+          {/* The hit area for clicks and hover: an invisible capsule the size of the body. */}
+          {onClick && (
+            <mesh position={[0, height / 2, 0]}>
+              <capsuleGeometry args={[Math.max(0.35, height * 0.18), Math.max(0.2, height * 0.6), 4, 8]} />
+              <meshBasicMaterial visible={false} />
+            </mesh>
+          )}
+          <mesh position={[0, flyer ? 1.3 : 0.9, 0]} raycast={NO_RAYCAST}>
             <sphereGeometry args={[0.75, 16, 12]} />
             <meshBasicMaterial ref={flash} color="#ff3b3b" transparent opacity={0} depthWrite={false} />
           </mesh>
-          <mesh position={[0, flyer ? 1.3 : 0.9, 0]}>
+          <mesh position={[0, flyer ? 1.3 : 0.9, 0]} raycast={NO_RAYCAST}>
             <sphereGeometry args={[0.85, 16, 12]} />
             <meshBasicMaterial ref={glow} color={PALETTE.verdigris} transparent opacity={0} depthWrite={false} />
           </mesh>

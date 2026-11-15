@@ -7,11 +7,9 @@ const net = require('node:net');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
-// Use the dedicated GPU on laptops that have two, and never fall back to software rendering lists.
+// Use the dedicated GPU on laptops that have two. (No experimental switches: forcing past Chrome's
+// driver blocklist or zero-copy uploads corrupt the picture on some drivers.)
 app.commandLine.appendSwitch('force_high_performance_gpu');
-app.commandLine.appendSwitch('ignore-gpu-blocklist');
-app.commandLine.appendSwitch('enable-zero-copy');
-app.commandLine.appendSwitch('enable-gpu-rasterization');
 // Windows: draw through Direct3D 11 (the fastest, most reliable path for WebGL there).
 if (process.platform === 'win32') app.commandLine.appendSwitch('use-angle', 'd3d11');
 
