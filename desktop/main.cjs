@@ -11,6 +11,9 @@ const { pathToFileURL } = require('node:url');
 app.commandLine.appendSwitch('force_high_performance_gpu');
 app.commandLine.appendSwitch('ignore-gpu-blocklist');
 app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+// Windows: draw through Direct3D 11 (the fastest, most reliable path for WebGL there).
+if (process.platform === 'win32') app.commandLine.appendSwitch('use-angle', 'd3d11');
 
 const freePort = () =>
   new Promise((resolve) => {
