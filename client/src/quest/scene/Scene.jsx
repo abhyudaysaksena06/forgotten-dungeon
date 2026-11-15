@@ -346,9 +346,12 @@ const QUALITY_KEY = 'forgotten-dungeon.quality';
 function readQuality() {
   try {
     const q = Number(localStorage.getItem(QUALITY_KEY));
-    return Number.isInteger(q) && q >= 0 && q < QUALITY.length ? q : 0;
+    // A first visit starts light (sharpness 1, 8 lamps, no glow) and climbs if the machine has room:
+    // starting at full quality made slow machines lag for the first minute of every fight.
+    const raw = localStorage.getItem(QUALITY_KEY);
+    return raw !== null && Number.isInteger(q) && q >= 0 && q < QUALITY.length ? q : 3;
   } catch {
-    return 0;
+    return 3;
   }
 }
 
@@ -358,7 +361,7 @@ function QualityWatch({ settleKey, onStep }) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     setReady(false);
-    const t = setTimeout(() => setReady(true), 2500);
+    const t = setTimeout(() => setReady(true), 1200);
     return () => clearTimeout(t);
   }, [settleKey]);
   if (!ready) return null;
@@ -367,6 +370,9 @@ function QualityWatch({ settleKey, onStep }) {
       key={settleKey}
       bounds={(refresh) => (refresh > 90 ? [55, 85] : [45, 57])}
       flipflops={4}
+      ms={200}
+      iterations={6}
+      onChange={({ fps }) => fps < 30 && onStep(2)}
       onDecline={() => onStep(1)}
       onIncline={() => onStep(-1)}
     />
