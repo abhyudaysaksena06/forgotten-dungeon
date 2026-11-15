@@ -1,7 +1,13 @@
 # Builds the desktop app for Windows and Mac. Run it from the Actions tab ("Run workflow"); the
-# installers appear as downloadable artifacts on the run's page.
+# installers are published on the repo's Releases page (runs on every push to main, or by hand).
 name: Desktop app
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['client/**', 'server/**', 'desktop/**', '.github/workflows/desktop.yml']
+permissions:
+  contents: write
 jobs:
   build:
     strategy:
@@ -31,3 +37,19 @@ jobs:
             desktop/dist/*.exe
             desktop/dist/*.zip
             desktop/dist/*.dmg
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-${{ github.run_number }}
+          name: The Forgotten Dungeon (desktop) — build ${{ github.run_number }}
+          make_latest: true
+          body: |
+            **Windows**: download the `.exe` (double-click, no install; on the SmartScreen warning click *More info → Run anyway*).
+            **Mac**: the `.dmg` (first launch: right-click the app → Open).
+          files: out/**/*
