@@ -14,3 +14,6 @@ ml/data/
 .vercel
 .dragon_build/
 __pycache__/
+desktop/stage/
+desktop/dist/
+desktop/node_modules/
