@@ -4,10 +4,9 @@ import { Component, Suspense, memo, useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
 import { useGLTF } from '@react-three/drei';
-import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
 import { ACESFilmicToneMapping, AgXToneMapping, AmbientLight, DirectionalLight, HemisphereLight, PointLight, Scene as ThreeScene, Vector3 } from 'three';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { Arena, loadRoomLayout, prepareRoom, setLampCap } from './Arena.jsx';
+import { Arena, loadRoomLayout, prepareRoom } from './Arena.jsx';
 import { MapView } from './MapView.jsx';
 import { InkContext, PALETTE, TOON_RAMP } from './placeholders.jsx';
 import { toonify } from './toon.js';
@@ -236,8 +235,12 @@ const LATER = [
   ['room_3', 'room_4', 'boss_nemesis', 'boss_hollow_king'],
   ['room_5', 'boss_morvath_knight', 'boss_morvath_dragon'],
 ];
+// In the desktop app every file is on the local disk: one batch, all of it before play, so nothing is
+// decoded or compiled while a fight runs.
+const DESKTOP = typeof navigator !== 'undefined' && /Electron/.test(navigator.userAgent);
 export function loadBatches(models, state) {
   modelsMeta.current = models;
+  if (DESKTOP) return [loadBatchesAll(models)];
   const here = state?.combat?.roomId ?? (state?.location && state.location !== 'camp' ? state.location : null);
   const hereKey = here ? `room_${here.slice(1)}` : null;
   const later = LATER.map((keys) => keys.filter((k) => models.has(k)));
@@ -250,6 +253,9 @@ export function loadBatches(models, state) {
   // Every map miniature comes with the first batch: the map shows all five rooms at once.
   const minis = [...models.keys()].filter((k) => models.get(k)?.mini && !first.includes(k)).map((k) => `/models/${k}.mini.glb`);
   return batches.map((b, i) => ({ models: b, urls: [...modelUrls(b), ...(i === 0 ? minis : [])] }));
+}
+function loadBatchesAll(models) {
+  return { models: new Map(models), urls: modelUrls(models) };
 }
 // The characters any room may show (everything that isn't a room), among the given batches.
 export const actorKeys = (batches) => batches.flatMap((b) => [...b.models.keys()]).filter((k) => !k.startsWith('room_'));
@@ -331,16 +337,16 @@ class PreloadGuard extends Component {
   }
 }
 
-// The quality ladder. The game watches its own frame rate in a fight: when it can't hold its pace it
-// steps down (sharpness first, then the glow, then the rooms' dimmer lamps), and steps back up when
-// there is room to spare. The step a machine settles on is remembered for the next visit.
+// The quality ladder: only the drawing sharpness (pixel ratio) moves, and only down. Lights, shadows and glow never
+// change during play: each change of the number of lights recompiles every material on the GPU, a
+// freeze and a flicker. The game watches its frame rate in a fight, steps down when it can't keep
+// its pace and back up when there is room; the step a machine settles on is remembered.
 const QUALITY = [
-  { dpr: 1.5, lamps: 16, bloom: true },
-  { dpr: 1.25, lamps: 16, bloom: true },
-  { dpr: 1, lamps: 16, bloom: false },
-  { dpr: 1, lamps: 8, bloom: false },
-  { dpr: 0.85, lamps: 5, bloom: false },
-  { dpr: 0.7, lamps: 3, bloom: false },
+  { dpr: 1.5 },
+  { dpr: 1.25 },
+  { dpr: 1 },
+  { dpr: 0.85 },
+  { dpr: 0.7 },
 ];
 const QUALITY_KEY = 'forgotten-dungeon.quality';
 function readQuality() {
@@ -349,9 +355,9 @@ function readQuality() {
     // A first visit starts light (sharpness 1, 8 lamps, no glow) and climbs if the machine has room:
     // starting at full quality made slow machines lag for the first minute of every fight.
     const raw = localStorage.getItem(QUALITY_KEY);
-    return raw !== null && Number.isInteger(q) && q >= 0 && q < QUALITY.length ? q : 3;
+    return raw !== null && Number.isInteger(q) && q >= 0 && q < QUALITY.length ? q : 2;
   } catch {
-    return 3;
+    return 2;
   }
 }
 
@@ -369,12 +375,9 @@ function QualityWatch({ settleKey, onStep }) {
     <PerformanceMonitor
       key={settleKey}
       bounds={(refresh) => (refresh > 90 ? [55, 85] : [45, 57])}
-      flipflops={4}
-      ms={200}
-      iterations={6}
-      onChange={({ fps }) => fps < 30 && onStep(2)}
+      ms={250}
+      iterations={8}
       onDecline={() => onStep(1)}
-      onIncline={() => onStep(-1)}
     />
   );
 }
@@ -390,20 +393,42 @@ function Scene({ state, meta, models, cues, targetId, onTarget, onTravel, lowSpe
   // In the artist's rooms only their own lamps light the scene (a faint ambient keeps the heroes
   // readable), with Blender's AgX tone mapping and no added effects.
   const fill = blenderRoom ? 0 : 1;
-  const [quality, setQuality] = useState(() => (lowSpec ? Math.max(3, readQuality()) : readQuality()));
+  const [quality, setQuality] = useState(() => (lowSpec ? Math.max(2, readQuality()) : readQuality()));
   const q = QUALITY[quality];
   useEffect(() => {
-    setLampCap(q.lamps);
     try {
       localStorage.setItem(QUALITY_KEY, String(quality));
     } catch {
       // Not remembered: the next visit learns again.
     }
-  }, [q.lamps, quality]);
-  const stepQuality = (d) => setQuality((v) => Math.min(QUALITY.length - 1, Math.max(lowSpec ? 3 : 0, v + d)));
+  }, [quality]);
+  // Settles instead of flip-flopping: only down, at most once every 4 s (each change resizes every
+  // frame buffer, a stutter and a sharp/blurry flicker). The level reached is remembered.
+  const lastStep = useRef(0);
+  const stepQuality = (d) => {
+    const now = performance.now();
+    if (d <= 0 || now - lastStep.current < 4000) return;
+    lastStep.current = now;
+    setQuality((v) => Math.min(QUALITY.length - 1, Math.max(lowSpec ? 2 : 0, v + d)));
+  };
   const devicePr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
   return (
     <Canvas
+      // Shader error checks read each program's log right after compiling it, which forces the GPU to
+      // finish that compile on the spot: a freeze every time a new material shows. Only in development.
+      onCreated={({ gl }) => {
+        gl.debug.checkShaderErrors = Boolean(import.meta.env.DEV);
+        // Drawing without the graphics card (an old or blocked driver): every 3D game crawls then.
+        // Tell the player, so the machine gets a driver update instead of the game the blame.
+        try {
+          const ctx = gl.getContext();
+          const ext = ctx.getExtension('WEBGL_debug_renderer_info');
+          const name = String(ctx.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : ctx.RENDERER));
+          if (/swiftshader|llvmpipe|software|basic render/i.test(name)) window.dispatchEvent(new CustomEvent('software-gl', { detail: name }));
+        } catch {
+          // Unknown renderer: say nothing.
+        }
+      }}
       shadows={!lowSpec}
       dpr={Math.min(devicePr, lowSpec ? Math.min(1, q.dpr) : q.dpr)}
       camera={{ fov: 50, position: MAP_VIEW.pos.toArray(), near: 0.1, far: 140 }}
@@ -453,13 +478,8 @@ function Scene({ state, meta, models, cues, targetId, onTarget, onTravel, lowSpe
           <MapView state={state} meta={meta} models={models} onTravel={onTravel} lowSpec={lowSpec} />
         )}
       </InkContext.Provider>
-      {/* Glow: candles, lava, runes and fire bloom; a soft vignette frames the scene. */}
-      {!lowSpec && !blenderRoom && q.bloom && (
-        <EffectComposer multisampling={0}>
-          <Bloom mipmapBlur luminanceThreshold={0.9} luminanceSmoothing={0.15} intensity={0.6} />
-          <Vignette offset={0.25} darkness={0.55} />
-        </EffectComposer>
-      )}
+      {/* (No post-processing pipeline: an extra full-screen pass and its own WebGL probe for a little
+          glow on the map. The vignette is a CSS overlay instead, free on any GPU.) */}
     </Canvas>
   );
 }

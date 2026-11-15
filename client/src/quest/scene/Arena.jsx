@@ -230,7 +230,9 @@ export function readRoom(scene) {
 
 // A room's own lamps, at the strength the artist set. Every light costs every pixel, so on a machine
 // that can't keep up (Scene's quality ladder) only the brightest few stay lit; they cast no shadows.
-let lampCap = 16;
+// A fixed budget, set once when a room is prepared and never changed during play (a change in the
+// number of lights recompiles every material): the brightest 8 of a room's lamps.
+let lampCap = 8;
 const roomLamps = new Set(); // each prepared room's lamps, brightest first
 function capLamps(lamps) {
   lamps.forEach((l, i) => (l.visible = i < lampCap));

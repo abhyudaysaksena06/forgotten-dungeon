@@ -969,3 +969,12 @@
     display: none;
   }
 }
+
+/* A soft vignette over the 3D view (a CSS overlay: no extra GPU pass). */
+.scene-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.45) 100%);
+}
