@@ -352,8 +352,7 @@ const QUALITY_KEY = 'forgotten-dungeon.quality';
 function readQuality() {
   try {
     const q = Number(localStorage.getItem(QUALITY_KEY));
-    // A first visit starts light (sharpness 1, 8 lamps, no glow) and climbs if the machine has room:
-    // starting at full quality made slow machines lag for the first minute of every fight.
+    // A first visit starts at sharpness 1; a machine that can't hold its pace steps down from there.
     const raw = localStorage.getItem(QUALITY_KEY);
     return raw !== null && Number.isInteger(q) && q >= 0 && q < QUALITY.length ? q : 2;
   } catch {
