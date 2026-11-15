@@ -152,10 +152,9 @@ function CameraControls({ world, active }) {
         world.onMouse?.(button);
         return;
       }
-      if (locked()) {
-        world.onMouse?.(0);
-        return;
-      }
+      // Left click always swings in a fight (it also captures the mouse for aiming).
+      world.onMouse?.(0);
+      if (locked()) return;
       lastX = e.clientX;
       lastY = e.clientY;
     };

@@ -450,11 +450,20 @@ export default function QuestGame({ session, onLeave }) {
   };
   // Anything that hits an enemy needs the leader close enough; the leader turns to face it.
   const strikeAt = (enemy, action) => {
+    // (reassigned below when a closer foe is in reach)
     if (!enemy) {
       swingAir(action.type);
       return setToast('No enemy in sight.');
     }
     if (!canReach(enemy)) return setToast(`${me.name} can’t reach a flying enemy.`);
+    // The target is out of reach but another foe is within the blade's arc: that one is hit.
+    if (gap(world, enemy.id) > reach && action.type === 'attack') {
+      const near = nearestEnemy(world, living, canReach);
+      if (near && gap(world, near.id) <= reach) {
+        enemy = near;
+        action = { ...action, targetId: near.id };
+      }
+    }
     if (gap(world, enemy.id) > reach) {
       // Out of reach: the blade still swings (it cuts only air: no damage, and no turn spent).
       setTargetId(enemy.id);
