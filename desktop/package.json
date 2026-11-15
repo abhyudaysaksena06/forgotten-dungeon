@@ -1,0 +1,25 @@
+{
+  "name": "forgotten-dungeon-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "stage": "node build.mjs",
+    "win": "node build.mjs && cd stage && npx electron-builder --win --x64",
+    "mac": "node build.mjs && cd stage && npx electron-builder --mac",
+    "linux": "node build.mjs && cd stage && npx electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.forgottendungeon.game",
+    "productName": "The Forgotten Dungeon",
+    "asar": false,
+    "directories": { "output": "../dist" },
+    "files": ["**/*"],
+    "win": { "target": [{ "target": "portable" }, { "target": "zip" }], "signAndEditExecutable": false },
+    "mac": { "target": "dmg", "category": "public.app-category.games" },
+    "linux": { "target": "AppImage" }
+  }
+}
