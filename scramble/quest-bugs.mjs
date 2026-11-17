@@ -203,7 +203,7 @@ export const QUEST_BUGS = [
     round: 3,
     name: 'Crossed Branches',
     kind: 'ml',
-    symptom: 'Seraphine the Oracle praises reckless choices and frowns on sensible ones: fighting on at 10% health with three potions is "wise", resting when hurt is "unwise".',
+    symptom: 'Seraphine the Oracle calls almost every choice wise, even reckless ones: marching into the Hollow Barracks at a third of your health is "wise".',
     patches: [
       {
         file: FOREST,

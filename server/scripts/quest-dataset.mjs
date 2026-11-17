@@ -27,13 +27,16 @@ const OUT = resolve(args.out ?? 'ml/data/route_decisions.csv');
 const rand = createRng({ rngState: hashSeed(args.seed ?? 'dataset-v1') });
 const r01 = () => rand.next();
 
-// Continue a run to the end with a sensible player and fresh dice.
-function rollout(state, option, k) {
+// Continue a run to the end with a sensible player. Every option at a decision is played against the
+// same k-th set of dice and route coin flips (common random numbers), so the difference between two
+// options is the choice itself, not luck: with independent dice the noise was larger than MARGIN.
+function rollout(state, option, k, at) {
   let s = structuredClone(state);
-  s.rngState = hashSeed(`rollout:${r01()}:${k}`);
+  s.rngState = hashSeed(`rollout:${at}:${k}`);
+  const coins = createRng({ rngState: hashSeed(`route:${at}:${k}`) });
   const { as, ...move } = option;
   s = step(s, move, { mutate: true });
-  const route = routePolicy({ boldness: [1, 1.4, 1.8][k % 3], epsilon: 0.05, rng: r01 });
+  const route = routePolicy({ boldness: [1, 1.4, 1.8][k % 3], epsilon: 0.05, rng: () => coins.next(), upgrades: true });
   for (let i = 0; i < 2500 && (s.phase === 'map' || s.phase === 'combat'); i++) {
     const a = s.phase === 'map' ? upkeep(s) ?? route(s) : carefulLeaderAction(s);
     if (!a) break;
@@ -118,7 +121,7 @@ for (const { team, tier, state } of samples) {
   if (options.length < 2) continue;
   const probs = options.map((o) => {
     let total = 0;
-    for (let k = 0; k < ROLLOUTS; k++) total += rollout(state, o, k);
+    for (let k = 0; k < ROLLOUTS; k++) total += rollout(state, o, k, done);
     return total / ROLLOUTS;
   });
   const best = Math.max(...probs);

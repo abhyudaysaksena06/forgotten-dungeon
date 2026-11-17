@@ -312,12 +312,15 @@ own clean copy of the forest.
 
 1. `node server/scripts/quest-dataset.mjs --states 3000 --rollouts 40 --out ml/data/route_decisions.csv`
    plays thousands of runs of all tiers (Kael alone, with sword and shield). At each decision it tries every option and
-   estimates its win chance from 40 simulated continuations with fresh dice. An option is "good" if it's
+   estimates its win chance from 40 simulated continuations. Every option at a decision is played
+   against the same 40 sets of dice (common random numbers), so the comparison is the choice and not
+   luck, and the continuations buy the Altar and the Forge when affordable (a planner that never
+   upgraded made every other choice look poor next to "upgrade now"). An option is "good" if it's
    within 10 points of the best option in that exact situation. About 4 minutes.
 2. `python ml/train_forest.py` trains a scikit-learn RandomForestClassifier (120 trees, depth 12),
-   split by team. Current result (retrained after room 4's ease): **85.2% accuracy on
-   unseen teams** (majority baseline 52.2%), ROC AUC 0.932, on 15,305 decisions. By tier: weak 83%,
-   average 85%, strong 89%. Top inputs: party power, party DEF, power-to-threat ratio, gold, target tier.
+   split by team. Current result (retrained with care choices, paired rollouts and upgrading continuations): **85.6% accuracy on
+   unseen teams** (majority baseline 66.4%), ROC AUC 0.936, on 11,918 decisions. By tier: weak 81%,
+   average 87%, strong 90%. Care choices: potions 95%, skipped heals 97%, Healer 82%, Weaponsmith 82%. Top inputs: party power, party DEF, power-to-threat ratio, gold, target tier.
 3. The model ships as JSON (`server/src/quest/model/route-forest.json`); `forest.js` evaluates it in
    Node. `server/test/forest.test.js` proves Node and scikit-learn agree, and that the forest beats the
    baseline by at least 10 points.
