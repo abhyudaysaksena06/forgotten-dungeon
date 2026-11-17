@@ -18,12 +18,29 @@
     "appId": "com.forgottendungeon.game",
     "productName": "The Forgotten Dungeon",
     "asar": false,
-    "directories": { "output": "../dist" },
-    "files": ["**/*"],
-    "win": { "target": [{ "target": "portable" }, { "target": "zip" }], "signAndEditExecutable": false },
-    "mac": { "target": "dmg", "category": "public.app-category.games" },
-    "win-bugged": "node build.mjs --bugged && cd stage && npx electron-builder --win --x64",
-    "mac-bugged": "node build.mjs --bugged && cd stage && npx electron-builder --mac",
-    "linux": { "target": "AppImage" }
+    "directories": {
+      "output": "../dist"
+    },
+    "files": [
+      "**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable"
+        },
+        {
+          "target": "zip"
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.games"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   }
 }
