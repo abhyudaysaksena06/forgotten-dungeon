@@ -10,6 +10,7 @@ import { ENEMIES, MORVATH, PIP, POWER_UPS, ROOMS, SWORD, XP_PER_TIER } from '../
 import { beginFight, createRun, distance, routeOptions, step, throneOpen } from '../../src/quest/engine.js';
 import { QuestRuns, cleanAction } from '../../src/quest/runs.js';
 import { makeProfile } from '../../src/quest/teams.js';
+import { loadForest, predictGood } from '../../src/quest/forest.js';
 
 const profile = (tier = 'strong', seed = 'hidden') => makeProfile({ teamId: 'h', seed, tier });
 // Each test sets up only what its own bug touches, so one bug never fails another bug's test.
@@ -210,4 +211,10 @@ test('[Q20] Defend halves Dragon’s Breath', () => {
   const hp = kael(s).hp;
   const after = step(s, { type: 'defend' });
   assert.equal(hp - kael(after).hp, Math.ceil(MORVATH.moves.breath.damage / 2));
+});
+
+test('[Q23] the forest is read the way it was trained: every check vector gives scikit-learn\'s answer', () => {
+  const forest = loadForest();
+  assert.ok(forest, 'the model file ships with the game');
+  for (const { x, p } of forest.checks) assert.ok(Math.abs(predictGood(forest, x) - p) < 1e-4, `expected ${p}, got ${predictGood(forest, x)}`);
 });

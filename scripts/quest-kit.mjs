@@ -10,12 +10,13 @@ export const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 export const REGISTRY = join(ROOT, 'organiser', 'registry.json');
 export const QUEST_TESTS = 'test/quest/**/*.test.js';
 
-// Never shipped: hidden tests, the judge's model, organiser data and tools, old-round tooling.
+// Never shipped: hidden tests, organiser data and tools, old-round tooling. (The forest and its model
+// do ship: Seraphine the Oracle reads them in the game, and Q23 is a bug in reading them. The judge
+// always scores with the organiser's own clean copy.)
 const ORGANISER_ONLY = [
   'node_modules', '.git', '.claude', '.vercel', '.scramble', '.judge', 'organiser', 'docs', 'scramble', 'ml', 'assets', 'tools',
   'api', 'vercel.json', // the hosted (Vercel) build of the clean game
   'server/test', 'client/test', 'server/scripts', 'server/saves', 'server/teams', 'server/.env', 'client/dist',
-  'server/src/quest/model', 'server/src/quest/forest.js',
   'scripts/scramble.mjs', 'scripts/verify-scramble.mjs', 'scripts/judge.mjs', 'scripts/run-participant.mjs',
   'scripts/quest-kit.mjs', 'scripts/quest-teams.mjs', 'scripts/quest-build.mjs', 'scripts/quest-verify.mjs', 'scripts/quest-judge.mjs',
 ];

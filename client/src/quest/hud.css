@@ -978,3 +978,33 @@
   pointer-events: none;
   background: radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.45) 100%);
 }
+
+/* Seraphine the Oracle's word on the last judged choice. */
+.hud-oracle {
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  top: 4.2rem;
+  transform: translateX(-50%);
+  max-width: min(30rem, calc(100vw - 2rem));
+  padding: 0.45rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgb(150 120 220 / 0.6);
+  background: rgb(26 22 40 / 0.92);
+  font-style: italic;
+  font-size: 14px;
+  text-align: center;
+  pointer-events: none;
+  animation: hud-in 0.25s var(--ease) both;
+}
+.hud-oracle .oracle-name {
+  display: block;
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #b9a3ff;
+}
+.hud-oracle.is-wise { border-color: rgb(127 224 160 / 0.6); }
+.hud-oracle.is-unwise { border-color: rgb(255 90 95 / 0.6); }

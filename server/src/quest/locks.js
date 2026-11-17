@@ -11,6 +11,7 @@ import { ENEMIES, PIP, POWER_UPS, ROOMS, SWORD, XP_PER_TIER } from './data.js';
 import { beginFight, cagesOpen, createRun, distance, routeOptions, step } from './engine.js';
 import { QuestRuns, cleanAction } from './runs.js';
 import { makeProfile } from './teams.js';
+import { loadForest, predictGood } from './forest.js';
 
 const profile = (seed = 'lock') => makeProfile({ teamId: 'lock', seed, tier: 'strong' });
 const fresh = () => createRun(profile());
@@ -61,6 +62,11 @@ const CHECKS = {
     },
   ],
   3: [
+    // The Oracle's forest reads its trees the way scikit-learn built them (its own check vectors).
+    () => {
+      const forest = loadForest();
+      return !forest || forest.checks.slice(0, 12).every(({ x, p }) => Math.abs(predictGood(forest, x) - p) < 1e-4);
+    },
     () => {
       const s0 = atOpenCage();
       Object.assign(kael(s0), { hp: 40, shield: 5 });

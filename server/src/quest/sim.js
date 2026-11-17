@@ -34,7 +34,10 @@ export const ROUTE_NEED = { room: 0.4, final: 0.7 };
 
 // A route planner with a "boldness" knob: how strong the party must feel before a fight.
 // Noise (epsilon) makes it explore, which gives the forest varied decisions to learn from.
-export function routePolicy({ boldness = 1, epsilon = 0, rng = Math.random } = {}) {
+// `upgrades`: also buy the Rune Altar and the Forge whenever they're affordable (torches to spare).
+// The training data's continuations use it: a planner that never upgraded made every other choice
+// look poor next to "upgrade now" (left off for the balance runs, so their numbers stay comparable).
+export function routePolicy({ boldness = 1, epsilon = 0, rng = Math.random, upgrades = false } = {}) {
   return (state) => {
     const options = routeOptions(state);
     if (!options.length) return null;
@@ -43,6 +46,8 @@ export function routePolicy({ boldness = 1, epsilon = 0, rng = Math.random } = {
     const hp = hpFrac(state);
     const score = (o) => {
       if (o.type === 'rest') return hp < 0.75 ? 3 + (1 - hp) * 4 : -2;
+      if (upgrades && o.type === 'altar') return state.torches >= 8 ? 3.6 : -1;
+      if (upgrades && o.type === 'forge') return 3.8;
       if (o.type === 'altar') return STRIKERS.includes(o.memberId) ? 1.2 : 0.4;
       if (o.type === 'forge') return STRIKERS.includes(o.memberId) ? 1.6 : 0.5;
       if (!o.fight) return o.to === CAMP && hp < 0.6 ? 2.5 : -8;

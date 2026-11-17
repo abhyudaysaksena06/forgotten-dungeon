@@ -10,6 +10,7 @@ import { QuestError, publicState, step } from '../server/src/quest/engine.js';
 import { loadProfiles } from '../server/src/quest/profiles.js';
 import { replay } from '../server/src/quest/replay.js';
 import { checkpoints } from '../server/src/quest/checkpoints.js';
+import { counsel } from '../server/src/quest/oracle.js';
 import { cleanAction } from '../server/src/quest/runs.js';
 import { codeMatches, profileHash } from '../server/src/quest/teams.js';
 
@@ -45,6 +46,7 @@ const view = (p, run) => ({
   actions: run.actions,
   checkpoints: checkpoints(run.actions),
   saved: { turn: run.state.turn, at: new Date().toISOString() },
+  counsel: counsel(run.state),
 });
 
 function readBody(req) {

@@ -37,7 +37,7 @@ import {
   XP_PER_TIER,
 } from './data.js';
 import { companionAction } from './ai.js';
-import { decisionFeatures, optionCategory } from './features.js';
+import { CARE_TYPES, careMoment, decisionFeatures, optionCategory } from './features.js';
 import { CAMP_LINES, DEFEAT_LINE, ENDING, INTRO, LEAD_LINES, MORVATH_LINES, ROOM_LINES } from './story.js';
 import { questLog } from './quests.js';
 
@@ -986,6 +986,8 @@ export function step(prev, action, { mutate = false } = {}) {
   const state = mutate ? prev : structuredClone(prev);
   state.speech = null;
   if (state.phase === 'map') {
+    // Care choices are judged too (recorded before they act, from what the player saw).
+    if (CARE_TYPES.has(action.type)) recordDecision(state, action);
     if (action.type === 'potion' || action.type === 'meal') consume(state, null, action);
     else if (action.type === 'trade') trade(state, action);
     else if (action.type === 'healer') healer(state);
@@ -1002,6 +1004,8 @@ export function step(prev, action, { mutate = false } = {}) {
       checkDarkness(state);
     }
   } else if (state.phase === 'combat') {
+    // Hurt, with something to heal with: drinking, eating, or carrying on regardless is judged.
+    if (careMoment(state)) recordDecision(state, CARE_TYPES.has(action.type) ? action : { type: 'skip' });
     combatRound(state, action);
   }
   state.turn += 1;

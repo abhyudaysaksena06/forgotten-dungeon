@@ -112,6 +112,13 @@ export default function QuestGame({ session, onLeave }) {
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
   const [softwareGL, setSoftwareGL] = useState(false);
+  // Seraphine the Oracle's word on the last judged choice (see server/src/quest/oracle.js).
+  const [oracle, setOracle] = useState(null);
+  useEffect(() => {
+    if (!oracle) return;
+    const t = setTimeout(() => setOracle(null), 4000);
+    return () => clearTimeout(t);
+  }, [oracle]);
   useEffect(() => {
     const on = () => setSoftwareGL(true);
     window.addEventListener('software-gl', on);
@@ -317,6 +324,7 @@ export default function QuestGame({ session, onLeave }) {
         const me = prev.current?.party.find((m) => m.controlled);
         const cut = cutInFor(action, me, metaRef.current);
         apply(v, cut ? [cut] : [], early);
+        if (v.counsel) setOracle({ ...v.counsel, at: Date.now() });
       } catch (err) {
         setToast(err.message);
       } finally {
@@ -691,6 +699,12 @@ export default function QuestGame({ session, onLeave }) {
 
       <TopBar view={view} meta={meta} lowSpec={lowSpec} onLowSpec={toggleLowSpec} onLeave={() => onLeave()} sensitivity={sensitivity} onSensitivity={changeSensitivity} audio={audio} onAudio={changeAudio} firstPerson={firstPerson} onToggleView={toggleView} onHelp={() => setHelpOpen(true)} onMenu={setSettingsOpen} onRewind={rewindTo} onReset={resetAll} busy={busy} />
       {view.note && <div className="hud-note">{view.note}</div>}
+      {oracle && (
+        <div key={oracle.at} className={`hud-oracle ${oracle.wise ? 'is-wise' : 'is-unwise'}`} role="status">
+          <span className="oracle-name">Seraphine the Oracle</span>
+          {oracle.line}
+        </div>
+      )}
       {softwareGL && (
         <div className="hud-note" role="alert">
           This computer is drawing the game without its graphics card, so it will lag. Update the graphics driver (Intel, AMD or NVIDIA) and restart the game.
