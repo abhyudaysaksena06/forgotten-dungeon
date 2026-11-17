@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['client/**', 'server/**', 'desktop/**', '.github/workflows/desktop.yml']
+    paths: ['client/**', 'server/**', 'desktop/**', 'scramble/quest-bugs.mjs', '.github/workflows/desktop.yml']
 permissions:
   contents: write
 jobs:
@@ -18,6 +18,10 @@ jobs:
             target: win
           - os: macos-latest
             target: mac
+          - os: windows-latest
+            target: win-bugged
+          - os: macos-latest
+            target: mac-bugged
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -51,6 +55,7 @@ jobs:
           name: The Forgotten Dungeon (desktop) — build ${{ github.run_number }}
           make_latest: true
           body: |
+            **The Forgotten Dungeon** = the fixed game. **The Forgotten Dungeon (Bugged)** = every planted rune, for the event.
             **Windows**: download the `.exe` (double-click, no install; on the SmartScreen warning click *More info → Run anyway*).
             **Mac**: the `.dmg` (first launch: right-click the app → Open).
           files: out/**/*
