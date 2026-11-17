@@ -6,6 +6,8 @@
     "stage": "node build.mjs",
     "win": "node build.mjs && cd stage && npx electron-builder --win --x64",
     "mac": "node build.mjs && cd stage && npx electron-builder --mac",
+    "win-bugged": "node build.mjs --bugged && cd stage && npx electron-builder --win --x64",
+    "mac-bugged": "node build.mjs --bugged && cd stage && npx electron-builder --mac",
     "linux": "node build.mjs && cd stage && npx electron-builder --linux"
   },
   "devDependencies": {
@@ -20,6 +22,8 @@
     "files": ["**/*"],
     "win": { "target": [{ "target": "portable" }, { "target": "zip" }], "signAndEditExecutable": false },
     "mac": { "target": "dmg", "category": "public.app-category.games" },
+    "win-bugged": "node build.mjs --bugged && cd stage && npx electron-builder --win --x64",
+    "mac-bugged": "node build.mjs --bugged && cd stage && npx electron-builder --mac",
     "linux": { "target": "AppImage" }
   }
 }
