@@ -20,7 +20,7 @@ if (BUGGED) {
   for (const bug of [...QUEST_BUGS].sort((a, b) => a.id.localeCompare(b.id))) {
     for (const p of bug.patches) {
       const file = join(here, 'stage/game', p.file);
-      const text = readFileSync(file, 'utf8');
+      const text = readFileSync(file, 'utf8').replace(/\r\n/g, '\n'); // Windows checkouts use CRLF
       if (text.split(p.find).length !== 2) throw new Error(`${bug.id}: patch does not match ${p.file}`);
       writeFileSync(file, text.replace(p.find, () => p.replace));
     }
