@@ -291,10 +291,24 @@ spot to the room's old NPC spot where the whole cage fits off to the side of the
 
 ## The random forest
 
-It judges **readiness choices**: every time the party is on the map and picks a room, rest, the altar
-or the forge, the engine records the 29 numbers in `server/src/quest/features.js` (party level, HP,
-ATK, DEF, power, torches, gold, potions, meals, parts, fragments, progress, wipes, the option's type,
-the target room's tier and threat, travel cost, power-to-threat ratio, who leads, and the leader's HP).
+It judges two kinds of choice. The engine records 37 numbers for each (`server/src/quest/features.js`:
+party level, HP, ATK, DEF, power, torches, gold, potions, meals, parts, fragments, progress, wipes,
+the option's type, the target room's tier and threat, travel cost, power-to-threat ratio, the
+leader's HP, whether it's in a fight, the sword's state and how much fight is left in the room):
+
+- **Readiness choices** on the map: which room to enter (or going back to camp), resting by the
+  campfire, the Rune Altar, the forge.
+- **Care choices**: drinking a potion or eating a meal (on the map or in a fight), and calling on the
+  Healer or the Weaponsmith (in a cleared room's cage, or at the camp). **Skipping a heal counts
+  too**: in a fight, any turn where Kael is under 60% health with a potion or a meal to hand is a
+  *care moment*, and whatever he does then is judged; carrying on regardless is recorded as `skip`.
+
+**Seraphine the Oracle** speaks the forest's verdict in the game, right after each judged choice
+("Resting by the fire was wise.", "Fighting on without healing was unwise."): after, never before, so
+she teaches rather than plays. `server/src/quest/oracle.js`; the forest and its model ship with every
+team's build because of her, and the bug **Q23 (Crossed Branches)** sits in the code that reads it
+(every team gets it: kind `ml`, 80 points, round 3). The judge always scores with the organiser's
+own clean copy of the forest.
 
 1. `node server/scripts/quest-dataset.mjs --states 3000 --rollouts 40 --out ml/data/route_decisions.csv`
    plays thousands of runs of all tiers (Kael alone, with sword and shield). At each decision it tries every option and

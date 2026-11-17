@@ -1,4 +1,5 @@
-// The numbers the random forest sees for one readiness / route decision. Shared by the simulator
+// The numbers the random forest sees for one decision: a readiness / route choice on the map, or a
+// care choice (a potion, a meal, the Healer or the Weaponsmith; or skipping a heal while hurt). Shared by the simulator
 // (training data), the engine (recorded at decision time) and the judge (scoring).
 import { CAMP, ENEMIES, FINAL_GROWTH, FRAGMENTS_FOR_THRONE, POWER_UPS, PROGRESS_SCALE, ROOMS, SWORD, TIER_SCALE } from './data.js';
 
@@ -32,11 +33,32 @@ export const FEATURE_NAMES = [
   'leader_rogue',
   'leader_ranger',
   'leader_hp_frac',
+  // Care decisions (added after the route features, so their order never changes):
+  'in_combat',
+  'sword_frac',
+  'foes_threat',
+  'opt_potion',
+  'opt_meal',
+  'opt_healer',
+  'opt_smith',
+  'opt_skip',
 ];
 
-export const CATEGORIES = ['rest', 'altar', 'forge', 'room1', 'room2', 'room3', 'room4', 'room5', 'move'];
+export const CATEGORIES = ['rest', 'altar', 'forge', 'room1', 'room2', 'room3', 'room4', 'room5', 'move', 'potion', 'meal', 'healer', 'smith', 'skip'];
+
+// The choices that tend to Kael (the camp's paid helpers count as the Healer and the Weaponsmith).
+export const CARE_TYPES = new Set(['potion', 'meal', 'healer', 'smith', 'camp_healer', 'camp_smith']);
+
+// A moment that calls for care in a fight: the leader is hurt (under 60%) and has something to heal
+// with. Whatever is done then is judged, so skipping the heal counts as a choice too ('skip').
+export function careMoment(state) {
+  const leader = state.party.find((m) => m.id === state.leaderId);
+  return Boolean(leader && !leader.fallen && leader.hp < leader.maxHp * 0.6 && (state.potions > 0 || state.meals > 0));
+}
 
 export function optionCategory(state, action) {
+  if (action.type === 'camp_healer') return 'healer';
+  if (action.type === 'camp_smith') return 'smith';
   if (action.type !== 'travel') return action.type;
   const fight = action.to !== CAMP && !state.fragments.includes(action.to);
   return fight ? `room${action.to.slice(1)}` : 'move';
@@ -68,6 +90,18 @@ export function roomThreat(state, roomId) {
     for (const kind of wave) threat += (ENEMIES[kind].hp / 10 + ENEMIES[kind].atk * 2) * scale * weight;
   });
   return threat;
+}
+
+// The leader's sword, 0 (blunt and broken) to 1 (sharp and whole).
+function swordFrac(state) {
+  const sword = state.party.find((m) => m.id === state.leaderId)?.sword;
+  return sword ? Math.round(((sword.sharpness / SWORD.sharpness + sword.durability / SWORD.durability) / 2) * 1000) / 1000 : 0;
+}
+
+// How much fight is left in the room right now (0 on the map).
+function foesThreat(state) {
+  if (state.phase !== 'combat' || !state.combat) return 0;
+  return Math.round(state.combat.enemies.filter((e) => e.hp > 0).reduce((n, e) => n + e.hp / 10 + e.atk * 2, 0));
 }
 
 function leaderHp(state) {
@@ -113,5 +147,13 @@ export function decisionFeatures(state, action) {
     // Who leads matters: only the leader can break Morvath's armour, so they must survive.
     ...['knight', 'mage', 'rogue', 'ranger'].map((c) => (state.leaderId === c ? 1 : 0)),
     leaderHp(state),
+    state.phase === 'combat' ? 1 : 0,
+    swordFrac(state),
+    foesThreat(state),
+    cat === 'potion' ? 1 : 0,
+    cat === 'meal' ? 1 : 0,
+    cat === 'healer' ? 1 : 0,
+    cat === 'smith' ? 1 : 0,
+    cat === 'skip' ? 1 : 0,
   ];
 }

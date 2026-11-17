@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { QuestError, publicState, step } from './engine.js';
 import { cageRunes } from './locks.js';
 import { checkpoints } from './checkpoints.js';
+import { counsel } from './oracle.js';
 import { replay } from './replay.js';
 import { codeMatches, profileHash } from './teams.js';
 
@@ -153,6 +154,7 @@ export class QuestRuns {
       state: { ...publicState(run.state), cageRunes: cageRunes(run.state) },
       checkpoints: checkpoints(run.actions),
       saved: { turn: run.state.turn, at: new Date().toISOString() },
+      counsel: counsel(run.state),
     };
   }
 

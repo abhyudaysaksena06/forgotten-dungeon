@@ -1,6 +1,7 @@
-// Builds the training data for the route-choice random forest.
+// Builds the training data for the decision random forest: route choices and care choices.
 //
-// 1. Plays many teams (all tiers) with varied route styles and records each map decision.
+// 1. Plays many teams (all tiers) with varied route styles and records each map decision, and
+//    every care moment in a fight (hurt, with a potion or a meal: drink, eat, or carry on).
 // 2. At a sample of those decisions, tries every available option and estimates its chance of
 //    winning the whole run from N simulated continuations with fresh dice.
 // 3. Each continuation is scored like the judge scores progression: 10 per room cleared and 40
@@ -12,8 +13,9 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { createRng, hashSeed } from '../src/engine/rng.js';
-import { createRun, routeOptions, step } from '../src/quest/engine.js';
-import { FEATURE_NAMES, decisionFeatures, optionCategory } from '../src/quest/features.js';
+import { campHelpers, cagesOpen, createRun, routeOptions, step } from '../src/quest/engine.js';
+import { FEATURE_NAMES, careMoment, decisionFeatures, optionCategory } from '../src/quest/features.js';
+import { CAMP_SERVICES } from '../src/quest/data.js';
 import { carefulLeaderAction, routePolicy, upkeep } from '../src/quest/sim.js';
 import { makeProfile } from '../src/quest/teams.js';
 
@@ -29,7 +31,8 @@ const r01 = () => rand.next();
 function rollout(state, option, k) {
   let s = structuredClone(state);
   s.rngState = hashSeed(`rollout:${r01()}:${k}`);
-  s = step(s, option, { mutate: true });
+  const { as, ...move } = option;
+  s = step(s, move, { mutate: true });
   const route = routePolicy({ boldness: [1, 1.4, 1.8][k % 3], epsilon: 0.05, rng: r01 });
   for (let i = 0; i < 2500 && (s.phase === 'map' || s.phase === 'combat'); i++) {
     const a = s.phase === 'map' ? upkeep(s) ?? route(s) : carefulLeaderAction(s);
@@ -52,6 +55,8 @@ function collectStates() {
       if (s.phase === 'map') {
         const prep = upkeep(s);
         if (prep) {
+          // Sometimes before the upkeep too, so cage and camp care choices are in the data.
+          if (r01() < 0.35) states.push({ team: t, tier, state: structuredClone(s) });
           s = step(s, prep, { mutate: true });
           continue;
         }
@@ -59,7 +64,10 @@ function collectStates() {
         const a = route(s);
         if (!a) break;
         s = step(s, a, { mutate: true });
-      } else s = step(s, carefulLeaderAction(s), { mutate: true });
+      } else {
+        if (careMoment(s) && r01() < 0.5) states.push({ team: t, tier, state: structuredClone(s) });
+        s = step(s, carefulLeaderAction(s), { mutate: true });
+      }
     }
   }
   // Even sample across the whole collection.
@@ -69,6 +77,31 @@ function collectStates() {
   return picked;
 }
 
+// Every choice open at a state. On the map: the routes and readiness options, plus care (a potion
+// or a meal when hurt, the cage's Healer and Weaponsmith, the camp's paid helpers). In a fight's care
+// moment: drink, eat, or skip (carry on with the usual move, recorded as 'skip').
+function choices(state) {
+  const leader = state.party.find((m) => m.id === state.leaderId);
+  const hurt = leader && leader.hp < leader.maxHp;
+  const care = [];
+  if (state.potions > 0 && hurt) care.push({ type: 'potion', targetId: leader.id });
+  if (state.meals > 0 && hurt) care.push({ type: 'meal', targetId: leader.id });
+  if (state.phase === 'combat') {
+    let move = carefulLeaderAction(state);
+    if (move.type === 'potion' || move.type === 'meal') {
+      const foe = state.combat.enemies.find((e) => e.hp > 0);
+      move = { type: 'attack', targetId: foe?.id };
+    }
+    return [...care, { ...move, as: { type: 'skip' } }];
+  }
+  if (cagesOpen(state)) care.push({ type: 'healer' }, { type: 'smith' });
+  if (campHelpers(state)) {
+    if (state.gold >= CAMP_SERVICES.healer.gold) care.push({ type: 'camp_healer' });
+    if (state.gold >= CAMP_SERVICES.smith.gold) care.push({ type: 'camp_smith' });
+  }
+  return [...routeOptions(state), ...care];
+}
+
 const t0 = Date.now();
 const samples = collectStates();
 const rows = [];
@@ -76,8 +109,8 @@ let done = 0;
 for (const { team, tier, state } of samples) {
   // Shrine/forge per member collapse to one representative (the Hero) to keep options comparable.
   const seen = new Set();
-  const options = routeOptions(state).filter((o) => {
-    const key = o.type === 'travel' ? `${o.type}:${o.to}` : o.type;
+  const options = choices(state).filter((o) => {
+    const key = o.type === 'travel' ? `${o.type}:${o.to}` : optionCategory(state, o.as ?? o);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -90,7 +123,8 @@ for (const { team, tier, state } of samples) {
   });
   const best = Math.max(...probs);
   options.forEach((o, i) => {
-    rows.push([team, tier, optionCategory(state, o), ...decisionFeatures(state, o), probs[i], best, probs[i] >= best - MARGIN ? 1 : 0]);
+    const seenAs = o.as ?? o; // a skipped heal is played as the plain move, recorded as 'skip'
+    rows.push([team, tier, optionCategory(state, seenAs), ...decisionFeatures(state, seenAs), probs[i], best, probs[i] >= best - MARGIN ? 1 : 0]);
   });
   if (++done % 200 === 0) console.log(`${done}/${samples.length} decisions · ${rows.length} rows · ${Math.round((Date.now() - t0) / 1000)}s`);
 }

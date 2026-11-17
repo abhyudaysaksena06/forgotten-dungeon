@@ -7,6 +7,7 @@
 
 const E = 'server/src/quest/engine.js';
 const RUNS = 'server/src/quest/runs.js';
+const FOREST = 'server/src/quest/forest.js';
 
 export const ROUNDS = {
   1: 'The Entrance — action handling, navigation, initial state',
@@ -20,12 +21,14 @@ export const ROUNDS = {
 export const ROUND_MIX = {
   1: { blocker: 1, hindrance: 1 },
   2: { hindrance: 2 },
-  3: { hindrance: 2 },
+  3: { hindrance: 2, ml: 1 },
   4: { blocker: 1, hindrance: 1 },
   5: { blocker: 1, hindrance: 1 },
 };
 
-export const POINTS = { blocker: 100, hindrance: 60 };
+// `ml`: a fault in the machine-learning code (the random forest that judges decisions and speaks
+// through Seraphine the Oracle). Every team gets one.
+export const POINTS = { blocker: 100, hindrance: 60, ml: 80 };
 
 export const QUEST_BUGS = [
   // ---------- Round 1: The Entrance ----------
@@ -195,6 +198,25 @@ export const QUEST_BUGS = [
     ],
   },
 
+  {
+    id: 'Q23',
+    round: 3,
+    name: 'Crossed Branches',
+    kind: 'ml',
+    symptom: 'Seraphine the Oracle praises reckless choices and frowns on sensible ones: fighting on at 10% health with three potions is "wise", resting when hurt is "unwise".',
+    patches: [
+      {
+        file: FOREST,
+        find: '    node = Math.fround(x[tree.feature[node]]) <= tree.threshold[node] ? tree.left[node] : tree.right[node];',
+        replace: '    node = Math.fround(x[tree.feature[node]]) <= tree.threshold[node] ? tree.right[node] : tree.left[node];',
+      },
+    ],
+    hints: [
+      'The Oracle reads a random forest (server/src/quest/model/route-forest.json) through server/src/quest/forest.js. Is the model wrong, or the code that reads it?',
+      'The model file carries `checks`: inputs with the probability scikit-learn gave for each. Run predictGood on them and compare.',
+      'In a scikit-learn decision tree a sample goes to the LEFT child when its feature is <= the threshold, RIGHT otherwise. Follow `treeProb` one step at a time.',
+    ],
+  },
   // ---------- Round 4: The Shadow Depths ----------
   {
     id: 'Q04',
