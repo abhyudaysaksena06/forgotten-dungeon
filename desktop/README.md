@@ -22,6 +22,23 @@ The game's server code ships as plain files, not sealed: participants find it ne
 Show Package Contents → `Contents/Resources/app/game/server/src`). Fix a rune, then close and
 reopen the app.
 
+## Which app to hand out
+
+- **The Forgotten Dungeon (Bugged)** from the Releases page plants all 23 bugs with the practice
+  profile. Use it to try the event out; its saves can't be judged, because the judge replays every
+  save with the team's official profile.
+- **A team's own app**: that team's bugs and official profile (from `organiser/registry.json`,
+  which is private, so this build runs on an organiser's machine, not on GitHub). The app asks for
+  the team's access code on start.
+
+  ```
+  cd desktop && npm install
+  node build.mjs --team team03 && cd stage && npx electron-builder --win --x64   # or --mac on a Mac
+  ```
+
+  The result lands in `desktop/dist` as `The Forgotten Dungeon (Team 3)`. Its saves live in their
+  own app-data folder, so team apps on one machine don't mix.
+
 ## Building
 
 ```

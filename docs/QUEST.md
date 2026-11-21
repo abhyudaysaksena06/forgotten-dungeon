@@ -329,8 +329,8 @@ Re-run steps 1–2 after any change to the game rules.
 
 ## The bugs
 
-`scramble/quest-bugs.mjs`, 22 bugs grouped by the rulebook's five rounds. Each has a hidden test in
-`server/test/quest/bugs.test.js` and three hint levels. A blocker is worth 100 marks, a hindrance 60.
+`scramble/quest-bugs.mjs`, 23 bugs grouped by the rulebook's five rounds (1,760 marks in all). Each has a hidden test in
+`server/test/quest/bugs.test.js` and three hint levels. A blocker is worth 100 marks, a hindrance 60, the ML bug 80.
 
 | Round | Id | Name | Kind | What players see |
 | --- | --- | --- | --- | --- |
@@ -345,6 +345,7 @@ Re-run steps 1–2 after any change to the game rules.
 | 3 | Q06 | Half a Healer | hindrance | The cage's Healer restores health but not the shield. |
 | 3 | Q16 | Paper Shield | hindrance | The shield drains, but the whole blow still reaches Kael's health. |
 | 3 | Q17 | Watered Potion | hindrance | Potions restore almost nothing. |
+| 3 | Q23 | Crossed Branches | ml | Seraphine the Oracle calls almost every choice wise, even reckless ones. |
 | 4 | Q04 | Iron Skin | blocker | From the second room on, enemies shrug off almost every blow. |
 | 4 | Q05 | Short Memory | blocker | After a server restart a long run rewinds. |
 | 4 | Q08 | Endless Wave | blocker | A fight never ends after the last enemy falls. |
@@ -358,9 +359,9 @@ Re-run steps 1–2 after any change to the game rules.
 | 5 | Q22 | Hasty Armour | hindrance | Rune Strike promises 3 rounds, but the armour is back after 2. |
 
 **Per-team mix.** Each team draws, per round: R1 one blocker + one hindrance, R2 two hindrances, R3 two
-hindrances, R4 one blocker + one hindrance, R5 one blocker + one hindrance. That's 10 bugs and 720 marks
-for every team, but a different set per team. Every round has at least two hindrances to draw from, so no
-bug is shared by every team.
+hindrances + the ML bug, R4 one blocker + one hindrance, R5 one blocker + one hindrance. That's 11 bugs and 800 marks
+for every team (Q23 included), but a different set per team. Every round has at least two hindrances to draw from, so no
+bug but Q23 is shared by every team.
 
 How hard the two newest hindrances are (win rate with the prepared route, average teams): clean 84%,
 with Q18 59%, with Q22 80% (strong teams on the balanced route: 98% → 59% with Q22). Both make the run

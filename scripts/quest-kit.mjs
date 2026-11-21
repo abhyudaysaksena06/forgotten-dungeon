@@ -16,9 +16,11 @@ export const QUEST_TESTS = 'test/quest/**/*.test.js';
 const ORGANISER_ONLY = [
   'node_modules', '.git', '.claude', '.vercel', '.scramble', '.judge', 'organiser', 'docs', 'scramble', 'ml', 'assets', 'tools',
   'api', 'vercel.json', // the hosted (Vercel) build of the clean game
+  '.github', 'desktop', // the organiser's desktop builds (a pushed team repo must not start them)
   'server/test', 'client/test', 'server/scripts', 'server/saves', 'server/teams', 'server/.env', 'client/dist',
   'scripts/scramble.mjs', 'scripts/verify-scramble.mjs', 'scripts/judge.mjs', 'scripts/run-participant.mjs',
   'scripts/quest-kit.mjs', 'scripts/quest-teams.mjs', 'scripts/quest-build.mjs', 'scripts/quest-verify.mjs', 'scripts/quest-judge.mjs',
+  'scripts/quest-hints.mjs', 'scripts/quest-package.mjs',
 ];
 
 export function loadRegistry(path = REGISTRY) {
@@ -62,6 +64,15 @@ export function buildRepo({ out, bugs = [], profile = null, participant = true }
   }
   if (participant) {
     cpSync(join(ROOT, 'scramble', 'participant', 'QUEST_README.md'), join(dest, 'README.md'));
+    // One command to play: `npm start` installs, builds the screens once, runs the server (which
+    // restarts on every save in server/src) and opens the browser.
+    cpSync(join(ROOT, 'scramble', 'participant', 'play.mjs'), join(dest, 'scripts', 'play.mjs'));
+    const pkg = JSON.parse(readFileSync(join(dest, 'package.json'), 'utf8'));
+    pkg.name = 'the-forgotten-dungeon-quest';
+    pkg.description = 'The Forgotten Dungeon: The Shattered Heart. Find and fix the broken runes.';
+    pkg.engines = { node: '>=22' };
+    pkg.scripts = { start: 'node scripts/play.mjs', dev: 'node scripts/dev.mjs', test: 'npm test -w server' };
+    writeFileSync(join(dest, 'package.json'), `${JSON.stringify(pkg, null, 2)}\n`);
     mkdirSync(join(dest, 'server', 'test'), { recursive: true });
     writeFileSync(
       join(dest, 'server', 'test', 'example.test.js'),

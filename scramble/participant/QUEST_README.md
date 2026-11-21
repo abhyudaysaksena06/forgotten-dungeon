@@ -49,15 +49,23 @@ readiness choice you make is scored against them.
 
 ## Run it
 
-```bash
-npm install
-```
+Needs [Node 22 or later](https://nodejs.org). Then, in this folder:
 
 ```bash
-npm run dev
+npm start
 ```
 
-Then open http://localhost:5173.
+The first run installs everything and builds the game (a minute or two); after that it starts at
+once. The game opens in your browser at http://localhost:3001 (open it yourself if it doesn't).
+**Ctrl+C** stops it.
+
+**Fixing a rune:** the game's rules live in `server/src/` (start with `server/src/quest/`). Edit a
+file and save: the server restarts by itself. Reload the page and carry on from your save. The HUD's
+"The cage" section shows how many broken runes each round still has. A typo that crashes the server
+shows its error in the terminal; fix it and save again.
+
+`npm test` runs your tests in `server/test/`. `npm run dev` is the developer mode (hot-reloading
+screens at http://localhost:5173), if you want to work on the client too.
 
 In a fight you walk around the room:
 

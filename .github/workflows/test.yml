@@ -1,0 +1,30 @@
+# Runs the tests on every push and pull request: the server and client suites, quest-verify (every
+# planted bug fails only its own hidden test), and a check that a practice package builds and boots.
+name: Tests
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: node scripts/quest-verify.mjs
+      - name: Practice package builds and boots
+        run: |
+          node scripts/quest-package.mjs --practice --out "$RUNNER_TEMP/packages"
+          cd "$RUNNER_TEMP/packages/forgotten-dungeon-practice"
+          if git ls-files | grep -E '^(scramble|ml|organiser|server/test/quest)/|quest-bugs'; then echo "answer key leaked into the package"; exit 1; fi
+          (NO_BROWSER=1 PORT=3101 npm start > start.log 2>&1 &)
+          for i in $(seq 1 90); do curl -sf http://localhost:3101/api/quest/teams && break; sleep 2; done
+          curl -sf http://localhost:3101/ | grep -qi '<html' || { cat start.log; exit 1; }

@@ -55,7 +55,7 @@ jobs:
           name: The Forgotten Dungeon (desktop) — build ${{ github.run_number }}
           make_latest: true
           body: |
-            **The Forgotten Dungeon** = the fixed game. **The Forgotten Dungeon (Bugged)** = every planted rune, for the event.
+            **The Forgotten Dungeon** = the fixed game. **The Forgotten Dungeon (Bugged)** = every planted rune, practice profile (saves are not judged; build each team's own app with `node build.mjs --team teamNN`).
             **Windows**: download the `.exe` (double-click, no install; on the SmartScreen warning click *More info → Run anyway*).
             **Mac**: the `.dmg` (first launch: right-click the app → Open).
           files: out/**/*
