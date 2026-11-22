@@ -1,0 +1,36 @@
+<!doctype html>
+<!-- A dev-only model viewer (vite serves it in development; the production build ignores it).
+     http://localhost:5173/preview.html?p=<key>:<yaw>:<clip>:<time>:<zoom>,<panel2>,...
+     e.g. ?p=boss_hollow_king:0.6:attack:0.32:1,boss_hollow_king:1.57:skill:0.45:1 -->
+<html><body style="margin:0;background:#07070a">
+<canvas id="c" width="1600" height="900"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
+const q = new URLSearchParams(location.search);
+const panels = q.get('p').split(',').map((s) => { const [key, yaw, clip, t, zoom] = s.split(':'); return { key, yaw: Number(yaw), clip: clip || null, t: Number(t || 0), zoom: Number(zoom || 1) }; });
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+renderer.toneMapping = THREE.AgXToneMapping; renderer.setScissorTest(true);
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+const cache = {};
+const W = 1600 / panels.length, H = 900;
+for (const [i, p] of panels.entries()) {
+  cache[p.key] ??= await loader.loadAsync(`/models/${p.key}.glb`);
+  const g = cache[p.key]; const m = clone(g.scene);
+  const s = new THREE.Scene(); s.background = new THREE.Color('#09080c'); s.fog = new THREE.Fog('#09080c', 4, 12);
+  s.add(new THREE.HemisphereLight('#6a6f88', '#140c0c', 0.6));
+  const key = new THREE.DirectionalLight('#ffd2a0', 3.2); key.position.set(-2, 3, 3); s.add(key);
+  const rim = new THREE.DirectionalLight('#ff2a14', 4.5); rim.position.set(1.5, 2, -3); s.add(rim);
+  const fill = new THREE.DirectionalLight('#5a78c8', 0.8); fill.position.set(3, 1, 1); s.add(fill);
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(3, 64), new THREE.MeshStandardMaterial({ color: '#141114', roughness: 0.9 })); floor.rotation.x = -Math.PI / 2; s.add(floor);
+  const box = new THREE.Box3().setFromObject(m); const size = box.getSize(new THREE.Vector3()); const c = box.getCenter(new THREE.Vector3());
+  m.position.sub(new THREE.Vector3(c.x, box.min.y, c.z)); m.scale.multiplyScalar(1.9 / size.y); m.position.multiplyScalar(1.9 / size.y);
+  m.rotation.y = p.yaw; s.add(m);
+  if (p.clip) { const mixer = new THREE.AnimationMixer(m); mixer.clipAction(g.animations.find((a) => a.name === p.clip)).play(); mixer.setTime(p.t); }
+  const cam = new THREE.PerspectiveCamera(30, W / H, 0.05, 50); const z = p.zoom; cam.position.set(0, 1.25 + (z - 1) * 0.35, 4.6 / z); cam.lookAt(0, 0.95 + (z - 1) * 0.45, 0);
+  renderer.setViewport(i * W, 0, W, H); renderer.setScissor(i * W, 0, W, H); renderer.render(s, cam);
+}
+window.done = true;
+</script></body></html>

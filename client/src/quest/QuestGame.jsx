@@ -1,0 +1,1145 @@
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useGLTF } from '@react-three/drei';
+import { loadModelManifest, loadQuestMeta, questApi } from './api.js';
+import { applySettings, play, playCues, readAudioSettings, setMusic, unlock } from './audio.js';
+import { TouchControls, useCoarsePointer } from './TouchControls.jsx';
+import { AbilityBar, BossBar, EnemyList, HelpPanel, PartyPanel, Subtitle, TopBar } from './hud.jsx';
+import { BANNER_MS, bannersFor, cutInFor } from './banners.js';
+import { cuesFor } from './events.js';
+import { download, downloadAll } from './preload.js';
+import Scene, { loadBatches } from './scene/Scene.jsx';
+import { morvathStrength } from './scene/MapView.jsx';
+import { CAGE, REACH, createWorld, gap, laneOf, nearestEnemy, yawTo } from './scene/world.js';
+import { DRACO_PATH } from './scene/assets.js';
+import { WORLD_RUNE_COUNT, worldRunes } from './runes.js';
+
+// Draco-compressed models (room 3) decode with three.js's own decoder (see scene/assets.js).
+useGLTF.setDecoderPath(DRACO_PATH);
+
+const PRELOAD_LIMIT_MS = 120000;
+
+// Covers the game until the preloader is done: the same words as the first loading line and how much
+// of the models has arrived; then, while each room's shaders compile, a second line.
+const mb = (bytes) => (bytes / 1e6).toFixed(1);
+function LoadingScreen({ room }) {
+  const [d, setD] = useState({ ...download });
+  useEffect(() => {
+    const t = setInterval(() => setD({ ...download }), 150);
+    return () => clearInterval(t);
+  }, []);
+  const share = d.done ? 1 : d.total ? Math.min(0.99, d.got / d.total) : 0;
+  return (
+    <div className="loading-screen" role="status" aria-live="polite">
+      <p className="font-mono text-sm text-ash">{room ? `Preparing ${room}…` : d.done ? 'Raising the skeletons…' : 'Lighting the torches…'}</p>
+      <span className="load-bar" aria-hidden="true">
+        <span style={{ width: `${Math.round(share * 100)}%` }} />
+      </span>
+      <p className="font-mono text-[11px] text-ash/70">{d.done ? 'Preparing the rooms' : `${Math.round(share * 100)}% · ${mb(d.got)} of ${mb(d.total)} MB`}</p>
+    </div>
+  );
+}
+
+const MOVE_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright']);
+
+// The fight goes on: if Kael does nothing for this long, the round plays
+// out anyway (a plain "wait" input, saved and replayed like any other), so the
+// enemies keep fighting. It pauses whenever the player is busy elsewhere.
+const ROUND_SECONDS = 6;
+// A boss doesn't wait for you: in a fight with a boss the clock always runs, faster, and the first
+// blow comes moments after the fight is ready.
+const BOSS_ROUND_SECONDS = 3.5;
+const BOSS_FIRST_SECONDS = 1.5;
+const AUTO_KEY = 'forgotten-dungeon.autorounds';
+const COACH_KEY = 'forgotten-dungeon.coach';
+const readCoach = () => {
+  try {
+    return Number(localStorage.getItem(COACH_KEY) ?? 0);
+  } catch {
+    return 0;
+  }
+};
+// The first-fight coach: each step clears when the player does the thing.
+const COACH = [
+  { title: 'Move', text: 'Walk with W A S D. Click the view to look around with the mouse; Esc frees the cursor.' },
+  { title: 'Attack', text: 'Walk up to an enemy until the ring under it turns green, then right-click (or press F).' },
+  { title: 'Read the floor', text: 'Red lanes on the floor are hit next round. Step into another lane before you act. The action bar shows your lane.' },
+  { title: 'Your other moves', text: 'E: your hero’s skill · Q: Rune Strike (the only thing that breaks Morvath’s armour) · R: defend · H: potion · J: quests. Wait too long and the round plays without you.' },
+];
+const SENS_KEY = 'forgotten-dungeon.sensitivity';
+const VIEW_KEY = 'forgotten-dungeon.view';
+const readFirstPerson = () => {
+  try {
+    return localStorage.getItem(VIEW_KEY) === 'first'; // third person by default: Kael is on screen
+  } catch {
+    return true;
+  }
+};
+const readSensitivity = () => {
+  try {
+    const v = Number(localStorage.getItem(SENS_KEY));
+    return v >= 0.2 && v <= 3 ? v : 1;
+  } catch {
+    return 1;
+  }
+};
+const readAuto = () => {
+  try {
+    return localStorage.getItem(AUTO_KEY) !== '0';
+  } catch {
+    return true;
+  }
+};
+
+const LOW_SPEC_KEY = 'forgotten-dungeon.lowspec';
+const readLowSpec = () => {
+  try {
+    return localStorage.getItem(LOW_SPEC_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+// The leader's moves that start the moment they are chosen (the cue each one plays).
+const EARLY_KIND = { attack: 'attack', skill: 'skill', rune: 'rune', defend: 'defend' };
+
+export default function QuestGame({ session, onLeave }) {
+  const [meta, setMeta] = useState(null);
+  const [models, setModels] = useState(() => new Map());
+  const [world] = useState(createWorld); // where everyone stands in a fight (see scene/world.js)
+  const [autoRounds, setAutoRounds] = useState(readAuto);
+  const [clock, setClock] = useState(null); // { left, paused } while the round clock runs
+  const [view, setView] = useState(null);
+  const [cues, setCues] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [softwareGL, setSoftwareGL] = useState(false);
+  // Seraphine the Oracle's word on the last judged choice (see server/src/quest/oracle.js).
+  // The choice check pop-up: right or wrong, and how sure the forest is. `tally` counts this session's.
+  const [oracle, setOracle] = useState(null);
+  const [tally, setTally] = useState({ right: 0, wrong: 0 });
+  useEffect(() => {
+    if (!oracle) return;
+    const t = setTimeout(() => setOracle(null), 5500);
+    return () => clearTimeout(t);
+  }, [oracle]);
+  // The runes of the 3D world (see runes.js), checked once on load. null while checking.
+  const [brokenWorld, setBrokenWorld] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    worldRunes().then((n) => alive && setBrokenWorld(n));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  useEffect(() => {
+    const on = () => setSoftwareGL(true);
+    window.addEventListener('software-gl', on);
+    return () => window.removeEventListener('software-gl', on);
+  }, []);
+  const [targetId, setTargetId] = useState(null);
+  const [picker, setPicker] = useState(null); // { kind, title } for choosing an ally
+  const [lowSpec, setLowSpec] = useState(readLowSpec);
+  const [banners, setBanners] = useState([]); // queue of { kind, title, sub, note }
+  const [logOpen, setLogOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  // Models load in batches (Scene's loadBatches): the first (rooms 1 and 2, the characters, the map)
+  // opens the game once it is downloaded and its shaders compiled; rooms 3–4 and then the Throne
+  // follow in the background. A slow or broken connection never keeps a team out for more than
+  // PRELOAD_LIMIT_MS.
+  const [batches, setBatches] = useState(null);
+  const [loaded, setLoaded] = useState(0); // batches downloaded
+  const [warmed, setWarmed] = useState(0); // batches compiled
+  const [forced, setForced] = useState(false);
+  const preloaded = warmed >= 1 || forced;
+  const onWarmed = useCallback((n) => setWarmed((w) => Math.max(w, n)), []);
+  useEffect(() => {
+    const t = setTimeout(() => setForced(true), PRELOAD_LIMIT_MS);
+    return () => clearTimeout(t);
+  }, []);
+  // The next batch starts downloading once the game is open and the one before has arrived.
+  const fetching = useRef(0);
+  useEffect(() => {
+    if (!batches || !preloaded || loaded >= batches.length || fetching.current > loaded) return;
+    fetching.current = loaded + 1;
+    const n = loaded;
+    downloadAll(batches[n].urls).then(() => setLoaded((l) => Math.max(l, n + 1)));
+  }, [batches, preloaded, loaded]);
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'F1') {
+        e.preventDefault();
+        setHelpOpen((o) => !o);
+      } else if (e.key === 'Escape') setHelpOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+  const [coach, setCoachStep] = useState(readCoach);
+  const setCoach = useCallback((n) => {
+    setCoachStep((cur) => {
+      const next = Math.max(cur, n);
+      try {
+        localStorage.setItem(COACH_KEY, String(next));
+      } catch {
+        // Then it just shows again next time.
+      }
+      return next;
+    });
+  }, []);
+  const coachStart = useRef(null);
+  const coachTurn = useRef(null);
+  const prev = useRef(null);
+  const metaRef = useRef(null);
+  const path = `/${encodeURIComponent(session.teamId)}`;
+
+  // `early`: the leader's move, already started at the click (see act). The server's cues are timed
+  // from it, so the blow lands mid-swing however long the answer took, and the move isn't replayed.
+  const apply = useCallback((v, lead = [], early = null) => {
+    const now = performance.now();
+    let fresh = cuesFor(prev.current, v.state, early ? Math.max(early.at + 120, now - 160) : now);
+    if (early) {
+      const i = fresh.findIndex((c) => c.id === early.id && c.kind === early.kind);
+      if (i >= 0) fresh = fresh.filter((_, k) => k !== i);
+    }
+    playCues(fresh);
+    setCues((old) => [...old.filter((c) => c.at > now - 6000), ...fresh]);
+    const news = [...lead, ...bannersFor(prev.current, v.state, metaRef.current)];
+    if (news.length) setBanners((q) => [...q, ...news].slice(-6));
+    prev.current = v.state;
+    setView(v);
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    Promise.all([loadQuestMeta(), loadModelManifest(), questApi(`${path}/session`, { method: 'POST', code: session.code })])
+      .then(([m, manifest, v]) => {
+        if (!alive) return;
+        metaRef.current = m;
+        setMeta(m);
+        setModels(manifest);
+        // Download every model now (rooms, their map miniatures, the skeletons), counting bytes for
+        // the loading screen; then Scene's preloader parses them and compiles the rooms.
+        const b = loadBatches(manifest, v.state);
+        setBatches(b);
+        fetching.current = 1;
+        downloadAll(b[0].urls).then(() => alive && setLoaded((l) => Math.max(l, 1)));
+        apply(v);
+      })
+      .catch((err) => alive && onLeave(err.message));
+    return () => {
+      alive = false;
+    };
+  }, [path, session.code, apply, onLeave]);
+
+  // Sound: browsers allow it only after a click or key press.
+  const [audio, setAudio] = useState(readAudioSettings);
+  const [soundOn, setSoundOn] = useState(false);
+  useEffect(() => {
+    const start = () => {
+      unlock();
+      setSoundOn(true);
+    };
+    window.addEventListener('pointerdown', start, { once: true });
+    window.addEventListener('keydown', start, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', start);
+      window.removeEventListener('keydown', start);
+    };
+  }, []);
+  const changeAudio = (next) => setAudio(applySettings(next));
+  const place = view?.state?.phase === 'combat' ? view.state.combat.roomId : 'map';
+  useEffect(() => {
+    if (soundOn) setMusic(place);
+  }, [soundOn, place]);
+  const bannerNow = banners[0];
+  useEffect(() => {
+    if (bannerNow) play(bannerNow.kind);
+  }, [bannerNow]);
+
+  // Banners play one after another.
+  useEffect(() => {
+    if (!banners.length) return;
+    const t = setTimeout(() => setBanners((q) => q.slice(1)), BANNER_MS[banners[0].kind] ?? 1500);
+    return () => clearTimeout(t);
+  }, [banners]);
+
+  // Progress: the run saves itself after every move. A round can be played again (the run goes back
+  // to just before Kael first entered it; what came after is undone), or the whole game reset.
+  const travelBack = useCallback(
+    async (verb, body) => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        const v = await questApi(`${path}/${verb}`, { method: 'POST', body, code: session.code });
+        prev.current = v.state; // a jump, not a move: nothing to animate
+        setCues([]);
+        apply(v);
+        setToast(verb === 'reset' ? 'A new game: everything is back to the start.' : 'Back to the start of that round.');
+      } catch (err) {
+        setToast(err.message);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [busy, path, session.code, apply],
+  );
+  const rewindTo = useCallback(
+    (cp) => {
+      if (window.confirm(`Play Round ${cp.round} (${cp.name}) again? You go back to just before you first entered it; everything after that is undone.`)) travelBack('rewind', { to: cp.at });
+    },
+    [travelBack],
+  );
+  const resetAll = useCallback(() => {
+    if (window.confirm('Reset the whole game? Every round, item and level goes back to zero.')) travelBack('reset');
+  }, [travelBack]);
+
+  // J opens the quest log anywhere.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.target instanceof HTMLInputElement || e.repeat) return;
+      if (e.key.toLowerCase() === 'j') setLogOpen((o) => !o);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3200);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const act = useCallback(
+    async (action) => {
+      if (busy) return;
+      setBusy(true);
+      setPicker(null);
+      // No waiting on the server to see your own move: the swing, guard or spell starts on the click,
+      // and the answer (a round trip of about 0.2 s on the hosted site) arrives while it winds up.
+      const me0 = prev.current?.party.find((m) => m.controlled);
+      const early = prev.current?.phase === 'combat' && me0 && !me0.fallen && EARLY_KIND[action.type] ? { id: me0.id, kind: EARLY_KIND[action.type], at: performance.now() } : null;
+      if (early) {
+        playCues([early]);
+        setCues((old) => [...old, early]);
+      }
+      try {
+        // In a fight the leader's lane is wherever they are standing.
+        const leader = world.actors.get(world.leaderId);
+        const sent = prev.current?.phase === 'combat' && leader && !action.lane ? { ...action, lane: laneOf(world, leader.x, leader.z) } : action;
+        const v = await questApi(`${path}/act`, { method: 'POST', body: { action: sent }, code: session.code });
+        if (['attack', 'skill', 'rune'].includes(action.type)) setCoach(2);
+        if (coach === 2) {
+          coachTurn.current ??= v.state.turn;
+          if (v.state.turn - coachTurn.current >= 2) setCoach(3);
+        }
+        const me = prev.current?.party.find((m) => m.controlled);
+        const cut = cutInFor(action, me, metaRef.current);
+        apply(v, cut ? [cut] : [], early);
+        if (v.counsel) {
+          setOracle({ ...v.counsel, at: Date.now() });
+          setTally((t) => (v.counsel.wise ? { ...t, right: t.right + 1 } : { ...t, wrong: t.wrong + 1 }));
+        }
+      } catch (err) {
+        setToast(err.message);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [busy, path, session.code, apply, coach, setCoach, world],
+  );
+
+  // Stable for the 3D scene (memoized): the clock and the aim tick several times a second, and a new
+  // function each time would redraw the whole scene tree with them.
+  const actRef = useRef(act);
+  actRef.current = act;
+  const onTravel = useCallback((o) => actRef.current({ type: 'travel', to: o.to }), []);
+
+  const state = view?.state;
+  const phase = state?.phase;
+  const me = state?.party.find((m) => m.controlled);
+  const living = useMemo(() => (state?.combat?.enemies ?? []).filter((e) => e.hp > 0), [state]);
+  const skill = me && meta ? meta.classes[me.cls].skill : null;
+  const reachKind = me && meta ? meta.classes[me.cls].reach : 'melee';
+  const reach = REACH[reachKind] ?? REACH.melee;
+  const canReach = useCallback((e) => Boolean(e) && (!e.flying || reachKind !== 'melee'), [reachKind]);
+  // Kael walks in a fight, and in a cleared room (with its cage, open or still locked).
+  const walking = phase === 'combat' || Boolean(state?.cages);
+  const touch = useCoarsePointer();
+
+  // Which cell door of the open cage Kael stands at: 'healer', 'smith' or null.
+  const [atCell, setAtCell] = useState(null);
+  useEffect(() => {
+    if (!state?.cages) return setAtCell(null);
+    const t = setInterval(() => {
+      const l = world.actors.get(world.leaderId);
+      const cells = world.cage?.cells;
+      if (!l || !cells) return setAtCell(null);
+      // The nearer door, if it is within reach (the two doors stand close together).
+      const [dh, ds] = cells.map((c) => Math.hypot(l.x - c[0], l.z - c[1]));
+      setAtCell(Math.min(dh, ds) > CAGE.reach ? null : dh <= ds ? 'healer' : 'smith');
+    }, 150);
+    return () => clearInterval(t);
+  }, [state?.cages, world]);
+  const atCellRef = useRef(null);
+  atCellRef.current = atCell;
+  // E at a cell door: the Healer or the Weaponsmith.
+  useEffect(() => {
+    if (!state?.cages) return;
+    const onKey = (e) => {
+      if (e.target instanceof HTMLInputElement || e.repeat || e.key.toLowerCase() !== 'e') return;
+      if (atCellRef.current) handlers.current.act({ type: atCellRef.current });
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [state?.cages]);
+
+  // One hero: a "choose a hero" picker answers itself.
+  const pickRef = useRef(null);
+  useLayoutEffect(() => {
+    if (!picker || state?.party.length !== 1) return;
+    pickRef.current?.(state.party[0].id);
+    setPicker(null);
+  }, [picker, state?.party.length]);
+
+  // Movement: WASD (or ↑ ↓) walks, Space jumps, ← → turn the camera. In a fight, and in a cleared
+  // room while the cage is open.
+  useEffect(() => {
+    if (!walking) {
+      world.keys.clear();
+      return;
+    }
+    const typing = (e) => e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement;
+    const down = (e) => {
+      if (typing(e)) return;
+      const k = e.key.toLowerCase();
+      if (MOVE_KEYS.has(k)) {
+        world.keys.add(k);
+        if (k.startsWith('arrow')) e.preventDefault();
+      } else if (k === ' ') {
+        e.preventDefault();
+        if (!e.repeat) {
+          world.jumpQueued = true;
+          play('jump');
+        }
+      }
+    };
+    const up = (e) => world.keys.delete(e.key.toLowerCase());
+    const clear = () => world.keys.clear();
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    window.addEventListener('blur', clear);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+      window.removeEventListener('blur', clear);
+      clear();
+    };
+  }, [walking, world]);
+
+  // Who the leader aims at: the clicked enemy, else the nearest one they can hit. Positions
+  // change every frame, so this is refreshed a few times a second.
+  const [aim, setAim] = useState({ nearestId: null, gap: null });
+  useEffect(() => {
+    if (phase !== 'combat') return;
+    const tick = () => {
+      // With the mouse captured, aim with the crosshair: the enemy under it on screen becomes the target.
+      const aimedId = world.aimedId; // the crosshair aims, mouse captured or not
+      const sighted = aimedId ? living.find((e) => e.id === aimedId && canReach(e)) : null;
+      if (sighted && sighted.id !== targetId) setTargetId(sighted.id);
+      const near = nearestEnemy(world, living, canReach)?.id ?? null;
+      const id = living.some((e) => e.id === targetId) ? targetId : near;
+      const g = id ? Math.round(gap(world, id) * 10) / 10 : null;
+      const l = world.actors.get(world.leaderId);
+      const lane = l ? laneOf(world, l.x, l.z) : null;
+      if (l && coach === 0) {
+        coachStart.current ??= { x: l.x, z: l.z };
+        if (Math.hypot(l.x - coachStart.current.x, l.z - coachStart.current.z) > 1.5) setCoach(1);
+      }
+      const onTarget = Boolean(sighted);
+      setAim((a) => (a.nearestId === near && a.gap === g && a.lane === lane && a.onTarget === onTarget ? a : { nearestId: near, gap: g, lane, onTarget }));
+    };
+    tick();
+    const t = setInterval(tick, 150);
+    return () => clearInterval(t);
+  }, [phase, living, targetId, canReach, world, coach, setCoach]);
+
+  const target = living.find((e) => e.id === targetId) ?? living.find((e) => e.id === aim.nearestId) ?? living.find(canReach) ?? living[0];
+  // Rune Strike goes at Morvath when he is in the room, else at the current target.
+  const runeTarget = living.find((e) => e.ultimate) ?? target;
+
+  const lastAir = useRef(0);
+  const swingAir = (type) => {
+    const now = performance.now();
+    if (!me || me.fallen || !EARLY_KIND[type] || now - lastAir.current < 450) return;
+    lastAir.current = now;
+    const cue = { id: me.id, kind: EARLY_KIND[type], at: now };
+    playCues([cue]);
+    setCues((old) => [...old.filter((c) => c.at > now - 6000), cue]);
+  };
+  // Anything that hits an enemy needs the leader close enough; the leader turns to face it.
+  const strikeAt = (enemy, action) => {
+    // (reassigned below when a closer foe is in reach)
+    if (!enemy) {
+      swingAir(action.type);
+      return setToast('No enemy in sight.');
+    }
+    if (!canReach(enemy)) return setToast(`${me.name} can’t reach a flying enemy.`);
+    // The target is out of reach but another foe is within the blade's arc: that one is hit.
+    if (gap(world, enemy.id) > reach && action.type === 'attack') {
+      const near = nearestEnemy(world, living, canReach);
+      if (near && gap(world, near.id) <= reach) {
+        enemy = near;
+        action = { ...action, targetId: near.id };
+      }
+    }
+    if (gap(world, enemy.id) > reach) {
+      // Out of reach: the blade still swings (it cuts only air: no damage, and no turn spent).
+      setTargetId(enemy.id);
+      swingAir(action.type);
+      return setToast(`Out of reach of ${enemy.name}: get closer to land a hit (WASD).`);
+    }
+    const l = world.actors.get(world.leaderId);
+    const a = world.actors.get(enemy.id);
+    if (l && a) l.yaw = yawTo(a.x - l.x, a.z - l.z);
+    act(action);
+  };
+  const doAttack = () => strikeAt(target, { type: 'attack', targetId: target?.id });
+  const doSkill = () => {
+    if (!skill || !me) return;
+    if (skill.target === 'ally') setPicker({ kind: 'skill', title: `${skill.name}: choose an ally` });
+    else if (skill.target === 'enemy') strikeAt(target, { type: 'skill', targetId: target?.id });
+    else act({ type: 'skill' });
+  };
+  const doRune = () => strikeAt(runeTarget, { type: 'rune', targetId: runeTarget?.id });
+  const cycleTarget = () => {
+    const order = living.filter(canReach).sort((a, b) => gap(world, a.id) - gap(world, b.id));
+    if (!order.length) return;
+    const i = order.findIndex((e) => e.id === target?.id);
+    setTargetId(order[(i + 1) % order.length].id);
+  };
+
+  // Ability keys: F attack · E skill · Q Rune Strike · R defend · H potion · G meal · X retreat ·
+  // Tab next target · 1–6 pick a target. The handlers change every render, so read the latest.
+  const handlers = useRef({});
+  // Retreat leaves the room, so it asks twice: the first press (X sits right under S) only warns.
+  const retreatArmed = useRef(0);
+  const retreat = () => {
+    const now = performance.now();
+    if (now - retreatArmed.current < 2500) {
+      retreatArmed.current = 0;
+      act({ type: 'retreat' });
+    } else {
+      retreatArmed.current = now;
+      setToast('Retreat? Press X (or the button) again to leave the room.');
+    }
+  };
+  handlers.current = { doAttack, doSkill, doRune, cycleTarget, act, me, living, retreat, potions: state?.potions ?? 0, meals: state?.meals ?? 0, menuOpen: settingsOpen || helpOpen || logOpen };
+  // Mouse buttons in a fight: left (mouse captured) or right = attack, middle = Rune Strike,
+  // back side button = skill, forward side button = defend.
+  world.onMouse = (button) => {
+    const h = handlers.current;
+    if (phase !== 'combat') return;
+    if (h.me?.fallen) return h.act({ type: 'wait' });
+    if (button === 0 || button === 2) h.doAttack();
+    else if (button === 1) h.doRune();
+    else if (button === 3) h.doSkill();
+    else if (button === 4) h.act({ type: 'defend' });
+  };
+
+  // Mouse-look sensitivity, kept in this browser.
+  const [sensitivity, setSensitivity] = useState(readSensitivity);
+  world.sensitivity = sensitivity;
+  // First person (default, like a shooter) or third person over the shoulder. V switches.
+  const [firstPerson, setFirstPerson] = useState(readFirstPerson);
+  world.firstPerson = firstPerson;
+  const toggleView = useCallback(() => {
+    setFirstPerson((v) => {
+      try {
+        localStorage.setItem(VIEW_KEY, v ? 'third' : 'first');
+      } catch {
+        // Preference just won't stick.
+      }
+      return !v;
+    });
+  }, []);
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.target instanceof HTMLInputElement || e.repeat) return;
+      if (e.key.toLowerCase() === 'v') toggleView();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [toggleView]);
+  const changeSensitivity = (v) => {
+    setSensitivity(v);
+    try {
+      localStorage.setItem(SENS_KEY, String(v));
+    } catch {
+      // Preference just won't stick.
+    }
+  };
+
+  // Mouse look: is the mouse captured by the 3D view right now? (Esc releases it.)
+  const [mouseLook, setMouseLook] = useState(false);
+  useEffect(() => {
+    const change = () => setMouseLook(Boolean(document.pointerLockElement));
+    document.addEventListener('pointerlockchange', change);
+    return () => document.removeEventListener('pointerlockchange', change);
+  }, []);
+  // Menus need the cursor: give it back when a picker or the quest log opens, or the fight ends
+  // (a won room keeps Kael walking to its cage, but the Journey list and the cage need the mouse).
+  useEffect(() => {
+    if ((picker || logOpen || helpOpen || settingsOpen || !walking || phase !== 'combat') && document.pointerLockElement) document.exitPointerLock?.();
+  }, [picker, logOpen, helpOpen, settingsOpen, walking, phase]);
+  useEffect(() => {
+    if (phase !== 'combat') return;
+    const onKey = (e) => {
+      if (e.target instanceof HTMLInputElement || e.repeat) return;
+      const h = handlers.current;
+      const k = e.key.toLowerCase();
+      // A menu over the fight takes the keys (Esc still closes a picker).
+      if (h.menuOpen && k !== 'escape') return;
+      if (k === 'tab') {
+        e.preventDefault();
+        h.cycleTarget();
+      } else if (/^[1-6]$/.test(k) && h.living[Number(k) - 1]) setTargetId(h.living[Number(k) - 1].id);
+      else if (k === 'f') h.me?.fallen ? h.act({ type: 'wait' }) : h.doAttack();
+      else if (k === 'e') h.doSkill();
+      else if (k === 'q') h.doRune();
+      else if (k === 'r') h.act({ type: 'defend' });
+      else if (k === 'h') h.potions > 0 ? setPicker({ kind: 'potion', title: 'Potion: choose an ally' }) : setToast('No potions left.');
+      else if (k === 'g') h.meals > 0 ? setPicker({ kind: 'meal', title: 'Monster Meal: choose an ally' }) : setToast('No meals left: Pip cooks them at the camp.');
+      else if (k === 'x') h.retreat();
+      else if (k === 'escape') setPicker(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [phase]);
+
+  // A room whose batch is still loading in the background: a veil covers it (and the clock waits)
+  // until its models are in and its shaders compiled, so it never stutters on first sight.
+  const shownRoom = state?.combat?.roomId ?? (state?.cages ? state.location : null);
+  const roomBatch = shownRoom && batches ? batches.findIndex((b) => b.models.has(`room_${shownRoom.slice(1)}`)) : -1;
+  const roomWaiting = roomBatch >= warmed && !forced ? shownRoom : null;
+
+  // The round clock. Restarts after every round; holds while a request is in flight, a picker or
+  // the quest log is open, a banner is showing, the game window isn't in front, the loading screen
+  // is still up, or the first-fight coach is teaching how to move and attack.
+  const holdClock = useRef(false);
+  holdClock.current = busy || Boolean(picker) || logOpen || helpOpen || settingsOpen || banners.length > 0 || !preloaded || Boolean(roomWaiting) || coach < 2;
+  const turn = state?.turn;
+  const bossFight = Boolean(state?.combat?.enemies.some((e) => e.boss && e.hp > 0));
+  const bossWave = bossFight ? `${state.combat.roomId}:${state.combat.waveIndex}` : null;
+  const bossStarted = useRef(null);
+  useEffect(() => {
+    if (phase !== 'combat' || (!autoRounds && !bossFight)) {
+      setClock(null);
+      return;
+    }
+    const period = bossFight ? BOSS_ROUND_SECONDS : ROUND_SECONDS;
+    const first = bossFight && bossStarted.current !== bossWave;
+    bossStarted.current = bossWave;
+    let left = first ? BOSS_FIRST_SECONDS : period;
+    let last = performance.now();
+    const t = setInterval(() => {
+      const now = performance.now();
+      const dt = (now - last) / 1000;
+      last = now;
+      if (holdClock.current || document.hidden || !document.hasFocus()) return setClock({ left, max: period, paused: true });
+      left -= dt;
+      if (left <= 0) {
+        left = period;
+        handlers.current.act({ type: 'wait' });
+      }
+      setClock({ left: Math.max(0, left), max: period, paused: false });
+    }, 200);
+    return () => clearInterval(t);
+  }, [phase, autoRounds, turn, bossFight, bossWave]);
+
+  const toggleAuto = () =>
+    setAutoRounds((v) => {
+      try {
+        localStorage.setItem(AUTO_KEY, v ? '0' : '1');
+      } catch {
+        // Preference just won't stick.
+      }
+      return !v;
+    });
+
+  if (!state || !meta) return <div className="grid min-h-dvh place-items-center font-mono text-sm text-ash">Lighting the torches…</div>;
+
+  const toggleLowSpec = () => {
+    setLowSpec((v) => {
+      try {
+        localStorage.setItem(LOW_SPEC_KEY, v ? '0' : '1');
+      } catch {
+        // Preference just won't stick.
+      }
+      return !v;
+    });
+  };
+
+  const pick = (memberId) => {
+    if (picker.kind === 'potion' || picker.kind === 'meal') act({ type: picker.kind, targetId: memberId });
+    else if (picker.kind === 'skill') act({ type: 'skill', targetId: memberId });
+    else act({ type: picker.kind, memberId });
+  };
+  pickRef.current = pick;
+
+  return (
+    <div className="quest-root">
+      <div className="quest-canvas">
+        <Scene
+          state={state}
+          meta={meta}
+          models={models}
+          cues={cues}
+          targetId={target?.id}
+          onTarget={setTargetId}
+          onTravel={onTravel}
+          lowSpec={lowSpec}
+          world={world}
+          reach={reach}
+          firstPerson={firstPerson}
+          batches={batches}
+          loaded={loaded}
+          warmed={warmed}
+          onWarmed={onWarmed}
+        />
+      </div>
+      <div className="scene-vignette" aria-hidden="true" />
+      {!preloaded && <LoadingScreen />}
+      {preloaded && roomWaiting && <LoadingScreen room={meta?.rooms?.[roomWaiting]?.name} />}
+
+      <TopBar view={view} meta={meta} lowSpec={lowSpec} onLowSpec={toggleLowSpec} onLeave={() => onLeave()} sensitivity={sensitivity} onSensitivity={changeSensitivity} audio={audio} onAudio={changeAudio} firstPerson={firstPerson} onToggleView={toggleView} onHelp={() => setHelpOpen(true)} onMenu={setSettingsOpen} onRewind={rewindTo} onReset={resetAll} busy={busy} />
+      {view.note && <div className="hud-note">{view.note}</div>}
+      {oracle && (
+        <div key={oracle.at} className={`hud-oracle ${oracle.wise ? 'is-wise' : 'is-unwise'}`} role="status">
+          <span className="oracle-verdict">{oracle.wise ? '✔ Right choice' : '✘ Wrong choice'}</span>
+          <span className="oracle-line">{oracle.line}</span>
+          <span className="oracle-name">
+            Seraphine the Oracle · the forest is {Math.round(oracle.p * 100)}% sure it was a good choice · this session {tally.right} right, {tally.wrong} wrong
+          </span>
+        </div>
+      )}
+      {softwareGL && (
+        <div className="hud-note" role="alert">
+          This computer is drawing the game without its graphics card, so it will lag. Update the graphics driver (Intel, AMD or NVIDIA) and restart the game.
+        </div>
+      )}
+
+      {state.phase !== 'setup' && <PartyPanel party={state.party} meta={meta} inFight={state.phase === 'combat'} />}
+      {state.phase !== 'setup' && <Chronicle log={state.log} rolls={state.lastRolls} />}
+      {state.speech && state.phase !== 'setup' && <Subtitle speech={state.speech} meta={meta} />}
+      {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
+      {state.phase !== 'setup' && state.phase !== 'victory' && state.phase !== 'defeat' && (
+        <QuestTracker state={state} open={logOpen} onToggle={() => setLogOpen((o) => !o)} />
+      )}
+      {phase === 'combat' && coach < COACH.length && (
+        <div className="hud-coach" role="note">
+          <p className="eyebrow text-gold">
+            How to play · {coach + 1}/{COACH.length} · {COACH[coach].title}
+          </p>
+          <p className="mt-1 text-sm leading-snug">{COACH[coach].text}</p>
+          <div className="mt-2 flex gap-2">
+            {coach === COACH.length - 1 && (
+              <button className="btn px-2 py-0.5 text-xs" onClick={() => setCoach(COACH.length)}>
+                Got it
+              </button>
+            )}
+            <button className="font-mono text-[10px] text-ash hover:text-bone" onClick={() => setCoach(COACH.length)}>
+              Skip tutorial
+            </button>
+          </div>
+        </div>
+      )}
+      {walking && touch && <TouchControls world={world} />}
+      {/* The crosshair is always up in a fight: what's under it is the target. */}
+      {phase === 'combat' && <div className={`crosshair ${aim.onTarget ? 'on-target' : ''}`} aria-hidden="true" />}
+      {phase === 'combat' && !mouseLook && <p className="look-hint">Click the view to look around with the mouse · Esc frees the cursor</p>}
+      {banners[0] && <Banner key={`${banners[0].title}-${banners.length}-${state.turn}`} banner={banners[0]} />}
+
+      {state.phase === 'combat' && (
+        <>
+          <BossBar state={state} />
+          <EnemyList state={state} targetId={target?.id} onTarget={setTargetId} />
+          <AbilityBar
+            me={me}
+            skill={skill}
+            target={target}
+            canReach={canReach(target)}
+            potions={state.potions}
+            meals={state.meals}
+            rune={meta.runeStrike}
+            runeTarget={runeTarget}
+            canRetreat={!meta.rooms[state.combat.roomId].final}
+            busy={busy}
+            aimGap={aim.gap}
+            lane={aim.lane}
+            danger={dangerSoon(state)}
+            reach={reach}
+            clock={clock}
+            autoRounds={autoRounds}
+            onToggleAuto={toggleAuto}
+            onAttack={doAttack}
+            onDefend={() => act({ type: 'defend' })}
+            onSkill={doSkill}
+            onPotion={() => setPicker({ kind: 'potion', title: 'Potion: choose an ally' })}
+            onMeal={() => setPicker({ kind: 'meal', title: 'Monster Meal: choose an ally' })}
+            onRune={doRune}
+            onRetreat={retreat}
+            onWait={() => act({ type: 'wait' })}
+          />
+        </>
+      )}
+
+      {state.phase === 'map' && (
+        <MapPanel state={state} meta={meta} busy={busy} act={act} setPicker={setPicker} atCell={atCell} brokenWorld={brokenWorld} />
+      )}
+
+      {(state.phase === 'victory' || state.phase === 'defeat') && <EndScreen view={view} session={session} path={path} onRestart={async () => apply(await questApi(`${path}/reset`, { method: 'POST', code: session.code }))} />}
+
+      {picker && <AllyPicker picker={picker} party={state.party} onPick={pick} onClose={() => setPicker(null)} />}
+      {toast && (
+        <div role="alert" className="hud-toast">
+          {toast}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- HUD pieces ----------
+
+// Lanes about to be hit next round (a boss's marked lanes or Morvath's breath).
+function dangerSoon(state) {
+  const c = state.combat;
+  return new Set([...(c?.danger && c.danger.round === c.round + 1 ? c.danger.lanes : []), ...(c?.telegraph?.lanes ?? [])]);
+}
+
+function MapPanel({ state, meta, busy, act, setPicker, atCell, brokenWorld }) {
+  const travel = state.options.filter((o) => o.type === 'travel');
+  const atCamp = state.location === 'camp';
+  const has = (type) => state.options.some((o) => o.type === type);
+  return (
+    <section className="hud-map" aria-label="Journey">
+      <RuneLedger rules={state.sealRunes} rulesTotal={state.runeCount} world={brokenWorld} />
+      <p className="eyebrow text-gold">Journey</p>
+      <div className="mt-2 space-y-1.5">
+        {travel.map((o) => {
+          const room = meta.rooms[o.to];
+          return (
+            <button key={o.to} className={`hud-choice ${o.fight ? '' : 'is-quiet'}`} disabled={busy || (room?.final && brokenWorld > 0)} onClick={() => act({ type: 'travel', to: o.to })}>
+              <span>
+                {o.to === 'camp' ? 'Return to the camp' : `${o.fight ? 'Enter' : 'Walk to'} ${room.name}`}
+                {questFor(state, o.to) && <small className="block font-mono text-[10px] text-gold">Quest · {questFor(state, o.to).title}</small>}
+                {room?.final && (state.sealRunes > 0 || brokenWorld > 0) && (
+                  <small className="block font-mono text-[10px] text-blood">The seal holds until every broken rune is restored.</small>
+                )}
+                {room?.final && (
+                  <small className="block font-mono text-[10px] text-blood">
+                    Morvath at {morvathStrength(state, meta)}% · +{Math.round((meta.finalGrowth ?? 0) * 100)}% for every extra room you clear
+                  </small>
+                )}
+              </span>
+              <span className="font-mono text-[11px] text-ash">
+                {o.cost} torch{o.cost === 1 ? '' : 'es'}
+                {o.fight ? ` · round ${room.round}` : ''}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {state.cages && <CageSection busy={busy} act={act} atCell={atCell} runes={state.cageRunes ?? 0} />}
+      {atCamp && <p className="eyebrow mt-3">Camp</p>}
+      {atCamp && (
+        <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+          <button className="btn px-2 py-1.5 text-sm" disabled={busy || !has('rest')} onClick={() => act({ type: 'rest' })} title={meta.powerUps.rest.text}>
+            Rest <small className="block font-mono text-[10px] text-ash">1 torch</small>
+          </button>
+          <button className="btn px-2 py-1.5 text-sm" disabled={busy || !has('altar')} onClick={() => setPicker({ kind: 'altar', title: 'Rune Altar (+3 ATK, +3 DEF): choose a hero' })} title={meta.powerUps.altar.text}>
+            Rune Altar <small className="block font-mono text-[10px] text-ash">1 torch · {meta.powerUps.altar.gold}g</small>
+          </button>
+          <button className="btn px-2 py-1.5 text-sm" disabled={busy || !has('forge')} onClick={() => setPicker({ kind: 'forge', title: 'Forge (+5 ATK): choose a hero' })} title={meta.powerUps.forge.text}>
+            Forge <small className="block font-mono text-[10px] text-ash">{meta.powerUps.forge.gold}g</small>
+          </button>
+        </div>
+      )}
+      {atCamp && (
+        <div className="mt-3 border-t border-crypt-3 pt-2">
+          <p className="eyebrow">Your helpers at the camp</p>
+          {state.campHelpers ? (
+            <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+              {[
+                ['camp_healer', 'Healer', meta.campServices?.healer],
+                ['camp_smith', 'Weaponsmith', meta.campServices?.smith],
+              ].map(([type, label, offer]) => (
+                <button key={type} className="btn px-2 py-1.5 text-sm" disabled={busy || !offer || state.gold < offer.gold} onClick={() => act({ type })} title={offer?.text}>
+                  {label} <small className="block font-mono text-[10px] text-ash">{offer?.gold ?? '?'}g</small>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-1 text-xs text-ash">Free the Healer and the Weaponsmith from a cleared room’s cage and they will work here too.</p>
+          )}
+        </div>
+      )}
+      {atCamp && (
+        <div className="mt-3 border-t border-crypt-3 pt-2">
+          <p className="eyebrow">Pip’s pot</p>
+          <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+            <button className="btn px-2 py-1.5 text-sm" disabled={busy || !state.pip.some((o) => o.item === 'potion')} onClick={() => act({ type: 'trade', item: 'potion' })} title={meta.pip.potion.text}>
+              Buy potion <small className="block font-mono text-[10px] text-ash">{meta.pip.potion.gold}g</small>
+            </button>
+            <button className="btn px-2 py-1.5 text-sm" disabled={busy || !state.pip.some((o) => o.item === 'meal')} onClick={() => act({ type: 'trade', item: 'meal' })} title={meta.pip.meal.text}>
+              Cook a meal <small className="block font-mono text-[10px] text-ash">{meta.pip.meal.parts} parts ({state.parts})</small>
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="mt-2 grid grid-cols-2 gap-1.5">
+        <button className="btn px-2 py-1 text-sm" disabled={busy || state.potions <= 0} onClick={() => setPicker({ kind: 'potion', title: 'Potion: choose an ally' })}>
+          Drink a potion ({state.potions})
+        </button>
+        <button className="btn px-2 py-1 text-sm" disabled={busy || state.meals <= 0} onClick={() => setPicker({ kind: 'meal', title: 'Monster Meal: choose an ally' })}>
+          Eat a meal ({state.meals})
+        </button>
+      </div>
+    </section>
+  );
+}
+
+// The Rune Ledger: how many runes are still broken in the game's code. "The rules" are the server's
+// own checks (server/src/quest/locks.js), "the world" the browser's (runes.js). It never says which.
+function RuneLedger({ rules = 0, rulesTotal = 0, world }) {
+  const left = rules + (world ?? 0);
+  return (
+    <div className={`hud-ledger ${left ? 'is-broken' : 'is-whole'}`} role="status">
+      <p className="eyebrow">Rune Ledger</p>
+      {world === null ? (
+        <p className="text-xs text-ash">Reading the runes…</p>
+      ) : left ? (
+        <p className="text-xs">
+          <b>{left}</b> broken rune{left === 1 ? '' : 's'} left: {rules}/{rulesTotal} in the rules, {world}/{WORLD_RUNE_COUNT} in the world. The Throne stays sealed until all are restored.
+        </p>
+      ) : (
+        <p className="text-xs">Every rune is restored. The Throne’s seal can break.</p>
+      )}
+    </div>
+  );
+}
+
+// A cleared room's cage: walk up to a cell's door, then E (or the button).
+// It stays shut while the room's round still has broken runes in the code.
+function CageSection({ busy, act, atCell, runes }) {
+  const cell = (type, name, does) => (
+    <button className="btn px-2 py-1.5 text-sm" disabled={busy || runes > 0 || atCell !== type} onClick={() => act({ type })} title={does}>
+      {name}
+      <small className="block font-mono text-[10px] text-ash">{runes > 0 ? 'locked' : atCell === type ? `${does} (E)` : 'walk up to the door'}</small>
+    </button>
+  );
+  return (
+    <div className="mt-3 border-t border-crypt-3 pt-2">
+      <p className="eyebrow">The cage</p>
+      <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+        {cell('healer', 'Healer', 'health and shield')}
+        {cell('smith', 'Weaponsmith', 'hone and mend')}
+      </div>
+      {runes > 0 && (
+        <small className="mt-1.5 block font-mono text-[10px] text-blood">
+          {runes} broken rune{runes > 1 ? 's' : ''} left in this round’s code: fix, restart, come back
+        </small>
+      )}
+    </div>
+  );
+}
+
+function AllyPicker({ picker, party, onPick, onClose }) {
+  const allowFallen = picker.kind === 'skill' || picker.kind === 'altar' || picker.kind === 'forge';
+  return (
+    <div className="hud-picker" role="dialog" aria-label={picker.title}>
+      <p className="eyebrow mb-2">{picker.title}</p>
+      <div className="grid grid-cols-2 gap-1.5">
+        {party.map((m) => (
+          <button key={m.id} className="btn px-2 py-1.5 text-sm" disabled={m.fallen && !allowFallen} onClick={() => onPick(m.id)}>
+            {m.name} <small className="font-mono text-[10px] text-ash">{m.fallen ? 'Fallen' : `${m.hp}/${m.maxHp}`}</small>
+          </button>
+        ))}
+      </div>
+      <button className="mt-2 w-full font-mono text-xs text-ash hover:text-bone" onClick={onClose}>
+        Cancel (Esc)
+      </button>
+    </div>
+  );
+}
+
+function Chronicle({ log, rolls }) {
+  const ref = useRef(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
+  }, [log.length, log]);
+  return (
+    <section className="hud-log" aria-label="Chronicle">
+      <div className="flex items-center justify-between">
+        <button className="eyebrow hover:text-bone" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+          Chronicle {open ? '▾' : '▸'}
+        </button>
+        {rolls?.length > 0 && (
+          <span className="flex gap-1">
+            {rolls.map((r, i) => (
+              <span key={i} className={`dice ${r.value === 20 ? 'is-crit' : r.value <= 3 ? 'is-miss' : ''}`} title={`${r.by} rolled ${r.value}`}>
+                {r.value}
+              </span>
+            ))}
+          </span>
+        )}
+      </div>
+      <ol ref={ref} className="mt-1 max-h-48 space-y-0.5 overflow-y-auto pr-1 text-[13px] leading-snug" aria-live="polite">
+        {log.slice(open ? -40 : -3).map((line, i) => (
+          <li key={`${log.length}-${i}`} className={/Fallen|shadows claim|falls …|bursts open/.test(line) ? 'text-blood' : /cleared|Victory|shatters|level/.test(line) ? 'text-verdigris' : /: “/.test(line) ? 'italic text-frost' : 'text-bone/80'}>
+            {line}
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function EndScreen({ view, session, path, onRestart }) {
+  const s = view.state;
+  const won = s.phase === 'victory';
+  const [saving, setSaving] = useState(false);
+  async function download() {
+    setSaving(true);
+    try {
+      const { save } = await questApi(`${path}/save`, { code: session.code });
+      const url = URL.createObjectURL(new Blob([JSON.stringify(save, null, 1)], { type: 'application/json' }));
+      const a = Object.assign(document.createElement('a'), { href: url, download: `${view.team.id}-save.json` });
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setSaving(false);
+    }
+  }
+  return (
+    <div className="hud-end">
+      <div className={`panel border-2 p-6 ${won ? 'border-verdigris/70' : 'border-blood/70'}`}>
+        <h2 className={`font-display text-5xl ${won ? 'text-verdigris' : 'text-blood'}`}>{won ? 'The Heart beats again' : 'The shadows claim another soul'}</h2>
+        <p className="mt-2 text-bone/80">
+          {won ? 'The runes are restored. Eldermoor remembers its Runewright.' : '…but runes can always be rewritten. Fix what is broken and try again.'}
+        </p>
+        <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1 font-mono text-sm">
+          <dt className="text-ash">Heart fragments</dt>
+          <dd>{s.fragments.length} / 5</dd>
+          <dt className="text-ash">Wipes</dt>
+          <dd>{s.stats.wipes}</dd>
+          <dt className="text-ash">Turns</dt>
+          <dd>{s.turn}</dd>
+          <dt className="text-ash">Torches left</dt>
+          <dd>{s.torches}</dd>
+          <dt className="text-ash">Quests cleared</dt>
+          <dd>
+            {(s.quests ?? []).filter((q) => q.done).length} / {(s.quests ?? []).length}
+          </dd>
+        </dl>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <button className="btn btn-primary" disabled={saving} onClick={download}>
+            Download save
+          </button>
+          <button
+            className="btn"
+            onClick={() => {
+              if (window.confirm('Start a new run? Your current save is archived, and the dice stay the same.')) onRestart();
+            }}
+          >
+            Start over
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- quests ----------
+
+// The open quest that sends the party to this room, if any.
+function questFor(state, roomId) {
+  return (state.quests ?? []).find((q) => !q.done && (q.room === roomId || (roomId === 'r5' && q.id === 'throne')));
+}
+
+const KIND_LABEL = { main: 'Main', room: 'Quest', side: 'Side' };
+
+function QuestTracker({ state, open, onToggle }) {
+  const quests = state.quests ?? [];
+  const fightRoom = state.phase === 'combat' ? state.combat.roomId : null;
+  // In a fight, only the quest for this room; on the map, what's still open (main quests first).
+  const shown = open
+    ? [...quests.filter((q) => !q.done), ...quests.filter((q) => q.done)]
+    : fightRoom
+      ? quests.filter((q) => q.room === fightRoom || (fightRoom === 'r5' && q.id === 'throne'))
+      : quests.filter((q) => !q.done).slice(0, 4);
+  const cleared = quests.filter((q) => q.done).length;
+  return (
+    <section className={`hud-quests ${open ? 'is-open' : ''}`} aria-label="Quests">
+      <div className="flex items-center justify-between gap-2">
+        <p className="eyebrow text-gold">
+          {open ? 'Quest log' : 'Quests'} <span className="text-ash">· {cleared}/{quests.length} clear</span>
+        </p>
+        <button className="font-mono text-[10px] text-ash hover:text-bone" onClick={onToggle}>
+          {open ? 'Close' : 'Log'} <kbd>J</kbd>
+        </button>
+      </div>
+      <ol className="mt-1.5 space-y-2">
+        {shown.map((q) => (
+          <QuestItem key={q.id} quest={q} full={open} />
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function QuestItem({ quest: q, full }) {
+  return (
+    <li className={`quest-item ${q.done ? 'is-done' : ''} quest-${q.kind}`}>
+      <p className="flex items-baseline justify-between gap-2">
+        <span className="font-display text-[15px] leading-tight">{q.title}</span>
+        <span className="quest-tag">{q.done ? 'Clear' : KIND_LABEL[q.kind]}</span>
+      </p>
+      {full && (
+        <p className="mt-0.5 text-xs text-bone/75">
+          {q.giver && <span className="text-frost">{q.giver}: </span>}
+          {q.text}
+        </p>
+      )}
+      <ul className="mt-1 space-y-0.5">
+        {q.steps.map((st) => (
+          <li key={st.text} className={`quest-step ${st.done ? 'is-done' : ''}`}>
+            <span aria-hidden="true">{st.done ? '◆' : '◇'}</span> {st.text}
+            {st.count && !st.done && (
+              <span className="ml-1 font-mono text-[10px] text-ash">
+                {st.count[0]}/{st.count[1]}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+      {full && <p className="mt-1 font-mono text-[10px] text-gold/80">Reward: {q.reward}</p>}
+    </li>
+  );
+}
+
+// ---------- anime-style banner ----------
+
+function Banner({ banner }) {
+  return (
+    <div className={`hud-banner banner-${banner.kind}`} role="status" aria-live="assertive">
+      <div className="banner-strip">
+        <p className="banner-title">{banner.title}</p>
+        {banner.sub && <p className="banner-sub">{banner.sub}</p>}
+        {banner.note && <p className="banner-note">{banner.note}</p>}
+      </div>
+    </div>
+  );
+}
