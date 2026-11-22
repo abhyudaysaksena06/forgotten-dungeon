@@ -1,0 +1,68 @@
+# AI services to block on the venue network during the round. One domain per line; each blocks
+# its subdomains too. Gemini stays open: do NOT add google.com, googleapis.com or gstatic.com.
+# Turn this into router/DNS/Chrome formats with: node monitor/network/make-blocklists.mjs <format>
+
+# OpenAI
+chatgpt.com
+chat.openai.com
+openai.com
+oaistatic.com
+oaiusercontent.com
+# Anthropic
+claude.ai
+claude.com
+anthropic.com
+# GitHub Copilot and Microsoft Copilot
+githubcopilot.com
+copilot-proxy.githubusercontent.com
+copilot.microsoft.com
+copilot.cloud.microsoft
+# AI editors and coding assistants
+cursor.com
+cursor.sh
+cursorapi.com
+windsurf.com
+codeium.com
+tabnine.com
+sourcegraph.com
+supermaven.com
+blackbox.ai
+phind.com
+continue.dev
+cline.bot
+kilocode.ai
+trae.ai
+kiro.dev
+qodo.ai
+aider.chat
+# App builders
+v0.dev
+v0.app
+bolt.new
+lovable.dev
+replit.com
+# Other chat assistants
+perplexity.ai
+poe.com
+deepseek.com
+grok.com
+x.ai
+meta.ai
+mistral.ai
+chat.qwen.ai
+kimi.com
+moonshot.ai
+you.com
+character.ai
+pi.ai
+huggingface.co
+hf.co
+# Model APIs and routers
+openrouter.ai
+groq.com
+together.ai
+fireworks.ai
+cohere.com
+# Local model downloads
+ollama.com
+lmstudio.ai

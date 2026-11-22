@@ -10,6 +10,9 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "start": "npm run build -w client && npm start -w server",
-    "test": "npm test -w server && npm test -w client"
+    "test": "npm test -w server && npm test -w client",
+    "monitor": "node monitor/agent.mjs",
+    "monitor:dashboard": "node monitor/dashboard.mjs",
+    "test:monitor": "node --test monitor/test/monitor.test.mjs"
   }
 }

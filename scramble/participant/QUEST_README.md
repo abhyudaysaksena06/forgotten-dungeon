@@ -96,5 +96,10 @@ Your team's profile is in `server/teams/profile.json` and your save is in `serve
   caught it. Test the game's behaviour through its existing functions. A test that needs your own
   new helpers can't run on the original, so it doesn't count.
 - Breaking something that worked costs marks.
+- **Gemini is the only AI tool allowed.** Keep the event monitor running on every laptop you use:
+  `npm run monitor -- --server <address> --team <your team> --key <event key>` (the organisers give
+  you these). It reports known AI apps and extensions, your git activity and network connections; it
+  never records keystrokes, your screen or file contents. See exactly what it sends with
+  `npm run monitor -- --dry-run`, and read `monitor/README.md` for the full list.
 - Stuck? Hints cost CTF tokens and come one level at a time: what's wrong, then where, then the
   direction of the fix.

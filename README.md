@@ -55,6 +55,16 @@ node server/scripts/balance.mjs
 
 Plays seeded runs with careless and careful heroes and prints win rates.
 
+## Gemini-only monitoring
+
+```bash
+npm run monitor:dashboard -- --teams 12
+```
+
+A live dashboard of which AI tools each team runs, their git activity and hotspot or tampering flags. Teams run
+`npm run monitor` on their laptops. The venue blocklist, the student notice and the loopholes that remain are in
+[monitor/README.md](monitor/README.md).
+
 ## Layout
 
 ```

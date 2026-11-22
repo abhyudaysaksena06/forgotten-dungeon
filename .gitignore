@@ -17,3 +17,4 @@ __pycache__/
 desktop/stage/
 desktop/dist/
 desktop/node_modules/
+monitor-data/
